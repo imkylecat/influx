@@ -1,6 +1,6 @@
 import definePlugin from "@api/Plugins";
 import { Contributor } from "@utils/constants";
-import { findIcon } from "@webpack/common";
+import { React, findIcon } from "@webpack/common";
 import { cancelAutoUpdate, scheduleAutoUpdate } from "./autoUpdate";
 import { InfluxTab } from "./InfluxTab";
 import { PluginsTab } from "./PluginsTab";

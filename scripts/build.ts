@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { cp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import * as esbuild from "esbuild";
+import type { BuildConfig, BunPlugin } from "bun";
 import { influxDataDir } from "../src/shared/paths";
 import { DESKTOP_ASSETS } from "../src/shared/release";
 
@@ -14,19 +15,9 @@ const watch = process.argv.includes("--watch");
 const release = process.argv.includes("--release");
 const devInstallDir = path.join(influxDataDir(), "dev");
 
-const syncDevInstall: esbuild.Plugin = {
-  name: "sync-dev-install",
-  setup(build) {
-    build.onEnd(async (result) => {
-      if (release || result.errors.length > 0 || !existsSync(devInstallDir)) return;
-      const outfile = build.initialOptions.outfile!;
-      await cp(outfile, path.join(devInstallDir, path.basename(outfile)));
-    });
-  },
-};
 const { version } = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
 
-const pluginDiscovery: esbuild.Plugin = {
+const pluginDiscovery: BunPlugin = {
   name: "plugin-discovery",
   setup(build) {
     build.onResolve({ filter: /^~plugins$/ }, () => ({
@@ -48,75 +39,117 @@ const pluginDiscovery: esbuild.Plugin = {
         .join("\n");
       return {
         contents: `${imports}\nexport default [${entries.map((_, i) => `p${i}`).join(", ")}];`,
-        resolveDir: pluginsDir,
-        watchDirs: [pluginsDir],
-        watchFiles: entries,
+        loader: "ts",
       };
     });
   },
 };
 
-const common: esbuild.BuildOptions = {
-  bundle: true,
-  logLevel: "info",
-  sourcemap: "inline",
-  legalComments: "none",
+const common = {
+  sourcemap: release ? "none" : "inline",
+  minify: release,
   define: { INFLUX_VERSION: JSON.stringify(version), INFLUX_DEV: JSON.stringify(!release) },
-};
+} satisfies Partial<BuildConfig>;
 
-const renderer: esbuild.BuildOptions = {
+const renderer: BuildConfig = {
   ...common,
-  entryPoints: [path.join(root, "src/renderer/index.ts")],
+  entrypoints: [path.join(root, "src/renderer/index.ts")],
   format: "iife",
-  platform: "browser",
+  target: "browser",
   plugins: [pluginDiscovery],
-  jsx: "transform",
-  jsxFactory: "React.createElement",
-  jsxFragment: "React.Fragment",
-  inject: [path.join(root, "src/renderer/jsx.ts")],
+  jsx: {
+    runtime: "classic",
+    factory: "React.createElement",
+    fragment: "React.Fragment",
+  },
 };
 
-const builds: esbuild.BuildOptions[] = [
+const builds: BuildConfig[] = [
+  { ...renderer, outdir: path.join(dist, "desktop"), naming: "renderer.js" },
+  { ...renderer, outdir: path.join(dist, "extension"), naming: "renderer.js" },
   {
-    ...renderer,
-    outfile: path.join(dist, "desktop/renderer.js"),
-    target: "chrome120",
-    plugins: [pluginDiscovery, syncDevInstall],
-  },
-  {
-    ...renderer,
-    outfile: path.join(dist, "extension/renderer.js"),
-    target: ["chrome120", "firefox128"],
-  },
-  ...["main", "preload"].map((name): esbuild.BuildOptions => ({
     ...common,
-    entryPoints: [path.join(root, `src/desktop/${name}.ts`)],
-    outfile: path.join(dist, `desktop/${name}.js`),
+    entrypoints: ["main", "preload"].map((name) => path.join(root, `src/desktop/${name}.ts`)),
+    outdir: path.join(dist, "desktop"),
+    naming: "[name].js",
     format: "cjs",
-    platform: "node",
-    target: "node22",
+    target: "node",
     external: ["electron"],
-    plugins: [syncDevInstall],
-  })),
+  },
 ];
 
-await rm(dist, { recursive: true, force: true });
-await mkdir(path.join(dist, "extension"), { recursive: true });
-await cp(path.join(root, "src/extension/rules.json"), path.join(dist, "extension/rules.json"));
-const manifest = JSON.parse(await readFile(path.join(root, "src/extension/manifest.json"), "utf8"));
-await writeFile(
-  path.join(dist, "extension/manifest.json"),
-  `${JSON.stringify({ ...manifest, version }, null, "\t")}\n`,
-);
+async function buildAll(): Promise<void> {
+  await mkdir(path.join(dist, "extension"), { recursive: true });
+  await cp(path.join(root, "src/extension/rules.json"), path.join(dist, "extension/rules.json"));
+  const manifest = JSON.parse(
+    await readFile(path.join(root, "src/extension/manifest.json"), "utf8"),
+  );
+  await writeFile(
+    path.join(dist, "extension/manifest.json"),
+    `${JSON.stringify({ ...manifest, version }, null, "\t")}\n`,
+  );
 
+  const results = await Promise.all(builds.map((options) => Bun.build(options)));
+  for (const result of results) {
+    for (const log of result.logs) console.error(log);
+  }
+  if (results.some((result) => !result.success)) throw new Error("Build failed");
+
+  if (!release && existsSync(devInstallDir)) {
+    for (const result of results) {
+      for (const output of result.outputs) {
+        if (path.dirname(output.path) === path.join(dist, "desktop")) {
+          await cp(output.path, path.join(devInstallDir, path.basename(output.path)));
+        }
+      }
+    }
+  }
+  if (release) await stageRelease();
+  console.log("Built desktop and browser bundles.");
+}
+
+// Poll source metadata so watch mode also detects new plugin directories on platforms
+// where recursive filesystem notifications miss newly created files.
+async function sourceSnapshot(): Promise<string> {
+  async function scan(dir: string): Promise<string[]> {
+    const entries = await readdir(dir, { withFileTypes: true });
+    const files = await Promise.all(
+      entries.map(async (entry) => {
+        const file = path.join(dir, entry.name);
+        return entry.isDirectory() ? scan(file) : [file];
+      }),
+    );
+    return files.flat();
+  }
+  const files = [...(await scan(path.join(root, "src"))), path.join(root, "tsconfig.json")];
+  return JSON.stringify(
+    await Promise.all(
+      files.sort().map(async (file) => {
+        const info = await stat(file);
+        return [file, info.mtimeMs, info.ctimeMs, info.size];
+      }),
+    ),
+  );
+}
+
+await rm(dist, { recursive: true, force: true });
 if (watch) {
-  for (const options of builds) {
-    const context = await esbuild.context(options);
-    await context.watch();
+  let previous = "";
+  console.log("Watching for changes...");
+  while (true) {
+    try {
+      const current = await sourceSnapshot();
+      if (current !== previous) {
+        previous = current;
+        await buildAll();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    await delay(300);
   }
 } else {
-  await Promise.all(builds.map((options) => esbuild.build(options)));
-  if (release) await stageRelease();
+  await buildAll();
 }
 
 async function stageRelease() {

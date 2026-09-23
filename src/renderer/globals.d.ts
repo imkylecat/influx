@@ -4,7 +4,5 @@ declare module "~plugins" {
   export default plugins;
 }
 
-declare const React: typeof import("react");
-
 declare const INFLUX_VERSION: string;
 declare const INFLUX_DEV: boolean;

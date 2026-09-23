@@ -15,3 +15,7 @@ bun run inject --dev   # then restart Fluxer
 ```
 
 For the browser, load `dist/extension` as an unpacked extension.
+
+JavaScript bundles are built with `Bun.build()`. Run `bun run watch` to rebuild when source files change, including when plugins are added or removed. Development builds also sync to an existing development install.
+
+Bun does not downlevel JavaScript to specific browser or Node.js versions. Keep new syntax compatible with the Fluxer runtime and supported browsers. TSX files should import `React` from `@webpack/common` to use Fluxer's React instance.

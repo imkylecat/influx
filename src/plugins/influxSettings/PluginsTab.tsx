@@ -6,7 +6,7 @@ import {
   setPluginEnabled,
 } from "@api/Plugins";
 import type { OptionDef } from "@api/Settings";
-import { openUserProfile } from "@webpack/common";
+import { React, openUserProfile } from "@webpack/common";
 import { SettingsPage, useSettingsComponents } from "./components";
 import { settings } from "./settings";
 

@@ -2,7 +2,7 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
-import { Stores } from "@webpack/common";
+import { React, Stores } from "@webpack/common";
 import type { ComponentType } from "react";
 
 // Fluxer only defines flag bits up to 1 << 13, so this one is free for marking deleted messages.

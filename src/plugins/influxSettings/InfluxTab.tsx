@@ -1,5 +1,5 @@
 import { INFLUX_SERVER_INVITE } from "@utils/constants";
-import { openInvite } from "@webpack/common";
+import { React, openInvite } from "@webpack/common";
 import { SettingsPage, useSettingsComponents } from "./components";
 import { UpdatesSection } from "./UpdatesSection";
 

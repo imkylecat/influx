@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
-import { beforeEach, describe, it } from "bun:test";
+import { beforeEach, describe, it, mock } from "bun:test";
 import anonymiseFileNames, { anonymiseName } from "../src/plugins/anonymiseFileNames";
 import messageLogger from "../src/plugins/messageLogger";
 import { patchFactory } from "../src/renderer/patcher/patchFactory";
 import type { ModuleFactory, Patch } from "../src/renderer/webpack/types";
+
+import * as common from "../src/renderer/webpack/common";
 
 const errors: unknown[][] = [];
 const logger = { error: (...args: unknown[]) => errors.push(args) };
@@ -163,7 +165,10 @@ describe("MessageLogger", () => {
     const { store, channels } = setup();
     store.handleMessageUpdate({ message: { id: "2", channel_id: "c", content: "world!" } });
     assert.equal(channels.current.get("2").content, "world!");
-    (globalThis as any).React ??= { createElement: (...args: unknown[]) => args };
+    mock.module("../src/renderer/webpack/common", () => ({
+      ...common,
+      React: { createElement: (...args: unknown[]) => args },
+    }));
     const Markdown = () => null;
     const rendered: any = messageLogger.renderEdits(channels.current.get("2"), Markdown, {});
     assert.ok(rendered, "past edits render");

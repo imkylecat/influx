@@ -1,3 +1,4 @@
+import { React } from "@webpack/common";
 import {
   canInstallUpdates,
   checkForUpdates,

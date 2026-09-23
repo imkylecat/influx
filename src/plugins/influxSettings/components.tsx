@@ -1,4 +1,4 @@
-import { Components } from "@webpack/common";
+import { React, Components } from "@webpack/common";
 import type { ComponentType } from "react";
 
 const SETTINGS_COMPONENTS = {

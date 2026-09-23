@@ -7,6 +7,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-09-23
+
+### Changed
+
+- The Plugins tab uses Fluxer's native settings rows, with a Configure button that opens each
+  plugin's settings in a modal.
+- MessageLinkEmbeds uses Fluxer's forwarded-message frame for previews and a native card with a
+  "Jump to message" button when a linked message is unavailable.
+- MessageLogger uses Fluxer's failed-message text styling for deleted messages and native edit
+  label styling for past edits.
+- KeywordNotify and RelationshipNotifier share Fluxer's native notification handler.
+
 ## [0.2.4] - 2026-09-23
 
 ### Added
@@ -89,7 +101,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - ForceOwnerCrown plugin: shows the server owner's crown even in servers that hide it.
 - SilentTyping plugin: stops Fluxer from telling others that you're typing.
 
-[Unreleased]: https://github.com/imkylecat/influx/compare/v0.2.4...HEAD
+[Unreleased]: https://github.com/imkylecat/influx/compare/v0.2.5...HEAD
+[0.2.5]: https://github.com/imkylecat/influx/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/imkylecat/influx/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/imkylecat/influx/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/imkylecat/influx/compare/v0.2.1...v0.2.2

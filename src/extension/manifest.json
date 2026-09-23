@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Influx",
   "description": "A patch-based client mod for Fluxer",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "content_scripts": [
     {
       "matches": ["https://web.fluxer.app/*", "https://web.canary.fluxer.app/*"],

@@ -24,7 +24,7 @@ jobs:
           fi
 
       - name: Check the changelog has an entry for this version
-        run: bun scripts/changelog.ts "${GITHUB_REF_NAME}" > changelog.md
+        run: bun scripts/changelog.ts "${GITHUB_REF_NAME}" > release-notes.md
 
       - run: bun install --frozen-lockfile
         env:
@@ -44,7 +44,7 @@ jobs:
 
       - name: Write the release notes
         run: |
-          { echo "## What's changed"; echo; cat changelog.md; echo; } > notes.md
+          { echo "## What's changed"; echo; cat release-notes.md; echo; } > notes.md
           cat >> notes.md <<'EOF'
           ## Install
 

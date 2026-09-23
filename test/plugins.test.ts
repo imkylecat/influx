@@ -174,6 +174,22 @@ describe("MessageLogger", () => {
     assert.equal(channels.current.get("1"), undefined);
   });
 
+  it("tags deleted rows and adds Fluxer's failed-message class", () => {
+    const rowModule = new Function(
+      "return function(e,t,n){" +
+        'e.exports=(b,ty)=>({"data-flx-edited":null!=b.editedTimestamp?"true":void 0,"data-flx-compact":void 0,className:ty,ref:null})}',
+    )() as ModuleFactory;
+    const patched = patchFactory(1, rowModule, pendingFor(messageLogger), logger);
+    assert.deepEqual(errors, []);
+    const props = run(patched);
+    const live = props(message("1", "hi"), "row");
+    assert.equal(live.className, "row");
+    assert.equal(live["data-influx-deleted"], undefined);
+    const deleted = props(message("1", "hi", 1 << 30), "row");
+    assert.equal(deleted["data-influx-deleted"], "true");
+    assert.ok(deleted.className.startsWith("row"));
+  });
+
   it("records the previous content when a message is edited", () => {
     const { store, channels } = setup();
     store.handleMessageUpdate({

@@ -2,7 +2,7 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
-import { Components, React, Stores } from "@webpack/common";
+import { Components, nativeClasses, React, Stores } from "@webpack/common";
 import type { ComponentType } from "react";
 
 // Fluxer only defines flag bits up to 1 << 13, so this one is free for marking deleted messages.
@@ -15,19 +15,11 @@ const STYLES = `
 [data-influx-deleted] {
   background: color-mix(in srgb, var(--status-danger) 8%, transparent);
 }
-[data-influx-deleted] [data-search-highlight-scope="message"] {
-  color: var(--status-danger);
-}
 [data-influx-deleted] [data-flx$="message-attachments"] {
   opacity: 0.6;
 }
 .influx-ml-edit {
   opacity: 0.6;
-}
-.influx-ml-edit-label {
-  font-size: 0.625rem;
-  color: var(--text-chat-muted);
-  user-select: none;
 }
 `;
 
@@ -115,10 +107,13 @@ export default definePlugin({
       ],
     },
     {
+      // The message row: tag deleted messages and give them Fluxer's failed-message red text.
       find: '"data-flx-edited":',
       replacement: {
-        match: /"data-flx-edited":null!=(\i)\.editedTimestamp\?"true":void 0,/,
-        replace: '$&"data-influx-deleted":$self.isDeleted($1)?"true":void 0,',
+        match:
+          /("data-flx-edited":null!=(\i)\.editedTimestamp\?"true":void 0,)(.{0,1500}?className:)(\i),/,
+        replace:
+          '$1"data-influx-deleted":$self.isDeleted($2)?"true":void 0,$3$self.rowClass($4,$2),',
       },
     },
     {
@@ -189,18 +184,26 @@ export default definePlugin({
     return message != null && (message.flags & DELETED_FLAG) !== 0;
   },
 
+  rowClass(className: string | undefined, message: Message | undefined): string | undefined {
+    if (!this.isDeleted(message)) return className;
+    return [className, nativeClasses("Message.module__messageFailed___")].filter(Boolean).join(" ");
+  },
+
   renderEdits(message: Message, Markdown: ComponentType<any>, options: unknown) {
     const edits = settings.store.logEdits ? editHistory.get(message.id) : undefined;
     if (!edits?.length) return null;
     const Tooltip = Components.Tooltip();
+    // Fluxer's own "(edited)" label.
+    const editedClass = nativeClasses("Message.module__editedTimestamp___");
+    const editedLabelClass = nativeClasses("Message.module__editedLabel___");
     return (
       <div className="influx-ml-edits">
         {edits.map((edit, i) => {
           const time = edit.timestamp.toLocaleString();
           const label = (
-            <span className="influx-ml-edit-label" title={Tooltip ? undefined : time}>
+            <span className={editedClass} title={Tooltip ? undefined : time}>
               {" "}
-              (past edit)
+              <span className={editedLabelClass}>(past edit)</span>
             </span>
           );
           return (

@@ -2,28 +2,27 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
-import { Components, MessageRecord, React, RestClient, Stores } from "@webpack/common";
+import {
+  Components,
+  findIcon,
+  MessageRecord,
+  nativeClasses,
+  React,
+  RestClient,
+  Stores,
+} from "@webpack/common";
 import type { Context, ReactNode } from "react";
 
 const STYLE_ID = "influx-message-link-embeds";
 // Matches Fluxer's own jump links, e.g. https://web.fluxer.app/channels/@me/<channel>/<message>.
 const MESSAGE_LINK = /https?:\/\/([\w.-]+)\/channels\/(@me|\d+)\/(\d+)\/(\d+)/g;
 
+// Fluxer's forwarded-message frame supplies the bar and spacing; this only caps the size.
 const STYLES = `
 .influx-mle {
   max-width: 520px;
   max-height: 20em;
-  margin-top: 4px;
   overflow: hidden;
-  border-left: 4px solid var(--background-modifier-accent, var(--text-chat-muted));
-  border-radius: 4px;
-  background: var(--background-secondary, var(--background-tertiary));
-}
-.influx-mle-note {
-  display: block;
-  padding: 8px 12px;
-  color: var(--text-chat-muted);
-  font-size: 0.8125rem;
 }
 `;
 
@@ -126,15 +125,7 @@ function LinkEmbed({ link }: { link: MessageLink }) {
     return Spinner ? <Spinner size="small" /> : null;
   }
 
-  if (state.status === "error") {
-    return (
-      <div className="influx-mle">
-        <span className="influx-mle-note">
-          Couldn't load the linked message. It may have been deleted, or you can't see it.
-        </span>
-      </div>
-    );
-  }
+  if (state.status === "error") return <UnavailableCard link={link} />;
 
   const Message = Components.Message();
   const channel = Stores.Channels()?.getChannel(state.message.channelId);
@@ -142,19 +133,71 @@ function LinkEmbed({ link }: { link: MessageLink }) {
 
   const { Provider } = getInPreview();
   return (
-    <div className="influx-mle">
-      <Provider value={true}>
-        <Message
-          channel={channel}
-          message={state.message}
-          previewContext="LIST_POPOUT"
-          removeTopSpacing
-          suppressMessageActions
-          behaviorOverrides={PREVIEW_BEHAVIOR}
-          onHeadingActivate={() => jumpTo(link)}
-        />
-      </Provider>
+    <div
+      className={`influx-mle ${nativeClasses("MessageAttachments.module__forwardedContainer___")}`}
+    >
+      <div className={nativeClasses("MessageAttachments.module__forwardedBar___")} />
+      <div className={nativeClasses("MessageAttachments.module__forwardedContent___")}>
+        <Provider value={true}>
+          <Message
+            channel={channel}
+            message={state.message}
+            previewContext="LIST_POPOUT"
+            removeTopSpacing
+            suppressMessageActions
+            behaviorOverrides={PREVIEW_BEHAVIOR}
+            onHeadingActivate={() => jumpTo(link)}
+          />
+        </Provider>
+      </div>
     </div>
+  );
+}
+
+const UNAVAILABLE_TITLE = "Message unavailable";
+const UNAVAILABLE_DESCRIPTION = "It may have been deleted, or you can't see it.";
+
+// Laid out like Fluxer's own card for an unavailable theme or invite.
+function UnavailableCard({ link }: { link: MessageLink }) {
+  const EmbedCard = Components.EmbedCard();
+  const Button = Components.Button();
+  const Icon = findIcon("WarningCircleIcon");
+  if (!EmbedCard || !Button) {
+    return (
+      <span className={nativeClasses("EmbedCard.module__helpText___")}>
+        {UNAVAILABLE_TITLE}. {UNAVAILABLE_DESCRIPTION}
+      </span>
+    );
+  }
+  return (
+    <EmbedCard
+      splashURL={null}
+      icon={
+        <div className={nativeClasses("EmbedCard.module__iconCircleDisabled___")}>
+          {Icon && <Icon className={nativeClasses("EmbedCard.module__iconError___")} />}
+        </div>
+      }
+      title={
+        <h3
+          className={nativeClasses(
+            "EmbedCard.module__title___",
+            "EmbedCard.module__titleDanger___",
+          )}
+        >
+          {UNAVAILABLE_TITLE}
+        </h3>
+      }
+      subtitle={
+        <span className={nativeClasses("EmbedCard.module__helpText___")}>
+          {UNAVAILABLE_DESCRIPTION}
+        </span>
+      }
+      footer={
+        <Button variant="secondary" fitContainer small onClick={() => jumpTo(link)}>
+          Jump to message
+        </Button>
+      }
+    />
   );
 }
 

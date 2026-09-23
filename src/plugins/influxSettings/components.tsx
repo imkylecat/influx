@@ -1,4 +1,4 @@
-import { React, Components, findIcon } from "@webpack/common";
+import { React, Components, findIcon, Modals } from "@webpack/common";
 import type { ComponentType } from "react";
 
 export const PluginIconFallback = ({ className }: { className?: string }) => (
@@ -35,7 +35,10 @@ const SETTINGS_COMPONENTS = {
   Button: Components.Button,
   WarningAlert: Components.WarningAlert,
   StatusSlate: Components.StatusSlate,
-  Accordion: Components.Accordion,
+  ModalRoot: Components.ModalRoot,
+  ModalHeader: Components.ModalHeader,
+  ModalContent: Components.ModalContent,
+  ModalContentLayout: Components.ModalContentLayout,
   ExternalLink: Components.ExternalLink,
 };
 
@@ -49,6 +52,7 @@ function resolveSettingsComponents(): { components: SettingsComponents; missing:
     if (component) components[name as keyof SettingsComponents] = component;
     else missing.push(name);
   }
+  if (!Modals()) missing.push("Modals");
   return { components, missing };
 }
 

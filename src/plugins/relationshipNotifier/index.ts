@@ -1,7 +1,7 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings, getPluginData, saveSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
-import { showToast, Stores } from "@webpack/common";
+import { NativeNotification, showToast, Stores } from "@webpack/common";
 import { addNotice, canShowBanner, hasNotices, nagbarPartsSource, withBanner } from "./banner";
 import {
   describeRemoval,
@@ -105,7 +105,15 @@ function notify(message: string): void {
   if (settings.store.toast || !settings.store.banner || !canShowBanner()) {
     showToast("info", message, { timeout: 10_000 });
   }
-  if (!settings.store.desktopNotifications || typeof Notification === "undefined") return;
+  if (!settings.store.desktopNotifications) return;
+  const showNotification = NativeNotification();
+  if (showNotification) {
+    void showNotification({ title: "Influx", body: message }).catch((error) =>
+      console.error("[Influx] RelationshipNotifier couldn't show a notification", error),
+    );
+    return;
+  }
+  if (typeof Notification === "undefined") return;
   if (Notification.permission === "granted") {
     new Notification("Influx", { body: message });
   } else if (Notification.permission === "default") {

@@ -1,4 +1,4 @@
-import { openExternal, React } from "@webpack/common";
+import { nativeClasses, openExternal, React } from "@webpack/common";
 import {
   canInstallUpdates,
   checkForUpdates,
@@ -113,7 +113,7 @@ export function UpdatesSection() {
       }
       actions={actions}
     >
-      <div className="influx-updates">
+      <div className={nativeClasses("AdvancedSettingsTab.module__controlStackCompact___")}>
         <Switch
           label="Automatically update"
           description={autoUpdateDescription}

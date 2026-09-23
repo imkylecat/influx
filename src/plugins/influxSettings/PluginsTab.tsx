@@ -6,7 +6,7 @@ import {
   setPluginEnabled,
 } from "@api/Plugins";
 import type { OptionDef } from "@api/Settings";
-import { React, openUserProfile } from "@webpack/common";
+import { findIcon, Modals, nativeClasses, openUserProfile, React } from "@webpack/common";
 import { iconOrFallback, SettingsPage, useSettingsComponents } from "./components";
 import { settings } from "./settings";
 
@@ -90,7 +90,44 @@ function visibleOptions(plugin: PluginDef): Array<[string, OptionDef]> {
   );
 }
 
-function PluginCard({
+// Laid out like the rows on Fluxer's Advanced settings tab.
+const row = (name: string) => nativeClasses(`AdvancedSettingsTab.module__${name}___`);
+const badge = (...variants: string[]) =>
+  nativeClasses(
+    "SettingsStatusBadge.module__badge___",
+    ...variants.map((variant) => `SettingsStatusBadge.module__${variant}___`),
+  );
+
+function PluginSettingsModal({ plugin }: { plugin: PluginDef }) {
+  const { ModalRoot, ModalHeader, ModalContent, ModalContentLayout } = useSettingsComponents();
+  const close = () => Modals()?.pop();
+  return (
+    <ModalRoot size="medium" onClose={close}>
+      <ModalHeader title={`${plugin.name} settings`} onClose={close} />
+      <ModalContent>
+        <ModalContentLayout>
+          {!isPluginEnabled(plugin) && (
+            <p className={row("settingDescription")}>
+              {plugin.name} is off. These settings apply when you turn it on.
+            </p>
+          )}
+          <div className={row("controlStackCompact")}>
+            {visibleOptions(plugin).map(([name, def]) => (
+              <OptionField key={name} plugin={plugin} name={name} def={def} />
+            ))}
+          </div>
+        </ModalContentLayout>
+      </ModalContent>
+    </ModalRoot>
+  );
+}
+
+function openPluginSettings(plugin: PluginDef): void {
+  const modals = Modals();
+  modals?.push(modals.modal(() => <PluginSettingsModal plugin={plugin} />));
+}
+
+function PluginRow({
   plugin,
   needsReload,
   onToggle,
@@ -99,35 +136,26 @@ function PluginCard({
   needsReload: boolean;
   onToggle(): void;
 }) {
-  const [showOptions, setShowOptions] = React.useState(false);
   const enabled = isPluginEnabled(plugin);
-  const optionEntries = visibleOptions(plugin);
-  const { Switch, Accordion } = useSettingsComponents();
-
-  const classes = ["influx-plugin-card"];
-  if (showOptions) classes.push("influx-plugin-card-expanded");
+  const { Switch, Button } = useSettingsComponents();
+  const GearIcon = findIcon("GearIcon");
 
   return (
-    <div className={classes.join(" ")}>
-      <div className="influx-plugin-header">
-        <div className="influx-plugin-title">
-          <span className="influx-plugin-name">{plugin.name}</span>
-          {plugin.required && <span className="influx-tag">Required</span>}
-          {needsReload && <span className="influx-tag influx-tag-warning">Reload to apply</span>}
+    <div className={row("settingRow")}>
+      <div className={row("settingMain")}>
+        <div className={row("settingTitleRow")}>
+          <span className={row("settingTitle")}>{plugin.name}</span>
+          {(plugin.required || needsReload) && (
+            <span className={nativeClasses("SettingsStatusBadge.module__badges___")}>
+              {plugin.required && <span className={badge("new")}>Required</span>}
+              {needsReload && (
+                <span className={`influx-badge-warning ${badge()}`}>Reload to apply</span>
+              )}
+            </span>
+          )}
         </div>
-        <Switch
-          ariaLabel={`${enabled ? "Disable" : "Enable"} ${plugin.name}`}
-          value={enabled}
-          disabled={plugin.required}
-          onChange={(value: boolean) => {
-            setPluginEnabled(plugin.name, value);
-            onToggle();
-          }}
-        />
-      </div>
-      <p className="influx-plugin-description">{plugin.description}</p>
-      <div className="influx-plugin-meta">
-        <span>
+        <p className={row("settingDescription")}>{plugin.description}</p>
+        <p className={row("settingDescription")}>
           By{" "}
           {plugin.authors.map((author, i) => (
             <React.Fragment key={author.id}>
@@ -141,26 +169,30 @@ function PluginCard({
               </button>
             </React.Fragment>
           ))}
-        </span>
+        </p>
       </div>
-      {optionEntries.length > 0 && (
-        <Accordion
-          id={`influx-plugin-settings-${plugin.name}`}
-          title="Settings"
-          description={
-            enabled ? undefined : `${plugin.name} is off. These settings apply when you turn it on.`
-          }
-          expanded={showOptions}
-          onExpandedChange={setShowOptions}
-          compact
-        >
-          <div className="influx-plugin-options">
-            {optionEntries.map(([name, def]) => (
-              <OptionField key={name} plugin={plugin} name={name} def={def} />
-            ))}
-          </div>
-        </Accordion>
-      )}
+      <div className={`influx-plugin-actions ${row("settingAction")}`}>
+        {visibleOptions(plugin).length > 0 && (
+          // Like the Configure buttons on Fluxer's Advanced settings tab.
+          <Button
+            variant="secondary"
+            compact
+            leftIcon={GearIcon && <GearIcon size={14} weight="bold" />}
+            onClick={() => openPluginSettings(plugin)}
+          >
+            Configure
+          </Button>
+        )}
+        <Switch
+          ariaLabel={`${enabled ? "Disable" : "Enable"} ${plugin.name}`}
+          value={enabled}
+          disabled={plugin.required}
+          onChange={(value: boolean) => {
+            setPluginEnabled(plugin.name, value);
+            onToggle();
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -200,6 +232,7 @@ function PluginsPage() {
   const shown = all.filter((plugin) => activeFilter.test(plugin) && matchesQuery(plugin, query));
   const enabledCount = all.filter(isPluginEnabled).length;
   const needsReload = getPluginsNeedingReload();
+  const SearchIcon = findIcon("MagnifyingGlassIcon");
 
   return (
     <Container>
@@ -220,39 +253,44 @@ function PluginsPage() {
           title="Installed plugins"
           description={`Influx v${window.Influx.version}. ${enabledCount} of ${all.length} plugins enabled.`}
         >
-          <div className="influx-plugin-toolbar">
-            <div className="influx-plugin-search">
-              <Input
-                placeholder="Search plugins"
-                aria-label="Search plugins"
-                value={query}
-                onChange={(e: { currentTarget: HTMLInputElement }) =>
-                  setQuery(e.currentTarget.value)
-                }
-              />
+          <div className={row("section")}>
+            <div className="influx-plugin-toolbar">
+              <div className="influx-plugin-search">
+                <Input
+                  placeholder="Search plugins"
+                  aria-label="Search plugins"
+                  leftIcon={SearchIcon && <SearchIcon size={20} weight="bold" />}
+                  value={query}
+                  onChange={(e: { currentTarget: HTMLInputElement }) =>
+                    setQuery(e.currentTarget.value)
+                  }
+                />
+              </div>
+              <div className="influx-plugin-filter">
+                <Combobox
+                  aria-label="Filter plugins"
+                  value={filter}
+                  isSearchable={false}
+                  options={FILTERS.map((f) => ({
+                    value: f.value,
+                    label: `${f.label} (${all.filter(f.test).length})`,
+                  }))}
+                  onChange={(value: PluginFilter) => setFilter(value)}
+                />
+              </div>
             </div>
-            <div className="influx-plugin-filter">
-              <Combobox
-                aria-label="Filter plugins"
-                value={filter}
-                isSearchable={false}
-                options={FILTERS.map((f) => ({
-                  value: f.value,
-                  label: `${f.label} (${all.filter(f.test).length})`,
-                }))}
-                onChange={(value: PluginFilter) => setFilter(value)}
-              />
-            </div>
-          </div>
-          <div className="influx-plugin-list">
-            {shown.map((plugin) => (
-              <PluginCard
-                key={plugin.name}
-                plugin={plugin}
-                needsReload={needsReload.includes(plugin.name)}
-                onToggle={rerender}
-              />
-            ))}
+            {shown.length > 0 && (
+              <div className={row("itemList")}>
+                {shown.map((plugin) => (
+                  <PluginRow
+                    key={plugin.name}
+                    plugin={plugin}
+                    needsReload={needsReload.includes(plugin.name)}
+                    onToggle={rerender}
+                  />
+                ))}
+              </div>
+            )}
           </div>
           {shown.length === 0 && (
             <StatusSlate

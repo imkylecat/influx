@@ -109,6 +109,33 @@ function unwrapComponent(component: any): any {
   return component;
 }
 
+// Display names often sit on the inner function of memo() and forwardRef() wrappers.
+function displayNameOf(component: any): string | undefined {
+  for (let depth = 0; depth < 5 && component != null; depth++) {
+    if (typeof component.displayName === "string") return component.displayName;
+    component = component.render ?? component.type;
+  }
+  return undefined;
+}
+
+// Finds a component by display name among the exports of modules whose source contains code.
+export function findComponentByDisplayName(code: string, displayName: string): any {
+  for (const id of search(code)) {
+    let exports: any;
+    try {
+      exports = wreq!(id);
+    } catch (error) {
+      logger.error(`Requiring module ${id} for component lookup threw`, error);
+      continue;
+    }
+    const match = [...exportCandidates({ exports })].find(
+      (c) => isComponent(c) && displayNameOf(c) === displayName,
+    );
+    if (match) return match;
+  }
+  return undefined;
+}
+
 export function findComponentByCode(code: string, displayName?: string): any {
   for (const id of search(code)) {
     let exports: any;

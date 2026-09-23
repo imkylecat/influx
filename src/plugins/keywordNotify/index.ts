@@ -1,8 +1,7 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
-import { showToast, Stores } from "@webpack/common";
-import { findByCode } from "@webpack/finders";
+import { NativeNotification, showToast, Stores } from "@webpack/common";
 
 const MAX_BODY_LENGTH = 200;
 
@@ -57,13 +56,6 @@ interface RenderedMessage {
   content?: string;
   author?: { id: string; bot?: boolean };
 }
-
-type ShowNotification = (options: {
-  title: string;
-  body: string;
-  url?: string;
-  playSound?: boolean;
-}) => Promise<unknown>;
 
 type GatewayHandler = (data: any, context: unknown) => void;
 
@@ -125,8 +117,6 @@ function isViewing(message: WireMessage): boolean {
   return document.hasFocus() && location.pathname.split("/")[3] === message.channel_id;
 }
 
-let showNotification: ShowNotification | null | undefined;
-
 function notify(message: WireMessage): void {
   const name = message.member?.nick || message.author.global_name || message.author.username;
   const channel = Stores.Channels()?.getChannel(message.channel_id);
@@ -136,9 +126,7 @@ function notify(message: WireMessage): void {
   const body = content.length > MAX_BODY_LENGTH ? `${content.slice(0, MAX_BODY_LENGTH)}…` : content;
   const url = `/channels/${message.guild_id ?? "@me"}/${message.channel_id}/${message.id}`;
 
-  showNotification ??=
-    findByCode("Electron native notification show failed; refusing browser/Web Push fallback") ??
-    null;
+  const showNotification = NativeNotification();
   if (showNotification) {
     void showNotification({ title: `${name}${where}`, body, url }).catch((error) =>
       console.error("[Influx] KeywordNotify couldn't show a notification", error),

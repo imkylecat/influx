@@ -5,6 +5,7 @@ import {
   findByCode,
   findByProps,
   findComponentByCode,
+  findComponentByDisplayName,
   findComponentByName,
   waitFor,
 } from "./finders";
@@ -16,6 +17,9 @@ waitFor(filters.byProps("useState", "createElement", "Fragment"), (m) => {
 });
 
 type AnyComponent = ComponentType<any>;
+
+// Fluxer's modal building blocks all live in one module.
+const MODAL_MODULE = "app.modal.content-layout.content-layout";
 
 const componentCache = new Map<string, AnyComponent>();
 
@@ -67,6 +71,22 @@ export const Components = {
   ExternalLink: lazyComponent("ExternalLink", () =>
     findComponentByCode("app.external-link.external-link.click"),
   ),
+  // The card behind invite and theme embeds: an icon, title, subtitle, and a footer below a divider.
+  EmbedCard: lazyComponent("EmbedCard", () =>
+    findComponentByCode("messaging.embeds.embed-card.embed-card.wrapper"),
+  ),
+  ModalRoot: lazyComponent("ModalRoot", () =>
+    findComponentByDisplayName(MODAL_MODULE, "ModalRoot"),
+  ),
+  ModalHeader: lazyComponent("ModalHeader", () =>
+    findComponentByDisplayName(MODAL_MODULE, "ModalHeader"),
+  ),
+  ModalContent: lazyComponent("ModalContent", () =>
+    findComponentByDisplayName(MODAL_MODULE, "ModalContent"),
+  ),
+  ModalContentLayout: lazyComponent("ModalContentLayout", () =>
+    findComponentByDisplayName(MODAL_MODULE, "ModalContentLayout"),
+  ),
   // The full message row, as rendered in pins, confirm modals, and unread-channel previews.
   Message: lazyComponent("Message", () =>
     findComponentByCode("channel.message.message-view-context-provider"),
@@ -110,6 +130,12 @@ export interface FluxerGuild {
   id: string;
   name: string;
 }
+
+export const Modals = lazyModule<{
+  push(modal: unknown): void;
+  pop(): void;
+  modal(render: () => JSX.Element): unknown;
+}>("push", "pop", "modal", "pushWithKey");
 
 export const Stores = {
   Users: lazyModule<{
@@ -158,6 +184,13 @@ export function findClassName(prefix: string): string | undefined {
   return className;
 }
 
+// Joins Fluxer CSS module classes found by prefix, skipping any that can't be found.
+export const nativeClasses = (...prefixes: string[]): string =>
+  prefixes
+    .map(findClassName)
+    .filter((name): name is string => Boolean(name))
+    .join(" ");
+
 export const RestClient = lazyModule<{
   get<T = unknown>(path: string): Promise<{ ok: boolean; status: number; body: T }>;
 }>("installAuth", "carriesAuthorization", "get");
@@ -166,6 +199,23 @@ export const RestClient = lazyModule<{
 export const MessageRecord = (() => {
   let record: (new (wire: unknown, options?: object) => any) | undefined;
   return () => (record ??= findByCode("this.editedTimestamp=e.edited_timestamp"));
+})();
+
+export type ShowNotification = (options: {
+  title: string;
+  body: string;
+  url?: string;
+  playSound?: boolean;
+}) => Promise<unknown>;
+
+// Fluxer's own notifications: native on desktop, the service worker or Notification API in browsers.
+// They respect Fluxer's notification settings and play its sound.
+export const NativeNotification = (() => {
+  let show: ShowNotification | undefined;
+  return (): ShowNotification | undefined =>
+    (show ??= findByCode(
+      "Electron native notification show failed; refusing browser/Web Push fallback",
+    ));
 })();
 
 export function openExternal(url: string): void {

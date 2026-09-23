@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Influx",
+  "description": "A patch-based client mod for Fluxer",
+  "version": "0.1.0",
+  "content_scripts": [
+    {
+      "matches": ["https://web.fluxer.app/*", "https://web.canary.fluxer.app/*"],
+      "js": ["renderer.js"],
+      "run_at": "document_start",
+      "world": "MAIN",
+      "all_frames": false
+    }
+  ],
+  "declarative_net_request": {
+    "rule_resources": [{ "id": "csp", "enabled": true, "path": "rules.json" }]
+  },
+  "permissions": ["declarativeNetRequest"],
+  "host_permissions": ["https://web.fluxer.app/*", "https://web.canary.fluxer.app/*"],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "influx@kylerich.dev",
+      "strict_min_version": "128.0"
+    }
+  }
+}

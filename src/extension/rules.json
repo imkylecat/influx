@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [{ "header": "content-security-policy", "operation": "remove" }]
+    },
+    "condition": {
+      "requestDomains": ["web.fluxer.app", "web.canary.fluxer.app"],
+      "resourceTypes": ["main_frame", "xmlhttprequest", "other"]
+    }
+  }
+]

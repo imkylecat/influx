@@ -23,6 +23,9 @@ jobs:
             exit 1
           fi
 
+      - name: Check the changelog has an entry for this version
+        run: bun scripts/changelog.ts "${GITHUB_REF_NAME}" > changelog.md
+
       - run: bun install --frozen-lockfile
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: 1
@@ -41,7 +44,8 @@ jobs:
 
       - name: Write the release notes
         run: |
-          cat > notes.md <<'EOF'
+          { echo "## What's changed"; echo; cat changelog.md; echo; } > notes.md
+          cat >> notes.md <<'EOF'
           ## Install
 
           Download the installer for your computer, quit Fluxer, run the installer, then reopen Fluxer.
@@ -67,3 +71,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release create "${GITHUB_REF_NAME}" dist/release/* --title "Influx ${GITHUB_REF_NAME#v}" --notes-file notes.md --generate-notes
+
+      - name: Post the release to Fluxer
+        env:
+          FLUXER_WEBHOOK_URL: ${{ secrets.FLUXER_WEBHOOK_URL }}
+        run: bun scripts/post-release.ts "${GITHUB_REF_NAME}" "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}"

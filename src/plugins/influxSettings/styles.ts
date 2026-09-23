@@ -94,32 +94,12 @@ export const STYLES = `
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-3, 12px);
-	margin-top: var(--spacing-3, 12px);
-	padding-top: var(--spacing-3, 12px);
-	border-top: 1px solid var(--background-modifier-accent);
 }
 .influx-updates {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-3, 12px);
 }
-.influx-update-row {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: var(--spacing-3, 12px);
-}
-.influx-community-row {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-3, 12px);
-	flex-wrap: wrap;
-}
-.influx-field-description {
-	color: var(--text-primary-muted);
-	font-size: 13px;
-}
-.influx-empty,
 .influx-missing-components {
 	padding: var(--spacing-6, 24px) 0;
 	text-align: center;

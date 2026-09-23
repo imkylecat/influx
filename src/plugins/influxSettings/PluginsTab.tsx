@@ -7,7 +7,7 @@ import {
 } from "@api/Plugins";
 import type { OptionDef } from "@api/Settings";
 import { React, openUserProfile } from "@webpack/common";
-import { SettingsPage, useSettingsComponents } from "./components";
+import { iconOrFallback, SettingsPage, useSettingsComponents } from "./components";
 import { settings } from "./settings";
 
 const humanize = (key: string): string =>
@@ -102,7 +102,7 @@ function PluginCard({
   const [showOptions, setShowOptions] = React.useState(false);
   const enabled = isPluginEnabled(plugin);
   const optionEntries = visibleOptions(plugin);
-  const { Switch, Button } = useSettingsComponents();
+  const { Switch, Accordion } = useSettingsComponents();
 
   const classes = ["influx-plugin-card"];
   if (showOptions) classes.push("influx-plugin-card-expanded");
@@ -142,23 +142,24 @@ function PluginCard({
             </React.Fragment>
           ))}
         </span>
-        {optionEntries.length > 0 && (
-          <Button small variant="secondary" fitContent onClick={() => setShowOptions(!showOptions)}>
-            {showOptions ? "Hide settings" : "Settings"}
-          </Button>
-        )}
       </div>
-      {showOptions && (
-        <div className="influx-plugin-options">
-          {!enabled && (
-            <span className="influx-field-description">
-              {plugin.name} is off. These settings apply when you turn it on.
-            </span>
-          )}
-          {optionEntries.map(([name, def]) => (
-            <OptionField key={name} plugin={plugin} name={name} def={def} />
-          ))}
-        </div>
+      {optionEntries.length > 0 && (
+        <Accordion
+          id={`influx-plugin-settings-${plugin.name}`}
+          title="Settings"
+          description={
+            enabled ? undefined : `${plugin.name} is off. These settings apply when you turn it on.`
+          }
+          expanded={showOptions}
+          onExpandedChange={setShowOptions}
+          compact
+        >
+          <div className="influx-plugin-options">
+            {optionEntries.map(([name, def]) => (
+              <OptionField key={name} plugin={plugin} name={name} def={def} />
+            ))}
+          </div>
+        </Accordion>
       )}
     </div>
   );
@@ -186,7 +187,7 @@ function PluginsPage() {
   );
   const [, rerender] = React.useReducer((n: number) => n + 1, 0);
 
-  const { Container, Content, Section, Input, Combobox, Button, WarningAlert } =
+  const { Container, Content, Section, Input, Combobox, Button, WarningAlert, StatusSlate } =
     useSettingsComponents();
 
   const setFilter = (value: PluginFilter) => {
@@ -254,9 +255,13 @@ function PluginsPage() {
             ))}
           </div>
           {shown.length === 0 && (
-            <div className="influx-empty">
-              {query.trim() ? `No plugins match "${query.trim()}".` : EMPTY_MESSAGES[filter]}
-            </div>
+            <StatusSlate
+              Icon={iconOrFallback(query.trim() ? "MagnifyingGlassIcon" : "PlugIcon")}
+              title="No plugins to show"
+              description={
+                query.trim() ? `No plugins match "${query.trim()}".` : EMPTY_MESSAGES[filter]
+              }
+            />
           )}
         </Section>
       </Content>

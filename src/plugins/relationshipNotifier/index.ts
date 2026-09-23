@@ -1,9 +1,8 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings, getPluginData, saveSettings } from "@api/Settings";
-import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
 import { showToast, Stores } from "@webpack/common";
-import { addNotice, FALLBACK_STYLES, hasNotices, nagbarPartsSource, withBanner } from "./banner";
+import { addNotice, canShowBanner, hasNotices, nagbarPartsSource, withBanner } from "./banner";
 import {
   describeRemoval,
   diffSnapshots,
@@ -21,7 +20,6 @@ import {
 const PLUGIN = "RelationshipNotifier";
 const SELF_ACTION_TTL_MS = 60_000;
 const SAVE_DELAY_MS = 1_000;
-const STYLE_ID = "influx-relationship-notifier";
 
 const settings = definePluginSettings({
   friends: {
@@ -104,7 +102,7 @@ function isWanted(removal: Removal): boolean {
 function notify(message: string): void {
   if (settings.store.banner) addNotice(message);
   // Without a banner, fall back to a toast so the notice isn't silently dropped.
-  if (settings.store.toast || !settings.store.banner) {
+  if (settings.store.toast || !settings.store.banner || !canShowBanner()) {
     showToast("info", message, { timeout: 10_000 });
   }
   if (!settings.store.desktopNotifications || typeof Notification === "undefined") return;
@@ -237,7 +235,7 @@ export default definePlugin({
 
   hasBanner(): boolean {
     try {
-      return settings.store.banner && hasNotices();
+      return settings.store.banner && canShowBanner() && hasNotices();
     } catch {
       return false;
     }
@@ -270,13 +268,5 @@ export default definePlugin({
         original(data, context);
       });
     }
-  },
-
-  start() {
-    enableStyle(STYLE_ID, FALLBACK_STYLES);
-  },
-
-  stop() {
-    disableStyle(STYLE_ID);
   },
 });

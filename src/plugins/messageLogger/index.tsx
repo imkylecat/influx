@@ -2,7 +2,7 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
-import { React, Stores } from "@webpack/common";
+import { Components, React, Stores } from "@webpack/common";
 import type { ComponentType } from "react";
 
 // Fluxer only defines flag bits up to 1 << 13, so this one is free for marking deleted messages.
@@ -192,17 +192,24 @@ export default definePlugin({
   renderEdits(message: Message, Markdown: ComponentType<any>, options: unknown) {
     const edits = settings.store.logEdits ? editHistory.get(message.id) : undefined;
     if (!edits?.length) return null;
+    const Tooltip = Components.Tooltip();
     return (
       <div className="influx-ml-edits">
-        {edits.map((edit, i) => (
-          <div key={i} className="influx-ml-edit">
-            <Markdown content={edit.content} options={options} />
-            <span className="influx-ml-edit-label" title={edit.timestamp.toLocaleString()}>
+        {edits.map((edit, i) => {
+          const time = edit.timestamp.toLocaleString();
+          const label = (
+            <span className="influx-ml-edit-label" title={Tooltip ? undefined : time}>
               {" "}
               (past edit)
             </span>
-          </div>
-        ))}
+          );
+          return (
+            <div key={i} className="influx-ml-edit">
+              <Markdown content={edit.content} options={options} />
+              {Tooltip ? <Tooltip text={time}>{label}</Tooltip> : label}
+            </div>
+          );
+        })}
       </div>
     );
   },

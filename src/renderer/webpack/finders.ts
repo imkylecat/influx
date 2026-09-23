@@ -129,6 +129,9 @@ export function findComponentByCode(code: string, displayName?: string): any {
     });
     if (bySource) return bySource;
     if (components.length === 1) return components[0];
+    // Observer-wrapped components hide their source, but hooks and helpers beside them are plain functions.
+    const wrapped = components.filter((c) => typeof c === "object");
+    if (wrapped.length === 1) return wrapped[0];
   }
   return undefined;
 }

@@ -53,14 +53,27 @@ export const Components = {
   SettingsTabSection: lazyComponent("SettingsTabSection", () =>
     findComponentByCode("app.settings-tab-layout.settings-tab-section.subsection"),
   ),
+  StatusSlate: lazyComponent("StatusSlate", () =>
+    findComponentByCode("app.status-slate.container"),
+  ),
+  Accordion: lazyComponent("Accordion", () =>
+    findComponentByCode("ui.accordion.accordion.accordion"),
+  ),
+  Tooltip: lazyComponent("Tooltip", () =>
+    findComponentByCode("ui.tooltip.tooltip.trigger-wrapper"),
+  ),
+  Spinner: lazyComponent("Spinner", () => findComponentByCode('"ui.spinner.spinner"')),
+  ExternalLink: lazyComponent("ExternalLink", () =>
+    findComponentByCode("app.external-link.external-link.click"),
+  ),
+  // The full message row, as rendered in pins, confirm modals, and unread-channel previews.
+  Message: lazyComponent("Message", () =>
+    findComponentByCode("channel.message.message-view-context-provider"),
+  ),
 };
 
 export const findIcon = (name: string): AnyComponent | undefined =>
   lazyComponent(`icon:${name}`, () => findComponentByName(name))();
-
-export const MarkdownComponent = lazyComponent("SafeMarkdown", () =>
-  findComponentByCode("messaging.markdown.parse-markdown.span"),
-);
 
 const lookupCache = new Map<string, any>();
 
@@ -126,6 +139,18 @@ export const Stores = {
 export const RestClient = lazyModule<{
   get<T = unknown>(path: string): Promise<{ ok: boolean; status: number; body: T }>;
 }>("installAuth", "carriesAuthorization", "get");
+
+// Fluxer's Message model class; its constructor takes a message as the API sends it.
+export const MessageRecord = (() => {
+  let record: (new (wire: unknown, options?: object) => any) | undefined;
+  return () => (record ??= findByCode("this.editedTimestamp=e.edited_timestamp"));
+})();
+
+export function openExternal(url: string): void {
+  const open = findByCode("Failed to open external URL via Electron");
+  if (open) void open(url);
+  else window.open(url, "_blank", "noopener");
+}
 
 export type ToastType = "success" | "error" | "info";
 

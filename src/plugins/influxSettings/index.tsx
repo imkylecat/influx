@@ -1,7 +1,8 @@
 import definePlugin from "@api/Plugins";
+import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
-import { React, findIcon } from "@webpack/common";
 import { cancelAutoUpdate, scheduleAutoUpdate } from "./autoUpdate";
+import { captureInviteEmbed, iconOrFallback } from "./components";
 import { InfluxTab } from "./InfluxTab";
 import { PluginsTab } from "./PluginsTab";
 import { settings } from "./settings";
@@ -10,19 +11,6 @@ import { STYLES } from "./styles";
 const CATEGORY = "influx";
 const CATEGORY_LABEL = "Influx";
 const STYLE_ID = "influx-settings-styles";
-
-const PluginIconFallback = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    width="1em"
-    height="1em"
-    viewBox="0 0 256 256"
-    fill="currentColor"
-    aria-hidden="true"
-  >
-    <path d="M237.66 66.34a8 8 0 0 0-11.32 0L192 100.69 155.31 64l34.35-34.34a8 8 0 1 0-11.32-11.32L144 52.69l-18.34-18.35a8 8 0 0 0-11.32 11.32L120.69 52 66.34 106.34a36 36 0 0 0 0 50.91l6.06 6.06-54.06 54.06a8 8 0 0 0 11.32 11.32l54.06-54.06 6.06 6.06a36 36 0 0 0 50.91 0L204 126.31l6.34 6.35a8 8 0 0 0 11.32-11.32L203.31 103l34.35-34.34a8 8 0 0 0 0-11.32Z" />
-  </svg>
-);
 
 interface SettingsTab {
   type: string;
@@ -69,6 +57,14 @@ export default definePlugin({
       },
     },
     {
+      find: '"channel.invite-embed.inner"',
+      replacement: {
+        match:
+          /(\i)=(\(0,\i\.\i\)\(function\(\{code:\i,message:\i,sourceChannel:\i,onDelete:\i\}\)\{[^{}]*?\{[^{}]*\}\):[^{}]*?\{[^{}]*"data-flx":"channel\.invite-embed\.inner"\}\)\}\))/,
+        replace: "$1=$self.captureInviteEmbed($2)",
+      },
+    },
+    {
       find: /\{my_profile:\i,account_security:\i/,
       replacement: {
         match: /\{(?=my_profile:\i,account_security:\i)/g,
@@ -77,6 +73,7 @@ export default definePlugin({
     },
   ],
 
+  captureInviteEmbed,
   categoryLabel: CATEGORY_LABEL,
   versionLabel: `Influx ${INFLUX_VERSION}`,
   tabComponents: Object.fromEntries(TABS.map((tab) => [tab.type, tab.component])),
@@ -87,7 +84,7 @@ export default definePlugin({
         type,
         label,
         category: CATEGORY,
-        icon: findIcon(icon) ?? PluginIconFallback,
+        icon: iconOrFallback(icon),
       }));
       const developerIndex = tabs.findIndex((tab) => tab.category === "developer");
       tabs.splice(developerIndex === -1 ? tabs.length : developerIndex, 0, ...ours);
@@ -99,15 +96,11 @@ export default definePlugin({
 
   start() {
     scheduleAutoUpdate();
-    if (document.getElementById(STYLE_ID)) return;
-    const style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = STYLES;
-    document.head.append(style);
+    enableStyle(STYLE_ID, STYLES);
   },
 
   stop() {
     cancelAutoUpdate();
-    document.getElementById(STYLE_ID)?.remove();
+    disableStyle(STYLE_ID);
   },
 });

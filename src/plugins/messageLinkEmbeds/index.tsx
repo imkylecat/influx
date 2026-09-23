@@ -2,9 +2,8 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
-import { findByCode } from "@webpack/finders";
-import { MarkdownComponent, React, RestClient, Stores } from "@webpack/common";
-import type { ReactNode } from "react";
+import { Components, MessageRecord, React, RestClient, Stores } from "@webpack/common";
+import type { Context, ReactNode } from "react";
 
 const STYLE_ID = "influx-message-link-embeds";
 // Matches Fluxer's own jump links, e.g. https://web.fluxer.app/channels/@me/<channel>/<message>.
@@ -12,82 +11,36 @@ const MESSAGE_LINK = /https?:\/\/([\w.-]+)\/channels\/(@me|\d+)\/(\d+)\/(\d+)/g;
 
 const STYLES = `
 .influx-mle {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
   max-width: 520px;
+  max-height: 20em;
   margin-top: 4px;
-  padding: 8px 12px;
+  overflow: hidden;
   border-left: 4px solid var(--background-modifier-accent, var(--text-chat-muted));
   border-radius: 4px;
   background: var(--background-secondary, var(--background-tertiary));
 }
-.influx-mle-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  font-size: 0.8125rem;
-}
-.influx-mle-avatar {
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  object-fit: cover;
-}
-.influx-mle-author {
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-}
-.influx-mle-meta {
-  overflow: hidden;
-  color: var(--text-chat-muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.influx-mle-jump {
-  margin-left: auto;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--text-link, var(--text-primary));
-  font: inherit;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.influx-mle-jump:hover {
-  text-decoration: underline;
-}
-.influx-mle-content {
-  max-height: 12em;
-  overflow: hidden;
-  color: var(--text-primary);
-}
-.influx-mle-image {
-  max-width: 100%;
-  max-height: 200px;
-  border-radius: 4px;
-  object-fit: contain;
-  align-self: flex-start;
-}
 .influx-mle-note {
+  display: block;
+  padding: 8px 12px;
   color: var(--text-chat-muted);
   font-size: 0.8125rem;
 }
 `;
+
+// Matches what Fluxer's confirm modal passes when it previews a message.
+const PREVIEW_BEHAVIOR = {
+  isEditing: false,
+  isHighlight: false,
+  disableContextMenu: true,
+  disableContextMenuTracking: true,
+  contextMenuOpen: false,
+};
 
 const settings = definePluginSettings({
   maxEmbeds: {
     type: "number",
     description: "The most message links to preview in one message.",
     default: 3,
-  },
-  showImages: {
-    type: "boolean",
-    description: "Show the first image attached to the linked message.",
-    default: true,
   },
 });
 
@@ -98,26 +51,7 @@ interface MessageLink {
   messageId: string;
 }
 
-interface LinkedMessage {
-  channelId: string;
-  author: { id: string; name: string; avatar: string | null };
-  content: string;
-  timestamp: Date;
-  attachmentCount: number;
-  image?: string;
-}
-
-type LoadState =
-  | { status: "loading" }
-  | { status: "loaded"; message: LinkedMessage }
-  | { status: "error" };
-
-interface WireAttachment {
-  url?: string;
-  proxy_url?: string;
-  content_type?: string;
-  width?: number;
-}
+type LoadState = { status: "loading" } | { status: "loaded"; message: any } | { status: "error" };
 
 const cache = new Map<string, Promise<LoadState>>();
 
@@ -130,51 +64,17 @@ function parseLinks(content: string): MessageLink[] {
   return [...links.values()];
 }
 
-function firstImage(attachments: readonly WireAttachment[] | undefined): string | undefined {
-  const image = attachments?.find((a) => a.content_type?.startsWith("image/") || a.width);
-  return image?.proxy_url ?? image?.url;
-}
-
-function fromStore(message: any): LinkedMessage {
-  return {
-    channelId: message.channelId,
-    author: {
-      id: message.author.id,
-      name: message.author.displayName ?? message.author.username,
-      avatar: message.author.avatar,
-    },
-    content: message.content ?? "",
-    timestamp: message.timestamp,
-    attachmentCount: message.attachments?.length ?? 0,
-    image: firstImage(message.attachments),
-  };
-}
-
-function fromWire(message: any): LinkedMessage {
-  return {
-    channelId: message.channel_id,
-    author: {
-      id: message.author.id,
-      name: message.author.global_name || message.author.username,
-      avatar: message.author.avatar ?? null,
-    },
-    content: message.content ?? "",
-    timestamp: new Date(message.timestamp),
-    attachmentCount: message.attachments?.length ?? 0,
-    image: firstImage(message.attachments),
-  };
-}
-
 async function fetchLinkedMessage(channelId: string, messageId: string): Promise<LoadState> {
   const cached = Stores.Messages()?.getMessage(channelId, messageId);
-  if (cached) return { status: "loaded", message: fromStore(cached) };
+  if (cached) return { status: "loaded", message: cached };
 
   const http = RestClient();
-  if (!http) return { status: "error" };
+  const Record = MessageRecord();
+  if (!http || !Record) return { status: "error" };
   try {
     const response = await http.get(`/channels/${channelId}/messages/${messageId}`);
     return response.ok
-      ? { status: "loaded", message: fromWire(response.body) }
+      ? { status: "loaded", message: new Record(response.body) }
       : { status: "error" };
   } catch {
     return { status: "error" };
@@ -193,27 +93,6 @@ function loadLinkedMessage(channelId: string, messageId: string): Promise<LoadSt
   return pending;
 }
 
-let avatarUrlFor: ((user: { id: string; avatar: string | null }) => string) | null | undefined;
-
-function avatarUrl(author: LinkedMessage["author"]): string | undefined {
-  avatarUrlFor ??=
-    findByCode(/^function [\w$]+\(\{id:[\w$]+,avatar:[\w$]+\},[\w$]+=!1,[\w$]+=\d+\)\{if\(!/) ??
-    null;
-  try {
-    return avatarUrlFor?.(author);
-  } catch {
-    return undefined;
-  }
-}
-
-function describeChannel(link: MessageLink): string {
-  const channel = Stores.Channels()?.getChannel(link.channelId);
-  if (link.guildId === "@me") return channel?.name ? channel.name : "Direct Messages";
-  const guild = Stores.Guilds()?.getGuild(link.guildId);
-  const channelName = channel?.name ? `#${channel.name}` : "a channel";
-  return guild ? `${channelName} in ${guild.name}` : channelName;
-}
-
 function jumpTo(link: MessageLink): void {
   const navigation = Stores.Navigation();
   if (!navigation) {
@@ -224,6 +103,10 @@ function jumpTo(link: MessageLink): void {
     navigation.navigateToGuild(link.guildId, link.channelId, link.messageId, "push");
   }
 }
+
+// Set inside a preview, so a linked message's own links don't preview again.
+let InPreview: Context<boolean> | undefined;
+const getInPreview = () => (InPreview ??= React.createContext(false));
 
 function LinkEmbed({ link }: { link: MessageLink }) {
   const [state, setState] = React.useState<LoadState>({ status: "loading" });
@@ -238,7 +121,10 @@ function LinkEmbed({ link }: { link: MessageLink }) {
     };
   }, [link.channelId, link.messageId]);
 
-  if (state.status === "loading") return null;
+  if (state.status === "loading") {
+    const Spinner = Components.Spinner();
+    return Spinner ? <Spinner size="small" /> : null;
+  }
 
   if (state.status === "error") {
     return (
@@ -250,43 +136,36 @@ function LinkEmbed({ link }: { link: MessageLink }) {
     );
   }
 
-  const { message } = state;
-  const Markdown = MarkdownComponent();
-  const avatar = avatarUrl(message.author);
-  const extraAttachments = message.attachmentCount - (message.image ? 1 : 0);
+  const Message = Components.Message();
+  const channel = Stores.Channels()?.getChannel(state.message.channelId);
+  if (!Message || !channel) return null;
 
+  const { Provider } = getInPreview();
   return (
     <div className="influx-mle">
-      <div className="influx-mle-header">
-        {avatar && <img className="influx-mle-avatar" src={avatar} alt="" />}
-        <span className="influx-mle-author">{message.author.name}</span>
-        <span className="influx-mle-meta">
-          {describeChannel(link)} · {message.timestamp.toLocaleString()}
-        </span>
-        <button type="button" className="influx-mle-jump" onClick={() => jumpTo(link)}>
-          Jump
-        </button>
-      </div>
-      {message.content &&
-        (Markdown ? (
-          <div className="influx-mle-content">
-            <Markdown
-              content={message.content}
-              options={{ context: 4, channelId: message.channelId, messageId: link.messageId }}
-            />
-          </div>
-        ) : (
-          <div className="influx-mle-content">{message.content}</div>
-        ))}
-      {settings.store.showImages && message.image && (
-        <img className="influx-mle-image" src={message.image} alt="" loading="lazy" />
-      )}
-      {extraAttachments > 0 && (
-        <span className="influx-mle-note">
-          {extraAttachments} attachment{extraAttachments === 1 ? "" : "s"}
-        </span>
-      )}
+      <Provider value={true}>
+        <Message
+          channel={channel}
+          message={state.message}
+          previewContext="LIST_POPOUT"
+          removeTopSpacing
+          suppressMessageActions
+          behaviorOverrides={PREVIEW_BEHAVIOR}
+          onHeadingActivate={() => jumpTo(link)}
+        />
+      </Provider>
     </div>
+  );
+}
+
+function LinkEmbeds({ links }: { links: MessageLink[] }) {
+  if (React.useContext(getInPreview())) return null;
+  return (
+    <>
+      {links.map((link) => (
+        <LinkEmbed key={link.messageId} link={link} />
+      ))}
+    </>
   );
 }
 
@@ -336,9 +215,7 @@ export default definePlugin({
     const Boundary = getBoundary();
     return (
       <Boundary>
-        {links.map((link) => (
-          <LinkEmbed key={link.messageId} link={link} />
-        ))}
+        <LinkEmbeds links={links} />
       </Boundary>
     );
   },

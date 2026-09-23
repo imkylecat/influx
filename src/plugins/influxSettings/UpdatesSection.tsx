@@ -1,4 +1,4 @@
-import { React } from "@webpack/common";
+import { openExternal, React } from "@webpack/common";
 import {
   canInstallUpdates,
   checkForUpdates,
@@ -26,10 +26,8 @@ const CHANNEL_LABELS = {
   browser: "Browser extension",
 };
 
-const openExternal = (url: string) => window.open(url, "_blank", "noopener");
-
 export function UpdatesSection() {
-  const { Section, Switch, Button, WarningAlert } = useSettingsComponents();
+  const { Section, Switch, Button, WarningAlert, ExternalLink } = useSettingsComponents();
   const pending = getPendingRestart();
   const [state, setState] = React.useState<UpdateState>(
     pending ? { kind: "installed", version: pending } : { kind: "idle" },
@@ -63,10 +61,57 @@ export function UpdatesSection() {
         ? "Not available for development builds. Update with git pull && bun run build."
         : "Not available in the browser extension. Browsers only let extensions update through their store.";
 
+  const status =
+    state.kind === "upToDate"
+      ? "You're on the latest version."
+      : state.kind === "available"
+        ? `Influx ${state.version} is available.`
+        : state.kind === "installing"
+          ? `Installing Influx ${state.version}…`
+          : state.kind === "error"
+            ? state.message
+            : null;
+
+  const actions =
+    state.kind === "installed" ? null : (
+      <>
+        <Button
+          small
+          variant="secondary"
+          fitContent
+          submitting={state.kind === "checking"}
+          onClick={check}
+        >
+          Check for updates
+        </Button>
+        {(state.kind === "available" || state.kind === "installing") &&
+          (canInstallUpdates ? (
+            <Button
+              small
+              fitContent
+              submitting={state.kind === "installing"}
+              onClick={() => install(state.version, state.url)}
+            >
+              Update to {state.version}
+            </Button>
+          ) : (
+            <Button small fitContent onClick={() => openExternal(state.url)}>
+              Get {state.version}
+            </Button>
+          ))}
+      </>
+    );
+
   return (
     <Section
       title="Updates"
-      description={`Influx ${INFLUX_VERSION} (${CHANNEL_LABELS[updateChannel]})`}
+      description={
+        <>
+          Influx {INFLUX_VERSION} ({CHANNEL_LABELS[updateChannel]}).{" "}
+          <span role="status">{status}</span>
+        </>
+      }
+      actions={actions}
     >
       <div className="influx-updates">
         <Switch
@@ -79,8 +124,7 @@ export function UpdatesSection() {
             setAutoUpdate(value);
           }}
         />
-
-        {state.kind === "installed" ? (
+        {state.kind === "installed" && (
           <WarningAlert
             title="Restart required"
             actions={
@@ -91,50 +135,8 @@ export function UpdatesSection() {
           >
             Influx {state.version} is installed. Restart Fluxer to start using it.
           </WarningAlert>
-        ) : (
-          <div className="influx-update-row">
-            <Button
-              small
-              variant="secondary"
-              fitContent
-              submitting={state.kind === "checking"}
-              onClick={check}
-            >
-              Check for updates
-            </Button>
-            {(state.kind === "available" || state.kind === "installing") &&
-              (canInstallUpdates ? (
-                <Button
-                  small
-                  fitContent
-                  submitting={state.kind === "installing"}
-                  onClick={() => install(state.version, state.url)}
-                >
-                  Update to {state.version}
-                </Button>
-              ) : (
-                <Button small fitContent onClick={() => openExternal(state.url)}>
-                  Get {state.version}
-                </Button>
-              ))}
-            <span className="influx-field-description" role="status">
-              {state.kind === "upToDate" && `You're on the latest version.`}
-              {state.kind === "available" && `Influx ${state.version} is available.`}
-              {state.kind === "installing" && `Installing Influx ${state.version}…`}
-              {state.kind === "error" && state.message}
-            </span>
-          </div>
         )}
-
-        <div className="influx-field-description">
-          <button
-            type="button"
-            className="influx-author"
-            onClick={() => openExternal(RELEASES_URL)}
-          >
-            All releases and changelogs
-          </button>
-        </div>
+        <ExternalLink href={RELEASES_URL}>All releases and changelogs</ExternalLink>
       </div>
     </Section>
   );

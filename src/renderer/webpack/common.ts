@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import {
   filters,
+  find,
   findByCode,
   findByProps,
   findComponentByCode,
@@ -134,7 +135,28 @@ export const Stores = {
     navigateToGuild(guildId: string, channelId?: string, messageId?: string, mode?: string): void;
     navigateToDM(channelId?: string, messageId?: string, mode?: string): void;
   }>("navigateToGuild", "navigateToDM", "navigateToFavorites"),
+  StreamerMode: lazyModule<{ shouldTruncateUsernames: boolean }>(
+    "shouldTruncateUsernames",
+    "shouldHidePersonalInformation",
+  ),
 };
+
+const classCache = new Map<string, string>();
+
+// Finds a CSS module class by its readable prefix, e.g. "Message.module__messageTimestamp___".
+export function findClassName(prefix: string): string | undefined {
+  let className = classCache.get(prefix);
+  if (className) return className;
+  const matches = (value: unknown): value is string =>
+    typeof value === "string" && value.startsWith(prefix);
+  const module = find(
+    (value) =>
+      typeof value === "object" && !Array.isArray(value) && Object.values(value).some(matches),
+  );
+  className = module && Object.values(module).find(matches);
+  if (className) classCache.set(prefix, className);
+  return className;
+}
 
 export const RestClient = lazyModule<{
   get<T = unknown>(path: string): Promise<{ ok: boolean; status: number; body: T }>;

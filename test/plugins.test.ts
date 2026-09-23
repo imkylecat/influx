@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it, mock } from "bun:test";
 import anonymiseFileNames, { anonymiseName } from "../src/plugins/anonymiseFileNames";
+import keywordNotify, { matchesKeywords } from "../src/plugins/keywordNotify";
 import messageLogger from "../src/plugins/messageLogger";
+import noBlockedMessages from "../src/plugins/noBlockedMessages";
+import showMeYourName from "../src/plugins/showMeYourName";
 import { patchFactory } from "../src/renderer/patcher/patchFactory";
 import type { ModuleFactory, Patch } from "../src/renderer/webpack/types";
 
@@ -22,7 +25,13 @@ const pendingFor = (plugin: { name: string; patches: Patch[] | Omit<Patch, "plug
 beforeEach(() => {
   errors.length = 0;
   (globalThis as any).Influx = {
-    plugins: { MessageLogger: messageLogger, AnonymiseFileNames: anonymiseFileNames },
+    plugins: {
+      MessageLogger: messageLogger,
+      AnonymiseFileNames: anonymiseFileNames,
+      NoBlockedMessages: noBlockedMessages,
+      ShowMeYourName: showMeYourName,
+      KeywordNotify: keywordNotify,
+    },
   };
 });
 
@@ -246,5 +255,85 @@ describe("RelationshipNotifier while away", () => {
     assert.equal(registry.get("MESSAGE_CREATE"), original, "unrelated events are left alone");
     registry.get("READY")!({ user: { id: "me" } }, "ctx");
     assert.deepEqual(seen, [["READY", { user: { id: "me" } }, "ctx"]]);
+  });
+});
+
+describe("NoBlockedMessages", () => {
+  it("drops blocked messages before createChannelStream groups them", () => {
+    // Excerpt of Fluxer's compiled createChannelStream.
+    const streamModule = new Function(
+      "return function(e,t,n){const u={DIVIDER:0,MESSAGE:1};" +
+        'const k={MESSAGE_GROUP_BLOCKED:"MESSAGE_GROUP_BLOCKED"};const s={r:(a,b)=>true};' +
+        "function h(e){let t,g=[];return e.forEach(e=>{let A;if(!t||!(0,s.r)(t,e.timestamp)){g.push({type:u.DIVIDER}),t=e.timestamp}g.push({type:u.MESSAGE,id:e.id})}),g}" +
+        "e.exports=h}",
+    )() as ModuleFactory;
+    const patched = patchFactory(1, streamModule, pendingFor(noBlockedMessages), logger);
+    assert.deepEqual(errors, []);
+    const stream = run(patched)([
+      { id: "1", timestamp: 1 },
+      { id: "2", timestamp: 2, blocked: true },
+      { id: "3", timestamp: 3, referencedMessage: { blocked: true } },
+    ]);
+    assert.deepEqual(
+      stream.filter((item: any) => item.id).map((item: any) => item.id),
+      ["1", "3"],
+      "replies stay unless hideReplies is on",
+    );
+  });
+});
+
+describe("ShowMeYourName", () => {
+  it("adds the username after the cozy and compact author names", () => {
+    const site = (flx: string) =>
+      `(0,d.jsx)(tD,{user:v,message:r,guild:N,member:null!=O?O:void 0,className:eM.um,"data-flx":"${flx}"})`;
+    const code =
+      "return function(e,t,n){const d={jsx:(c,p)=>p.user.username},tD=0,eM={um:0},N=null,O=null;" +
+      "const v={username:'kim'},r={};" +
+      `e.exports=[${site("channel.user-message.message-username--2")},${site("channel.compact-message-layout.compact-author-prefix.message-username")}]}`;
+    const module = new Function(code)() as ModuleFactory;
+    const calls: unknown[] = [];
+    const original = showMeYourName.renderUsername;
+    showMeYourName.renderUsername = (author: any) => (calls.push(author.username), null);
+    try {
+      const patched = patchFactory(1, module, pendingFor(showMeYourName), logger);
+      assert.deepEqual(errors, []);
+      run(patched);
+      assert.deepEqual(calls, ["kim", "kim"]);
+    } finally {
+      showMeYourName.renderUsername = original;
+    }
+  });
+});
+
+describe("KeywordNotify", () => {
+  const store = keywordNotify.settings.store as Record<string, unknown>;
+  beforeEach(() => {
+    keywordNotify.settings.pluginName = "KeywordNotify";
+    store.keywords = "cat, deploy failed, /colou?r/";
+    store.wholeWords = true;
+    store.caseSensitive = false;
+  });
+
+  it("matches whole words, phrases, and regular expressions", () => {
+    assert.equal(matchesKeywords("The CAT is here"), true);
+    assert.equal(matchesKeywords("new category"), false, "whole words only");
+    assert.equal(matchesKeywords("prod: deploy failed again"), true);
+    assert.equal(matchesKeywords("what color is it"), true);
+    assert.equal(matchesKeywords("nothing to see"), false);
+    store.wholeWords = false;
+    assert.equal(matchesKeywords("new category"), true);
+  });
+
+  it("highlights keyword hits with Fluxer's mention class", () => {
+    const rowModule = new Function(
+      "return function(e,t,n){const eM={L8:'mentioned'};" +
+        'e.exports=(C,b)=>[!C&&b.isMentioned()&&eM.L8,"channel.message.article.alt-click"]}',
+    )() as ModuleFactory;
+    const patched = patchFactory(1, rowModule, pendingFor(keywordNotify), logger);
+    assert.deepEqual(errors, []);
+    const classes = run(patched);
+    const row = (content: string) => ({ content, author: { id: "2" }, isMentioned: () => false });
+    assert.equal(classes(false, row("a cat appears"))[0], "mentioned");
+    assert.equal(classes(false, row("a dog appears"))[0], false);
   });
 });

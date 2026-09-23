@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it, mock } from "bun:test";
 import anonymiseFileNames, { anonymiseName } from "../src/plugins/anonymiseFileNames";
+import forceDeveloperMode from "../src/plugins/forceDeveloperMode";
+import forceFlags, { parseOverrides } from "../src/plugins/forceFlags";
 import keywordNotify, { matchesKeywords } from "../src/plugins/keywordNotify";
 import messageLogger from "../src/plugins/messageLogger";
 import noBlockedMessages from "../src/plugins/noBlockedMessages";
@@ -31,6 +33,8 @@ beforeEach(() => {
       NoBlockedMessages: noBlockedMessages,
       ShowMeYourName: showMeYourName,
       KeywordNotify: keywordNotify,
+      ForceDeveloperMode: forceDeveloperMode,
+      ForceFlags: forceFlags,
     },
   };
 });
@@ -172,7 +176,9 @@ describe("MessageLogger", () => {
 
   it("records the previous content when a message is edited", () => {
     const { store, channels } = setup();
-    store.handleMessageUpdate({ message: { id: "2", channel_id: "c", content: "world!" } });
+    store.handleMessageUpdate({
+      message: { id: "2", channel_id: "c", content: "world!" },
+    });
     assert.equal(channels.current.get("2").content, "world!");
     mock.module("../src/renderer/webpack/common", () => ({
       ...common,
@@ -332,8 +338,99 @@ describe("KeywordNotify", () => {
     const patched = patchFactory(1, rowModule, pendingFor(keywordNotify), logger);
     assert.deepEqual(errors, []);
     const classes = run(patched);
-    const row = (content: string) => ({ content, author: { id: "2" }, isMentioned: () => false });
+    const row = (content: string) => ({
+      content,
+      author: { id: "2" },
+      isMentioned: () => false,
+    });
     assert.equal(classes(false, row("a cat appears"))[0], "mentioned");
     assert.equal(classes(false, row("a dog appears"))[0], false);
+  });
+});
+
+describe("ForceDeveloperMode", () => {
+  it("makes isDeveloper true without staff or the 7-tap unlock", () => {
+    // Excerpt of Fluxer's compiled DeveloperMode store.
+    const storeModule = new Function(
+      "return function(e,t,n){const a={A:{currentUser:null}};" +
+        "e.exports=new class{constructor(){this.manuallyEnabled=!1}" +
+        "get isDeveloper(){var e,t;return null!=(t=a.A.currentUser)&&null!=(e=t.isStaff)&&!!e.call(t)||this.manuallyEnabled}}}",
+    )() as ModuleFactory;
+    assert.equal(run(storeModule).isDeveloper, false);
+    const patched = patchFactory(1, storeModule, pendingFor(forceDeveloperMode), logger);
+    assert.deepEqual(errors, []);
+    assert.equal(run(patched).isDeveloper, true);
+  });
+});
+
+describe("ForceDeveloperMode staff", () => {
+  it("makes only the current user staff, and only when the setting is on", () => {
+    mock.module("../src/renderer/webpack/common", () => ({
+      ...common,
+      Stores: { ...common.Stores, Users: () => ({ currentUserId: "1" }) },
+    }));
+    // Excerpt of Fluxer's compiled UserRecord.
+    const userModule = new Function(
+      "return function(e,t,n){e.exports=class{constructor(e){this.id=e.id;this._isStaff=e.is_staff;this.flags=0}" +
+        "isStaff(){var e;return null!=(e=this._isStaff)?e:(this.flags&1)!=0}}}",
+    )() as ModuleFactory;
+    const patched = patchFactory(1, userModule, pendingFor(forceDeveloperMode), logger);
+    assert.deepEqual(errors, []);
+    const User = run(patched);
+    const store = forceDeveloperMode.settings.store as Record<string, unknown>;
+    forceDeveloperMode.settings.pluginName = "ForceDeveloperMode";
+
+    store.forceStaff = false;
+    assert.equal(new User({ id: "1", is_staff: false }).isStaff(), false);
+    store.forceStaff = true;
+    assert.equal(new User({ id: "1", is_staff: false }).isStaff(), true);
+    assert.equal(new User({ id: "2", is_staff: false }).isStaff(), false);
+  });
+});
+
+describe("ForceFlags", () => {
+  const store = forceFlags.settings.store as Record<string, unknown>;
+  beforeEach(() => {
+    forceFlags.settings.pluginName = "ForceFlags";
+  });
+
+  it("parses overrides per ID", () => {
+    const parsed = parseOverrides(" 1: +staff -SPAMMER; 2:+PARTNER, 64 ; nonsense");
+    assert.deepEqual(parsed.get("1"), { add: ["STAFF"], remove: ["SPAMMER"] });
+    assert.deepEqual(parsed.get("2"), { add: ["PARTNER"], remove: [] });
+    assert.equal(parsed.size, 2);
+  });
+
+  it("overrides flags in Fluxer's UserRecord", () => {
+    // Excerpt of Fluxer's compiled UserRecord constructor.
+    const userModule = new Function(
+      "return function(e,t,n){e.exports=class{constructor(e){var l;this.id=e.id,this.flags=e.flags,this.mentionFlags=null!=(l=e.mention_flags)?l:0}}}",
+    )() as ModuleFactory;
+    const patched = patchFactory(1, userModule, pendingFor(forceFlags), logger);
+    assert.deepEqual(errors, []);
+    const User = run(patched);
+    store.userFlags = "1: +STAFF +PARTNER -SPAMMER; 2: +8";
+    assert.equal(new User({ id: "1", flags: 64 }).flags, 1 | 4);
+    assert.equal(new User({ id: "2", flags: 0 }).flags, 8);
+    assert.equal(new User({ id: "3", flags: 64 }).flags, 64);
+  });
+
+  it("overrides features in Fluxer's GuildRecord", () => {
+    // Excerpt of Fluxer's compiled GuildRecord constructor.
+    const guildModule = new Function(
+      "return function(e,t,n){e.exports=class{constructor(e){this.id=e.id,this.features=new Set(e.features),this.ownerId=e.owner_id}}}",
+    )() as ModuleFactory;
+    const patched = patchFactory(1, guildModule, pendingFor(forceFlags), logger);
+    assert.deepEqual(errors, []);
+    const Guild = run(patched);
+    store.guildFeatures = "1: +VANITY_URL -DISCOVERABLE";
+    assert.deepEqual(
+      [...new Guild({ id: "1", features: ["DISCOVERABLE", "VERIFIED"] }).features],
+      ["VERIFIED", "VANITY_URL"],
+    );
+    assert.deepEqual(
+      [...new Guild({ id: "2", features: ["DISCOVERABLE"] }).features],
+      ["DISCOVERABLE"],
+    );
   });
 });

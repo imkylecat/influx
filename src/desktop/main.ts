@@ -5,6 +5,9 @@ import { app, ipcMain, session } from "electron";
 import { FLUXER_APP_HOSTS, IPC_GET_RENDERER } from "./constants";
 import { registerUpdater } from "./updater";
 
+// Set by the build banner; Bun would otherwise bake in the build machine's __dirname.
+declare const INFLUX_DIR: string;
+
 const fluxerAsar = path.join(process.resourcesPath, "_app.asar");
 const fluxerPackage = JSON.parse(readFileSync(path.join(fluxerAsar, "package.json"), "utf8"));
 
@@ -26,17 +29,17 @@ function allowEval(csp: string): string {
     .join("; ");
 }
 
-registerUpdater(__dirname);
+registerUpdater(INFLUX_DIR);
 
 ipcMain.on(IPC_GET_RENDERER, (event) => {
-  event.returnValue = readFileSync(path.join(__dirname, "renderer.js"), "utf8");
+  event.returnValue = readFileSync(path.join(INFLUX_DIR, "renderer.js"), "utf8");
 });
 
 app.whenReady().then(() => {
   session.defaultSession.registerPreloadScript({
     id: "influx",
     type: "frame",
-    filePath: path.join(__dirname, "preload.js"),
+    filePath: path.join(INFLUX_DIR, "preload.js"),
   });
 
   const urls = FLUXER_APP_HOSTS.map((host) => `https://${host}/*`);

@@ -75,6 +75,8 @@ const builds: BuildConfig[] = [
     format: "cjs",
     target: "node",
     external: ["electron"],
+    // Bun inlines __dirname as the build machine's source path; capture the real one first.
+    banner: "var INFLUX_DIR = __dirname;",
   },
 ];
 

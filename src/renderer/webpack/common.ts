@@ -58,6 +58,75 @@ export const Components = {
 export const findIcon = (name: string): AnyComponent | undefined =>
   lazyComponent(`icon:${name}`, () => findComponentByName(name))();
 
+export const MarkdownComponent = lazyComponent("SafeMarkdown", () =>
+  findComponentByCode("messaging.markdown.parse-markdown.span"),
+);
+
+const lookupCache = new Map<string, any>();
+
+function lazyModule<T = any>(...props: string[]): () => T | undefined {
+  const key = props.join(",");
+  return () => {
+    let module = lookupCache.get(key);
+    if (!module) {
+      module = findByProps(...props);
+      if (module) lookupCache.set(key, module);
+    }
+    return module;
+  };
+}
+
+export interface FluxerUser {
+  id: string;
+  username: string;
+  globalName: string | null;
+  displayName: string;
+  avatar: string | null;
+  bot?: boolean;
+}
+
+export interface FluxerChannel {
+  id: string;
+  name?: string;
+  guildId?: string;
+  type: number;
+}
+
+export interface FluxerGuild {
+  id: string;
+  name: string;
+}
+
+export const Stores = {
+  Users: lazyModule<{
+    currentUserId: string | null;
+    getUser(id: string): FluxerUser | undefined;
+  }>("getUser", "getUserByTag", "getCurrentUser"),
+  Channels: lazyModule<{ getChannel(id: string): FluxerChannel | undefined }>(
+    "getChannel",
+    "getGuildChannels",
+    "getPrivateChannels",
+  ),
+  Guilds: lazyModule<{ getGuild(id: string): FluxerGuild | undefined }>(
+    "getGuild",
+    "getGuildRoles",
+    "getOwnedGuilds",
+  ),
+  Messages: lazyModule<{ getMessage(channelId: string, messageId: string): any }>(
+    "getMessage",
+    "handleMessageDelete",
+    "handleMessageDeleteBulk",
+  ),
+  Navigation: lazyModule<{
+    navigateToGuild(guildId: string, channelId?: string, messageId?: string, mode?: string): void;
+    navigateToDM(channelId?: string, messageId?: string, mode?: string): void;
+  }>("navigateToGuild", "navigateToDM", "navigateToFavorites"),
+};
+
+export const RestClient = lazyModule<{
+  get<T = unknown>(path: string): Promise<{ ok: boolean; status: number; body: T }>;
+}>("installAuth", "carriesAuthorization", "get");
+
 export type ToastType = "success" | "error" | "info";
 
 export function showToast(

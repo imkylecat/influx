@@ -7,6 +7,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-09-23
+
+### Added
+
+- ForceDeveloperMode plugin: turns on Fluxer's developer mode without tapping the build number 7
+  times. An option also shows staff-only settings and menus, though Fluxer's server still refuses
+  staff actions.
+- ForceFlags plugin: forces flags on or off for chosen users (such as the staff or partner badge),
+  and features on or off for chosen servers. Only your client sees the change.
+
 ## [0.2.3] - 2026-09-23
 
 ### Added
@@ -79,7 +89,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - ForceOwnerCrown plugin: shows the server owner's crown even in servers that hide it.
 - SilentTyping plugin: stops Fluxer from telling others that you're typing.
 
-[Unreleased]: https://github.com/imkylecat/influx/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/imkylecat/influx/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/imkylecat/influx/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/imkylecat/influx/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/imkylecat/influx/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/imkylecat/influx/compare/v0.2.0...v0.2.1

@@ -22,6 +22,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - MessageLogger makes deleted messages read-only: the hover bar and message menu no longer offer
   replies, reactions, edits, pins or other actions Fluxer's server would reject.
+- Tests now live next to their plugins and modules. Shared plugin tests are split into separate files.
+- Updated `@electron/asar` to 4.3.1.
+- TypeScript now targets ESNext and uses its library definitions.
+- Oxlint now checks types and enables additional checks for imports, documentation, promises,
+  accessibility, and React.
+- Oxfmt now sorts imports, and existing imports follow that order.
+- Visual Studio Code now uses Oxc to format files on save.
+- Contributor guidelines now cover limiting changes to the request, writing concise US English,
+  avoiding abbreviations and unnecessary comments, and running Oxlint before Oxfmt.
 
 ### Fixed
 

@@ -15,6 +15,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   private notes. Notes stay on this device and are stored separately for each account.
 - SilentTyping adds a keyboard button to the chat bar that turns it on or off. Like the GIF and
   sticker buttons, it's hidden on mobile and in narrow chat bars.
+- MessageLogger adds "Remove deleted message" and "Clear edit history" to the message menu, and can
+  skip logging for chosen user, channel and server IDs.
+
+### Changed
+
+- MessageLogger makes deleted messages read-only: the hover bar and message menu no longer offer
+  replies, reactions, edits, pins or other actions Fluxer's server would reject.
 
 ### Fixed
 

@@ -7,6 +7,7 @@ import keywordNotify, { matchesKeywords } from "../src/plugins/keywordNotify";
 import messageLogger from "../src/plugins/messageLogger";
 import noBlockedMessages from "../src/plugins/noBlockedMessages";
 import showMeYourName from "../src/plugins/showMeYourName";
+import { getPluginData } from "../src/renderer/api/Settings";
 import { patchFactory } from "../src/renderer/patcher/patchFactory";
 import type { ModuleFactory, Patch } from "../src/renderer/webpack/types";
 
@@ -65,6 +66,8 @@ describe("AnonymiseFileNames", () => {
 
 interface FakeMessage {
   id: string;
+  channelId: string;
+  guildId: string;
   content: string;
   flags: number;
   state: string;
@@ -77,6 +80,8 @@ interface FakeMessage {
 function message(id: string, content: string, flags = 0): FakeMessage {
   return {
     id,
+    channelId: "c",
+    guildId: "g",
     content,
     flags,
     state: "SENT",
@@ -131,6 +136,14 @@ const storeModule = new Function(
 )() as ModuleFactory;
 
 describe("MessageLogger", () => {
+  beforeEach(() => {
+    messageLogger.settings.pluginName = messageLogger.name;
+    const data = getPluginData(messageLogger.name);
+    delete data.ignoreUsers;
+    delete data.ignoreChannels;
+    delete data.ignoreServers;
+  });
+
   // Renders a message's past edits with a stand-in React, returning null when there are none.
   function renderPastEdits(message: FakeMessage): unknown {
     mock.module("../src/renderer/webpack/common", () => ({
@@ -151,7 +164,7 @@ describe("MessageLogger", () => {
     const pending = pendingFor(messageLogger);
     const patched = patchFactory(1, storeModule, pending, logger);
     assert.deepEqual(errors, []);
-    assert.equal(pending.length, 3, "only the render patches are left for other modules");
+    assert.equal(pending.length, 6, "only the patches for other modules are left");
     const { store, channels } = run(patched);
     channels.W = {
       current: new FakeChannelMessages(
@@ -208,6 +221,25 @@ describe("MessageLogger", () => {
     assert.ok(deleted.className.startsWith("row"));
   });
 
+  it("doesn't log ignored users, channels, or servers", () => {
+    const data = getPluginData(messageLogger.name);
+    for (const [key, value] of [
+      ["ignoreUsers", "9, author"],
+      ["ignoreChannels", "9 c"],
+      ["ignoreServers", "g"],
+    ]) {
+      const { store, channels } = setup();
+      data[key] = value;
+      store.handleMessageDelete({ channelId: "c", id: "1" });
+      assert.equal(channels.current.get("1"), undefined, `${key} skips the message`);
+      delete data[key];
+    }
+    const { store, channels } = setup();
+    data.ignoreChannels = "c2";
+    store.handleMessageDelete({ channelId: "c", id: "1" });
+    assert.equal(messageLogger.isDeleted(channels.current.get("1")), true, "IDs match exactly");
+  });
+
   it("records the previous content when a message is edited", () => {
     const { store, channels } = setup();
     assert.equal(renderPastEdits(channels.current.get("2")), null);
@@ -237,6 +269,65 @@ describe("MessageLogger", () => {
     const afterRollback = JSON.stringify(renderPastEdits(channels.current.get("1")));
     assert.doesNotMatch(afterRollback, /"content":"second"/, "the failed edit isn't kept");
     assert.match(afterRollback, /"content":"first"/);
+  });
+
+  it("gives deleted messages read-only permissions", () => {
+    // Shape of Fluxer's compiled message permissions, where a is its read-only channel check.
+    const permissionsModule = new Function(
+      "return function(e,t,n){const tN={A:{isBlocked:()=>!1}},u={sC:c=>!!c.readOnly};" +
+        'function tW(e){return!1}const modal="channel.message-action-utils.request-message-pin.confirm-modal";' +
+        "e.exports=function(e,t){let n=!t.guildId,i=tN.A.isBlocked(e.author.id),a=(0,u.sC)(t),o=tW(e);return{canSendMessages:!o&&!a,canEditMessage:!a}}}",
+    )() as ModuleFactory;
+    const patched = patchFactory(1, permissionsModule, pendingFor(messageLogger), logger);
+    assert.deepEqual(errors, []);
+    const permissions = run(patched);
+    const channel = { guildId: "g" };
+    assert.deepEqual(permissions(message("1", "hi"), channel), {
+      canSendMessages: true,
+      canEditMessage: true,
+    });
+    assert.deepEqual(permissions(message("1", "hi", 1 << 30), channel), {
+      canSendMessages: false,
+      canEditMessage: false,
+    });
+    assert.equal(permissions(message("1", "hi"), { readOnly: true }).canSendMessages, false);
+  });
+
+  it("keeps only local actions in a deleted message's menu", () => {
+    // Shape of Fluxer's compiled message action groups.
+    const groupsModule = new Function(
+      'return function(e,t,n){const i={jsx:(t,p)=>p},a={ul:e=>!0},m={},B={reply:"reply",copyMessageId:"message_copy_id",reportMessage:"report_message"},ea=()=>{};' +
+        'e.exports=e=>{let l=[{items:[{id:B.reply},{id:B.copyMessageId},{label:"Retry"}]}];' +
+        'return(0,a.ul)(e)&&l.push({items:[{id:B.reportMessage,icon:(0,i.jsx)(m.ll,{size:20,"data-flx":"channel.message-action-menu.groups.report-message-icon"}),label:"Report",onClick:ea,danger:!0}]}),l}}',
+    )() as ModuleFactory;
+    const patched = patchFactory(1, groupsModule, pendingFor(messageLogger), logger);
+    assert.deepEqual(errors, []);
+    const groups = run(patched);
+    const ids = (m: FakeMessage) => groups(m).map((g: any) => g.items.map((item: any) => item.id));
+    assert.deepEqual(ids(message("1", "hi")), [
+      ["reply", "message_copy_id", undefined],
+      ["report_message"],
+    ]);
+    assert.deepEqual(ids(message("1", "hi", 1 << 30)), [["message_copy_id"], []]);
+  });
+
+  it("adds its menu items after the danger group", () => {
+    // Shape of Fluxer's compiled message context menu.
+    const menuModule = new Function(
+      'return function(e,t,n){const i={jsx:(t,p)=>p,jsxs:(t,p)=>p},x={r:"group"},T={G:"submenu"};' +
+        'e.exports=(e,eG,D)=>[eG?(0,i.jsxs)(x.r,{"data-flx":"ui.action-menu.message-context-menu.render-danger-group.menu-group",children:[(0,i.jsx)(T.G,{render:()=>(0,i.jsx)(ee,{reactions:[],channelId:e.channelId,messageId:e.id,' +
+        '"data-flx":"ui.action-menu.message-context-menu.render-danger-group.remove-reactions-submenu"}),"data-flx":"ui.action-menu.message-context-menu.render-danger-group.menu-item-submenu"}),eG]}):null,D]}',
+    )() as ModuleFactory;
+    const patched = patchFactory(1, menuModule, pendingFor(messageLogger), logger);
+    assert.deepEqual(errors, []);
+    (globalThis as any).Influx.plugins.MessageLogger = {
+      renderMenuItems: (m: FakeMessage) => `items for ${m.id}`,
+    };
+    const menu = run(patched);
+    const children = menu(message("1", "hi"), "delete", "stickers");
+    assert.equal(children.length, 3);
+    assert.equal(children[1], "items for 1");
+    assert.equal(children[2], "stickers");
   });
 });
 

@@ -51,6 +51,10 @@ export const Components = {
   MenuItem: lazyComponent("MenuItem", () =>
     findComponentByDisplayName("ui.action-menu.menu-item.menu-item-primitive.select", "MenuItem"),
   ),
+  // A context menu section, with a separator after it when anything follows.
+  MenuGroup: lazyComponent("MenuGroup", () =>
+    findComponentByCode("ui.action-menu.menu-group.menu-group-primitive"),
+  ),
   Button: lazyComponent("Button", () =>
     findComponentByCode("ui.button.button.focus-ring", "Button"),
   ),
@@ -170,11 +174,13 @@ export const Stores = {
     "getGuildRoles",
     "getOwnedGuilds",
   ),
-  Messages: lazyModule<{ getMessage(channelId: string, messageId: string): any }>(
-    "getMessage",
-    "handleMessageDelete",
-    "handleMessageDeleteBulk",
-  ),
+  Messages: lazyModule<{
+    getMessage(channelId: string, messageId: string): any;
+    // A channel's loaded messages, without creating an empty list for unloaded channels.
+    getCachedMessages(channelId: string): any;
+    commitMessages(messages: any): void;
+    notifyChange(): void;
+  }>("getMessage", "handleMessageDelete", "handleMessageDeleteBulk"),
   Navigation: lazyModule<{
     navigateToGuild(guildId: string, channelId?: string, messageId?: string, mode?: string): void;
     navigateToDM(channelId?: string, messageId?: string, mode?: string): void;

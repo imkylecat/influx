@@ -14,6 +14,15 @@ const DELETED_FLAG = 1 << 30;
 const MAX_EDITED_MESSAGES = 2000;
 const STYLE_ID = "influx-message-logger";
 
+// Fluxer's message menu actions that still work once a message is gone from the server.
+const DELETED_MESSAGE_ACTIONS = new Set([
+  "view_reactions",
+  "copy_message",
+  "message_speak",
+  "message_copy_id",
+  "debug_message",
+]);
+
 const STYLES = `
 [data-influx-deleted] {
   background: color-mix(in srgb, var(--status-danger) 8%, transparent);
@@ -47,10 +56,27 @@ const settings = definePluginSettings({
     description: "Don't log messages from bots.",
     default: false,
   },
+  ignoreUsers: {
+    type: "string",
+    description: "Don't log messages from these user IDs, separated by commas or spaces.",
+    default: "",
+  },
+  ignoreChannels: {
+    type: "string",
+    description: "Don't log messages in these channel IDs, separated by commas or spaces.",
+    default: "",
+  },
+  ignoreServers: {
+    type: "string",
+    description: "Don't log messages in these server IDs, separated by commas or spaces.",
+    default: "",
+  },
 });
 
 interface Message {
   id: string;
+  channelId: string;
+  guildId?: string | null;
   content: string;
   flags: number;
   state: string;
@@ -69,6 +95,10 @@ interface ChannelMessages {
 interface MessagesStore {
   commitMessages(messages: ChannelMessages): void;
   notifyChange(): void;
+}
+
+interface ActionGroup {
+  items: { id?: string }[];
 }
 
 interface PastEdit {
@@ -97,10 +127,29 @@ function subscribeToEdits(listener: () => void) {
   };
 }
 
+const listed = (ids: string, id: string | null | undefined) =>
+  id != null && ids.split(/[\s,]+/).includes(id);
+
 function isIgnored(message: Message): boolean {
   if (message.state === "SENDING" || message.state === "FAILED") return true;
-  if (settings.store.ignoreBots && message.author.bot) return true;
-  return settings.store.ignoreSelf && message.author.id === Stores.Users()?.currentUserId;
+  const { ignoreBots, ignoreSelf, ignoreUsers, ignoreChannels, ignoreServers } = settings.store;
+  if (ignoreBots && message.author.bot) return true;
+  if (ignoreSelf && message.author.id === Stores.Users()?.currentUserId) return true;
+  if (listed(ignoreUsers, message.author.id) || listed(ignoreChannels, message.channelId)) {
+    return true;
+  }
+  if (!ignoreServers) return false;
+  const guildId = message.guildId ?? Stores.Channels()?.getChannel(message.channelId)?.guildId;
+  return listed(ignoreServers, guildId);
+}
+
+function removeDeletedMessage(message: Message) {
+  const store = Stores.Messages();
+  const messages: ChannelMessages | undefined = store?.getCachedMessages(message.channelId);
+  if (!store || !messages?.get(message.id)) return;
+  store.commitMessages(messages.removeIds([message.id]));
+  store.notifyChange();
+  if (editHistory.has(message.id)) setEdits(message.id, []);
 }
 
 function PastEdits({
@@ -205,6 +254,33 @@ export default definePlugin({
         replace: "!$1&&$self.renderEdits($4,$3,$5),!$1&&$2",
       },
     },
+    {
+      // Deleted messages get the permissions of a read-only channel, so the hover bar and
+      // message menu stop offering replies, reactions, edits, and pins the server would reject.
+      find: '"channel.message-action-utils.request-message-pin.confirm-modal"',
+      replacement: {
+        match:
+          /(let \i=!(\i)\.guildId,\i=\i\.\i\.isBlocked\((\i)\.author\.id\),\i=)(\(0,\i\.\i\)\(\2\))/,
+        replace: "$1$self.isDeleted($3)||$4",
+      },
+    },
+    {
+      // The message menu's actions, some of which don't check those permissions.
+      find: '"channel.message-action-menu.groups.report-message-icon"',
+      replacement: {
+        match:
+          /(\(0,\i\.\i\)\((\i)\)&&(\i)\.push\(\{items:\[\{id:\i\.reportMessage,.{0,250}?\}\]\}\),)\3\}/,
+        replace: "$1$self.filterActions($2,$3)}",
+      },
+    },
+    {
+      find: '"ui.action-menu.message-context-menu.render-danger-group.menu-group"',
+      replacement: {
+        match:
+          /messageId:(\i)\.id,"data-flx":"ui\.action-menu\.message-context-menu\.render-danger-group\.remove-reactions-submenu".{0,400}?\]\}\):null,/,
+        replace: "$&$self.renderMenuItems($1),",
+      },
+    },
   ],
 
   keepDeleted(store: MessagesStore, messages: ChannelMessages | undefined, ids: string[]): boolean {
@@ -264,6 +340,33 @@ export default definePlugin({
 
   renderEdits(message: Message, Markdown: ComponentType<any>, options: unknown) {
     return <PastEdits message={message} Markdown={Markdown} options={options} />;
+  },
+
+  filterActions(message: Message, groups: ActionGroup[]): ActionGroup[] {
+    if (!this.isDeleted(message)) return groups;
+    return groups.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.id && DELETED_MESSAGE_ACTIONS.has(item.id)),
+    }));
+  },
+
+  renderMenuItems(message: Message) {
+    const MenuGroup = Components.MenuGroup();
+    const MenuItem = Components.MenuItem();
+    if (!MenuGroup || !MenuItem) return null;
+    const deleted = this.isDeleted(message);
+    const edited = settings.store.logEdits && editHistory.has(message.id);
+    if (!deleted && !edited) return null;
+    return (
+      <MenuGroup>
+        {edited && <MenuItem onClick={() => setEdits(message.id, [])}>Clear edit history</MenuItem>}
+        {deleted && (
+          <MenuItem danger onClick={() => removeDeletedMessage(message)}>
+            Remove deleted message
+          </MenuItem>
+        )}
+      </MenuGroup>
+    );
   },
 
   start() {

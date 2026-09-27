@@ -45,6 +45,12 @@ export const Components = {
   Input: lazyComponent("Input", () =>
     findComponentByCode("ui.form.input.field-set.fieldset", "Input"),
   ),
+  Textarea: lazyComponent("Textarea", () =>
+    findComponentByDisplayName("ui.form.input.textarea.field-set", "Textarea"),
+  ),
+  MenuItem: lazyComponent("MenuItem", () =>
+    findComponentByDisplayName("ui.action-menu.menu-item.menu-item-primitive.select", "MenuItem"),
+  ),
   Button: lazyComponent("Button", () =>
     findComponentByCode("ui.button.button.focus-ring", "Button"),
   ),
@@ -89,6 +95,9 @@ export const Components = {
   ),
   ModalContentLayout: lazyComponent("ModalContentLayout", () =>
     findComponentByDisplayName(MODAL_MODULE, "ModalContentLayout"),
+  ),
+  ModalFooter: lazyComponent("ModalFooter", () =>
+    findComponentByDisplayName(MODAL_MODULE, "ModalFooter"),
   ),
   // The full message row, as rendered in pins, confirm modals, and unread-channel previews.
   Message: lazyComponent("Message", () =>

@@ -11,6 +11,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - SendConfirmation plugin: asks before sending in selected channels (or all channels), with
   default-on blocking for known honeypot channels.
+- LocalNotes plugin: adds a local note action to user menus, with a native editor to save or delete
+  private notes. Notes stay on this device and are stored separately for each account.
 
 ## [0.2.5] - 2026-09-23
 

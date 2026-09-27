@@ -17,5 +17,5 @@
       "@webpack/*": ["./src/renderer/webpack/*"]
     }
   },
-  "include": ["src", "test", "scripts/*.ts"]
+  "include": ["src", "scripts/*.ts"]
 }

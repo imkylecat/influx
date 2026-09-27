@@ -14,6 +14,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - LocalNotes plugin: adds a local note action to user menus, with a native editor to save or delete
   private notes. Notes stay on this device and are stored separately for each account.
 
+### Fixed
+
+- The Linux installer didn't find Fluxer installed from the Arch package, which uses `/opt/fluxer`
+  rather than `/opt/Fluxer`.
+- The Linux installer left `~/.config` owned by root when it had to create it, so Fluxer couldn't
+  save its settings.
+
 ## [0.2.5] - 2026-09-23
 
 ### Changed

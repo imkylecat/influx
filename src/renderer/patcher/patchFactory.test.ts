@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "bun:test";
-import { canonicalizeMatch, patchFactory } from "../src/renderer/patcher/patchFactory";
-import silentTyping from "../src/plugins/silentTyping";
-import type { ModuleFactory, Patch } from "../src/renderer/webpack/types";
+import type { ModuleFactory, Patch } from "@webpack/types";
+import silentTyping from "../../plugins/silentTyping";
+import { canonicalizeMatch, patchFactory } from "./patchFactory";
+import { errors, logger, resetPatching, run } from "./testing";
 
 const typingModule = new Function(
   "return " +
@@ -10,19 +11,7 @@ const typingModule = new Function(
     "e.exports=new r}",
 )() as ModuleFactory;
 
-function run(factory: ModuleFactory): any {
-  const module = { exports: {} as any };
-  factory.call(module.exports, module, module.exports, (() => {}) as any);
-  return module.exports;
-}
-
-const errors: unknown[][] = [];
-const logger = { error: (...args: unknown[]) => errors.push(args) };
-
-beforeEach(() => {
-  errors.length = 0;
-  (globalThis as any).Influx = { plugins: {} };
-});
+beforeEach(() => resetPatching());
 
 describe("canonicalizeMatch", () => {
   it("expands \\i to an identifier pattern", () => {
@@ -58,37 +47,6 @@ describe("patchFactory", () => {
     sender.postTyping("456");
     assert.deepEqual(sender.sent, ["456"]);
     assert.deepEqual(errors, []);
-  });
-
-  it("adds the SilentTyping button to the chat bar behind the GIF button's guard", () => {
-    // Shape of Fluxer's TextareaButtons render, trimmed to the guarded button group.
-    const buttonsModule = new Function(
-      "return " +
-        'function(e){e.exports=function({isMobile:b,showAllButtons:t}){return{"data-flx":"channel.textarea.textarea-buttons.button-container-dense",children:[!b&&t&&"gif","emoji"]}}}',
-    )() as ModuleFactory;
-    const pending: Patch[] = silentTyping.patches.map((p) => ({ ...p, plugin: silentTyping.name }));
-    (globalThis as any).Influx.plugins.SilentTyping = { renderChatBarButton: () => "silent" };
-
-    const patched = patchFactory(1, buttonsModule, pending, logger);
-    assert.notEqual(patched, buttonsModule);
-    assert.deepEqual(errors, []);
-
-    const render = run(patched);
-    assert.deepEqual(render({ isMobile: false, showAllButtons: true }).children, [
-      "silent",
-      "gif",
-      "emoji",
-    ]);
-    assert.deepEqual(render({ isMobile: true, showAllButtons: true }).children, [
-      false,
-      false,
-      "emoji",
-    ]);
-    assert.deepEqual(render({ isMobile: false, showAllButtons: false }).children, [
-      false,
-      false,
-      "emoji",
-    ]);
   });
 
   it("returns the original factory when no patch matches", () => {

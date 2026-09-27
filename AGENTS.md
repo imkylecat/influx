@@ -4,4 +4,6 @@ When developing plugins, use native Fluxer components wherever possible. Avoid r
 
 Where possible, plugins should include a `stop()` method that cleans up their effects so they can be disabled without reloading the app. Plugins that use startup patches still require a reload to remove those patches.
 
+We use Oxfmt for formatting and Oxlint for linting. After making changes, run `bun run lint` to verify the codebase, then `bun run fmt` to format it.
+
 Always format Git commit messages as `feat(scope): description`, using a scope that identifies the affected area and a concise description of the change. For example: `feat(plugins): add message link previews`.

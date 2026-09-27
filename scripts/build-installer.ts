@@ -1,5 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
+
 import { $ } from "bun";
 
 const root = path.dirname(import.meta.dir);

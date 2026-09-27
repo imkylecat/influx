@@ -1,9 +1,11 @@
-import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "bun:test";
-import sendConfirmation, { HONEYPOT_CHANNEL_IDS, sendPolicy } from ".";
+import assert from "node:assert/strict";
+
 import { getPluginData } from "@api/Settings";
-import { patchFactory } from "../../renderer/patcher/patchFactory";
 import type { ModuleFactory } from "@webpack/types";
+
+import sendConfirmation, { HONEYPOT_CHANNEL_IDS, sendPolicy } from ".";
+import { patchFactory } from "../../renderer/patcher/patchFactory";
 
 beforeEach(() => {
   sendConfirmation.settings.pluginName = sendConfirmation.name;

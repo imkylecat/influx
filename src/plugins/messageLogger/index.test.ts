@@ -1,8 +1,10 @@
-import assert from "node:assert/strict";
 import { beforeEach, describe, it, mock } from "bun:test";
+import assert from "node:assert/strict";
+
 import { getPluginData } from "@api/Settings";
 import * as common from "@webpack/common";
 import type { ModuleFactory } from "@webpack/types";
+
 import messageLogger from ".";
 import { patchFactory } from "../../renderer/patcher/patchFactory";
 import { errors, logger, pendingFor, resetPatching, run } from "../../renderer/patcher/testing";

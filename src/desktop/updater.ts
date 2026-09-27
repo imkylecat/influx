@@ -1,4 +1,5 @@
 import { app, ipcMain, net } from "electron";
+
 import {
   compareVersions,
   downloadDesktopRelease,

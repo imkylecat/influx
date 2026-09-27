@@ -2,6 +2,7 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings, getPluginData, saveSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { NativeNotification, showToast, Stores } from "@webpack/common";
+
 import { addNotice, canShowBanner, hasNotices, nagbarPartsSource, withBanner } from "./banner";
 import {
   describeRemoval,

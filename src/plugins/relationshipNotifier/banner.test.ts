@@ -1,5 +1,6 @@
-import assert from "node:assert/strict";
 import { describe, it } from "bun:test";
+import assert from "node:assert/strict";
+
 import { nagbarPartsSource } from "./banner";
 
 describe("RelationshipNotifier banner", () => {

@@ -1,5 +1,5 @@
-import { React } from "@webpack/common";
 import { getPluginData, saveSettings } from "@api/Settings";
+import { React } from "@webpack/common";
 import { find } from "@webpack/finders";
 import type { ComponentType, ReactNode } from "react";
 

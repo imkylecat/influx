@@ -1,6 +1,7 @@
+import pluginList from "~plugins";
+
 import * as Plugins from "./api/Plugins";
 import * as Settings from "./api/Settings";
-import pluginList from "~plugins";
 import { Logger } from "./utils/Logger";
 import * as common from "./webpack/common";
 import * as finders from "./webpack/finders";

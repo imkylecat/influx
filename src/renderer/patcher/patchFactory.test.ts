@@ -1,6 +1,8 @@
-import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "bun:test";
+import assert from "node:assert/strict";
+
 import type { ModuleFactory, Patch } from "@webpack/types";
+
 import silentTyping from "../../plugins/silentTyping";
 import { canonicalizeMatch, patchFactory } from "./patchFactory";
 import { errors, logger, resetPatching, run } from "./testing";

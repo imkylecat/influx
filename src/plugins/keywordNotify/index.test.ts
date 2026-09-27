@@ -1,6 +1,8 @@
-import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "bun:test";
+import assert from "node:assert/strict";
+
 import type { ModuleFactory } from "@webpack/types";
+
 import keywordNotify, { matchesKeywords } from ".";
 import { patchFactory } from "../../renderer/patcher/patchFactory";
 import { errors, logger, pendingFor, resetPatching, run } from "../../renderer/patcher/testing";

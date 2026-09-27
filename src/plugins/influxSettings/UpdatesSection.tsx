@@ -1,4 +1,3 @@
-import { nativeClasses, openExternal, React } from "@webpack/common";
 import {
   canInstallUpdates,
   checkForUpdates,
@@ -8,6 +7,8 @@ import {
   restartToUpdate,
   updateChannel,
 } from "@api/Updater";
+import { nativeClasses, openExternal, React } from "@webpack/common";
+
 import { useSettingsComponents } from "./components";
 import { settings } from "./settings";
 

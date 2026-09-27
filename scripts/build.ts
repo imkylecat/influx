@@ -4,7 +4,9 @@ import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promi
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+
 import type { BuildConfig, BunPlugin } from "bun";
+
 import { influxDataDir } from "../src/shared/paths";
 import { DESKTOP_ASSETS } from "../src/shared/release";
 

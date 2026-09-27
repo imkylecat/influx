@@ -1,9 +1,10 @@
+import { describe, it } from "bun:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { describe, it } from "bun:test";
+
 import {
   compareVersions,
   downloadDesktopRelease,

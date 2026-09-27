@@ -7,6 +7,7 @@ import {
 } from "@api/Plugins";
 import type { OptionDef } from "@api/Settings";
 import { findIcon, Modals, nativeClasses, openUserProfile, React } from "@webpack/common";
+
 import { iconOrFallback, SettingsPage, useSettingsComponents } from "./components";
 import { settings } from "./settings";
 

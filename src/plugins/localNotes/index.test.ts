@@ -1,9 +1,11 @@
-import assert from "node:assert/strict";
 import { beforeEach, describe, it } from "bun:test";
-import localNotes, { MAX_NOTE_LENGTH, readNote, writeNote } from ".";
+import assert from "node:assert/strict";
+
 import { getPluginData } from "@api/Settings";
-import { patchFactory } from "../../renderer/patcher/patchFactory";
 import type { ModuleFactory } from "@webpack/types";
+
+import localNotes, { MAX_NOTE_LENGTH, readNote, writeNote } from ".";
+import { patchFactory } from "../../renderer/patcher/patchFactory";
 
 describe("LocalNotes", () => {
   beforeEach(() => {

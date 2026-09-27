@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+
 import { app, ipcMain, session } from "electron";
+
 import { FLUXER_APP_HOSTS, IPC_GET_RENDERER } from "./constants";
 import { registerUpdater } from "./updater";
 

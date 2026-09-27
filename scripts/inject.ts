@@ -13,7 +13,9 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
 import { createPackage, extractFile } from "@electron/asar";
+
 import { DESKTOP_FILES, influxDataDir } from "../src/shared/paths";
 import {
   DESKTOP_ASSETS,

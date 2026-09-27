@@ -1,5 +1,6 @@
 import { canInstallUpdates, checkForUpdates, installUpdate, restartToUpdate } from "@api/Updater";
 import { showToast } from "@webpack/common";
+
 import { settings } from "./settings";
 
 const STARTUP_DELAY_MS = 15_000;

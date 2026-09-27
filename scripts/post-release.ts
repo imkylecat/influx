@@ -2,6 +2,7 @@
 // Usage: FLUXER_WEBHOOK_URL=... bun scripts/post-release.ts <version> <release url>
 import { readFileSync } from "node:fs";
 import path from "node:path";
+
 import { changelogSection, toEmbedMarkdown } from "../src/shared/changelog";
 
 const EMBED_DESCRIPTION_MAX_LENGTH = 4096;

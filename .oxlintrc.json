@@ -15,6 +15,17 @@
     "correctness": "error"
   },
   "rules": {},
+  "overrides": [
+    {
+      "files": ["**/*.test.ts"],
+      "rules": {
+        "typescript/no-implied-eval": "off"
+      }
+    }
+  ],
+  "options": {
+    "typeAware": true
+  },
   "env": {
     "builtin": true
   }

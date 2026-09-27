@@ -54,6 +54,10 @@ export const Components = {
   Button: lazyComponent("Button", () =>
     findComponentByCode("ui.button.button.focus-ring", "Button"),
   ),
+  // The icon buttons in the chat bar, beside the GIF, sticker, and emoji pickers.
+  TextareaButton: lazyComponent("TextareaButton", () =>
+    findComponentByCode("channel.textarea.textarea-button.focus-ring", "TextareaButton"),
+  ),
   Combobox: lazyComponent("Combobox", () => findComponentByCode("ui.form.combobox.label")),
   WarningAlert: lazyComponent("WarningAlert", () =>
     findComponentByCode("ui.warning-alert.warning-alert.alert"),

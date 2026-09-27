@@ -13,6 +13,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   default-on blocking for known honeypot channels.
 - LocalNotes plugin: adds a local note action to user menus, with a native editor to save or delete
   private notes. Notes stay on this device and are stored separately for each account.
+- SilentTyping adds a keyboard button to the chat bar that turns it on or off. Like the GIF and
+  sticker buttons, it's hidden on mobile and in narrow chat bars.
 
 ### Fixed
 

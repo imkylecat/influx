@@ -45,7 +45,11 @@ describe("patchFactory", () => {
 
     const patched = patchFactory(1, typingModule, pending, logger);
     assert.notEqual(patched, typingModule);
-    assert.equal(pending.length, 0, "single-module patch is consumed");
+    assert.deepEqual(
+      pending.map((p) => p.find),
+      ['"channel.textarea.textarea-buttons.button-container-dense"'],
+      "single-module patch is consumed; the chat bar patch waits for its module",
+    );
 
     const sender = run(patched);
     sender.postTyping("123");
@@ -54,6 +58,37 @@ describe("patchFactory", () => {
     sender.postTyping("456");
     assert.deepEqual(sender.sent, ["456"]);
     assert.deepEqual(errors, []);
+  });
+
+  it("adds the SilentTyping button to the chat bar behind the GIF button's guard", () => {
+    // Shape of Fluxer's TextareaButtons render, trimmed to the guarded button group.
+    const buttonsModule = new Function(
+      "return " +
+        'function(e){e.exports=function({isMobile:b,showAllButtons:t}){return{"data-flx":"channel.textarea.textarea-buttons.button-container-dense",children:[!b&&t&&"gif","emoji"]}}}',
+    )() as ModuleFactory;
+    const pending: Patch[] = silentTyping.patches.map((p) => ({ ...p, plugin: silentTyping.name }));
+    (globalThis as any).Influx.plugins.SilentTyping = { renderChatBarButton: () => "silent" };
+
+    const patched = patchFactory(1, buttonsModule, pending, logger);
+    assert.notEqual(patched, buttonsModule);
+    assert.deepEqual(errors, []);
+
+    const render = run(patched);
+    assert.deepEqual(render({ isMobile: false, showAllButtons: true }).children, [
+      "silent",
+      "gif",
+      "emoji",
+    ]);
+    assert.deepEqual(render({ isMobile: true, showAllButtons: true }).children, [
+      false,
+      false,
+      "emoji",
+    ]);
+    assert.deepEqual(render({ isMobile: false, showAllButtons: false }).children, [
+      false,
+      false,
+      "emoji",
+    ]);
   });
 
   it("returns the original factory when no patch matches", () => {

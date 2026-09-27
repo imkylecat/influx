@@ -7,6 +7,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- SendConfirmation plugin: asks before sending in selected channels (or all channels), with
+  default-on blocking for known honeypot channels.
+
 ## [0.2.5] - 2026-09-23
 
 ### Changed

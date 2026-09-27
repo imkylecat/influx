@@ -38,6 +38,9 @@ function lazyComponent(
 }
 
 export const Components = {
+  ConfirmModal: lazyComponent("ConfirmModal", () =>
+    findComponentByCode("app.confirm-modal.modal-root"),
+  ),
   Switch: lazyComponent("Switch", () => findComponentByCode("-switch-label")),
   Input: lazyComponent("Input", () =>
     findComponentByCode("ui.form.input.field-set.fieldset", "Input"),
@@ -134,6 +137,8 @@ export interface FluxerGuild {
 export const Modals = lazyModule<{
   push(modal: unknown): void;
   pop(): void;
+  pushWithKey(modal: unknown, key: string): void;
+  popWithKey(key: string): void;
   modal(render: () => JSX.Element): unknown;
 }>("push", "pop", "modal", "pushWithKey");
 

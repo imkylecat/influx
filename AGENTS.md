@@ -1,5 +1,7 @@
 Influx is a high-performance, patch-based mod for the Fluxer instant messaging application.
 
+Only do what is asked. Don't add features, refactor code, or make changes beyond the request.
+
 When developing plugins, use native Fluxer components wherever possible. Avoid raw CSS and custom components when an existing native component can serve the same purpose. Reusing native components keeps plugins visually and behaviorally consistent with Fluxer and the rest of Influx.
 
 Where possible, plugins should include a `stop()` method that cleans up their effects so they can be disabled without reloading the app. Plugins that use startup patches still require a reload to remove those patches.

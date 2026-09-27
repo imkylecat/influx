@@ -5,6 +5,9 @@ import { Contributor } from "@utils/constants";
 import { Components, nativeClasses, React, Stores } from "@webpack/common";
 import type { ComponentType } from "react";
 
+// Influx expands \i into a JavaScript identifier pattern.
+/* oxlint-disable no-useless-escape */
+
 // Fluxer only defines flag bits up to 1 << 13, so this one is free for marking deleted messages.
 // Changing flags also makes Message.equals() see a difference, which rerenders the row.
 const DELETED_FLAG = 1 << 30;
@@ -73,12 +76,67 @@ interface PastEdit {
   timestamp: Date;
 }
 
-const editHistory = new Map<string, PastEdit[]>();
+// Each message's list is replaced rather than mutated, so rows can tell when theirs changed.
+const editHistory = new Map<string, readonly PastEdit[]>();
+const editListeners = new Set<() => void>();
+
+function setEdits(id: string, edits: readonly PastEdit[]) {
+  // Re-inserting keeps the map ordered from least to most recently edited.
+  editHistory.delete(id);
+  if (edits.length) editHistory.set(id, edits);
+  if (editHistory.size > MAX_EDITED_MESSAGES) {
+    editHistory.delete(editHistory.keys().next().value!);
+  }
+  for (const listener of editListeners) listener();
+}
+
+function subscribeToEdits(listener: () => void) {
+  editListeners.add(listener);
+  return () => {
+    editListeners.delete(listener);
+  };
+}
 
 function isIgnored(message: Message): boolean {
   if (message.state === "SENDING" || message.state === "FAILED") return true;
   if (settings.store.ignoreBots && message.author.bot) return true;
   return settings.store.ignoreSelf && message.author.id === Stores.Users()?.currentUserId;
+}
+
+function PastEdits({
+  message,
+  Markdown,
+  options,
+}: {
+  message: Message;
+  Markdown: ComponentType<any>;
+  options: unknown;
+}) {
+  const edits = React.useSyncExternalStore(subscribeToEdits, () => editHistory.get(message.id));
+  if (!settings.store.logEdits || !edits?.length) return null;
+  const Tooltip = Components.Tooltip();
+  // Fluxer's own "(edited)" label.
+  const editedClass = nativeClasses("Message.module__editedTimestamp___");
+  const editedLabelClass = nativeClasses("Message.module__editedLabel___");
+  return (
+    <div className="influx-ml-edits">
+      {edits.map((edit, i) => {
+        const time = edit.timestamp.toLocaleString();
+        const label = (
+          <span className={editedClass} title={Tooltip ? undefined : time}>
+            {" "}
+            <span className={editedLabelClass}>(past edit)</span>
+          </span>
+        );
+        return (
+          <div key={i} className="influx-ml-edit">
+            <Markdown content={edit.content} options={options} />
+            {Tooltip ? <Tooltip text={time}>{label}</Tooltip> : label}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export default definePlugin({
@@ -103,6 +161,21 @@ export default definePlugin({
           match:
             /handleMessageUpdate\((\i)\)\{let \i=\1\.message\.id,\i=\1\.message\.channel_id,(\i)=\i\.\i\.get\(\i\);/,
           replace: "$&$self.recordEdit($2,$1.message);",
+        },
+      ],
+    },
+    {
+      // Your own edits show before the server confirms them, and are undone if saving fails.
+      find: /handleMessageDeleteBulk\(\i\)\{let \i=\i\.\i\.get\(/,
+      replacement: [
+        {
+          match:
+            /handleOptimisticEdit\((\i)\)\{(?:var \i,\i;)?let\{channelId:\i,messageId:\i,content:\i\}=\1,(\i)=\i\.\i\.get\(\i\);/,
+          replace: "$&$self.recordEdit($2,{id:$1.messageId,content:$1.content});",
+        },
+        {
+          match: /handleEditRollback\((\i)\)\{/,
+          replace: "$&$self.undoEdit($1.messageId,$1.originalContent);",
         },
       ],
     },
@@ -166,18 +239,18 @@ export default definePlugin({
   recordEdit(messages: ChannelMessages | undefined, update: { id: string; content?: string }) {
     if (!settings.store.logEdits || update.content == null) return;
     const message = messages?.get(update.id);
-    if (!message || message.content === update.content || isIgnored(message)) return;
+    // An EDITING message already shows your unconfirmed edit, which was recorded when you saved it.
+    if (!message || message.state === "EDITING" || message.content === update.content) return;
+    if (isIgnored(message)) return;
+    setEdits(message.id, [
+      ...(editHistory.get(message.id) ?? []),
+      { content: message.content, timestamp: message.editedTimestamp ?? message.timestamp },
+    ]);
+  },
 
-    const edits = editHistory.get(message.id) ?? [];
-    edits.push({
-      content: message.content,
-      timestamp: message.editedTimestamp ?? message.timestamp,
-    });
-    editHistory.delete(message.id);
-    editHistory.set(message.id, edits);
-    if (editHistory.size > MAX_EDITED_MESSAGES) {
-      editHistory.delete(editHistory.keys().next().value!);
-    }
+  undoEdit(id: string, restoredContent: string) {
+    const edits = editHistory.get(id);
+    if (edits?.at(-1)?.content === restoredContent) setEdits(id, edits.slice(0, -1));
   },
 
   isDeleted(message: Message | undefined): boolean {
@@ -190,31 +263,7 @@ export default definePlugin({
   },
 
   renderEdits(message: Message, Markdown: ComponentType<any>, options: unknown) {
-    const edits = settings.store.logEdits ? editHistory.get(message.id) : undefined;
-    if (!edits?.length) return null;
-    const Tooltip = Components.Tooltip();
-    // Fluxer's own "(edited)" label.
-    const editedClass = nativeClasses("Message.module__editedTimestamp___");
-    const editedLabelClass = nativeClasses("Message.module__editedLabel___");
-    return (
-      <div className="influx-ml-edits">
-        {edits.map((edit, i) => {
-          const time = edit.timestamp.toLocaleString();
-          const label = (
-            <span className={editedClass} title={Tooltip ? undefined : time}>
-              {" "}
-              <span className={editedLabelClass}>(past edit)</span>
-            </span>
-          );
-          return (
-            <div key={i} className="influx-ml-edit">
-              <Markdown content={edit.content} options={options} />
-              {Tooltip ? <Tooltip text={time}>{label}</Tooltip> : label}
-            </div>
-          );
-        })}
-      </div>
-    );
+    return <PastEdits message={message} Markdown={Markdown} options={options} />;
   },
 
   start() {

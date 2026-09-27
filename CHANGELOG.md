@@ -18,6 +18,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- MessageLogger didn't log your own edits when "Don't log your own messages" was turned off. An edit
+  that fails to save is no longer kept in the history.
 - The Linux installer didn't find Fluxer installed from the Arch package, which uses `/opt/fluxer`
   rather than `/opt/Fluxer`.
 - The Linux installer left `~/.config` owned by root when it had to create it, so Fluxer couldn't

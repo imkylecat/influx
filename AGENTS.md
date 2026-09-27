@@ -10,6 +10,8 @@ Don't add code comments unless the code is complex enough to need one.
 
 Write all text, such as plugin descriptions, settings labels, and docs, in US English. Keep sentences short and direct, and don't repeat yourself. Avoid technical jargon in text that general users will see.
 
+Don't abbreviate words when possible. For example, use `message` instead of `msg`.
+
 We use Oxfmt for formatting and Oxlint for linting. After making changes, run `bun run lint` to verify the codebase, then `bun run fmt` to format it.
 
 Always format Git commit messages as `feat(scope): description`, using a scope that identifies the affected area and a concise description of the change. For example: `feat(plugins): add message link previews`.

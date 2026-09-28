@@ -36,9 +36,7 @@ interface NagbarItem {
 
 let notices: NoticeList | undefined;
 // Whether the nagbar patch found all of Fluxer's banner parts. Without them, notices go to toasts.
-let nagbarFound = false;
-
-export const canShowBanner = (): boolean => nagbarFound;
+export let nagbarFound = false;
 
 function savedNotices(): Notice[] {
   const saved = getPluginData(PLUGIN).notices;

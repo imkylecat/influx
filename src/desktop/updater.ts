@@ -1,7 +1,6 @@
 import { app, ipcMain, net } from "electron";
 
 import {
-  compareVersions,
   downloadDesktopRelease,
   type Fetch,
   fetchLatestRelease,
@@ -9,6 +8,7 @@ import {
   NoReleaseError,
   type Release,
 } from "../shared/release";
+import { compareVersions } from "../shared/version";
 import { IPC_UPDATER_CHECK, IPC_UPDATER_INSTALL, IPC_UPDATER_RESTART } from "./constants";
 import type { UpdateCheckResult, UpdateInstallResult } from "./types";
 

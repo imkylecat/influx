@@ -3,7 +3,7 @@ import { definePluginSettings, getPluginData, saveSettings } from "@api/Settings
 import { Contributor } from "@utils/constants";
 import { NativeNotification, showToast, Stores } from "@webpack/common";
 
-import { addNotice, canShowBanner, hasNotices, nagbarPartsSource, withBanner } from "./banner";
+import { addNotice, hasNotices, nagbarFound, nagbarPartsSource, withBanner } from "./banner";
 import {
   describeRemoval,
   diffSnapshots,
@@ -103,7 +103,7 @@ function isWanted(removal: Removal): boolean {
 function notify(message: string): void {
   if (settings.store.banner) addNotice(message);
   // Without a banner, fall back to a toast so the notice isn't silently dropped.
-  if (settings.store.toast || !settings.store.banner || !canShowBanner()) {
+  if (settings.store.toast || !settings.store.banner || !nagbarFound) {
     showToast("info", message, { timeout: 10_000 });
   }
   if (!settings.store.desktopNotifications) return;
@@ -244,7 +244,7 @@ export default definePlugin({
 
   hasBanner(): boolean {
     try {
-      return settings.store.banner && canShowBanner() && hasNotices();
+      return settings.store.banner && nagbarFound && hasNotices();
     } catch {
       return false;
     }

@@ -103,8 +103,7 @@ describe("MessageLogger", () => {
         useSyncExternalStore: (_subscribe: unknown, getSnapshot: () => unknown) => getSnapshot(),
       },
     }));
-    const element: any = messageLogger.renderEdits(message as any, () => null, {});
-    return element.type(element.props);
+    return messageLogger.PastEdits({ message: message as any, Markdown: () => null, options: {} });
   }
 
   function setup() {

@@ -14,10 +14,10 @@ describe("SilentTyping", () => {
     // Shape of Fluxer's TextareaButtons render, trimmed to the guarded button group.
     const buttonsModule = new Function(
       "return " +
-        'function(e){e.exports=function({isMobile:b,showAllButtons:t}){return{"data-flx":"channel.textarea.textarea-buttons.button-container-dense",children:[!b&&t&&"gif","emoji"]}}}',
+        'function(e){const o={jsx:(type,props)=>({type,props}),jsxs:(type,props)=>props};e.exports=function({isMobile:b,showAllButtons:t}){return(0,o.jsxs)("div",{className:"buttons",ref:null,"data-flx":"channel.textarea.textarea-buttons.button-container-dense",children:[!b&&t&&"gif","emoji"]})}}',
     )() as ModuleFactory;
     const pending = pendingFor(silentTyping);
-    (globalThis as any).Influx.plugins.SilentTyping = { renderChatBarButton: () => "silent" };
+    (globalThis as any).Influx.plugins.SilentTyping = { ChatBarButton: "ChatBarButton" };
 
     const patched = patchFactory(1, buttonsModule, pending, logger);
     assert.notEqual(patched, buttonsModule);
@@ -25,7 +25,7 @@ describe("SilentTyping", () => {
 
     const render = run(patched);
     assert.deepEqual(render({ isMobile: false, showAllButtons: true }).children, [
-      "silent",
+      { type: "ChatBarButton", props: {} },
       "gif",
       "emoji",
     ]);

@@ -4,8 +4,6 @@ import path from "node:path";
 
 import { LATEST_RELEASE_API, RELEASES_URL } from "./version";
 
-export { compareVersions } from "./version";
-
 export const DESKTOP_ASSETS = {
   "main.js": "influx-main.js",
   "preload.js": "influx-preload.js",

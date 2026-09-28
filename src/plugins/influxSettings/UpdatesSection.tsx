@@ -1,14 +1,14 @@
 import {
   canInstallUpdates,
   checkForUpdates,
-  getPendingRestart,
   installUpdate,
-  RELEASES_URL,
+  pendingRestart,
   restartToUpdate,
   updateChannel,
 } from "@api/Updater";
 import { Components, nativeClasses, openExternal, React } from "@webpack/common";
 
+import { RELEASES_URL } from "../../shared/version";
 import { settings } from "./settings";
 
 type UpdateState =
@@ -27,9 +27,8 @@ const CHANNEL_LABELS = {
 };
 
 export function UpdatesSection() {
-  const pending = getPendingRestart();
   const [state, setState] = React.useState<UpdateState>(
-    pending ? { kind: "installed", version: pending } : { kind: "idle" },
+    pendingRestart ? { kind: "installed", version: pendingRestart } : { kind: "idle" },
   );
   const [autoUpdate, setAutoUpdate] = React.useState(settings.store.autoUpdate);
   const SettingsTabSection = Components.SettingsTabSection();

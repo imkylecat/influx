@@ -2,7 +2,7 @@ import definePlugin from "@api/Plugins";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
 
-import { cancelAutoUpdate, scheduleAutoUpdate } from "./autoUpdate";
+import { autoUpdateTimer, scheduleAutoUpdate } from "./autoUpdate";
 import { captureInviteEmbed, iconOrFallback } from "./components";
 import { InfluxTab } from "./InfluxTab";
 import { PluginsTab } from "./PluginsTab";
@@ -101,7 +101,7 @@ export default definePlugin({
   },
 
   stop() {
-    cancelAutoUpdate();
+    clearTimeout(autoUpdateTimer);
     disableStyle(STYLE_ID);
   },
 });

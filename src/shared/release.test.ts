@@ -6,7 +6,6 @@ import os from "node:os";
 import path from "node:path";
 
 import {
-  compareVersions,
   downloadDesktopRelease,
   type Fetch,
   fetchLatestRelease,
@@ -15,6 +14,7 @@ import {
   parseChecksums,
   type Release,
 } from "./release";
+import { compareVersions } from "./version";
 
 const sha256 = (data: string) => createHash("sha256").update(data).digest("hex");
 

@@ -2,8 +2,6 @@ import type { InfluxNative, UpdateCheckResult, UpdateInstallResult } from "../..
 import { compareVersions, LATEST_RELEASE_API, RELEASES_URL } from "../../shared/version";
 import { Logger } from "../utils/Logger";
 
-export { RELEASES_URL };
-
 const logger = new Logger("Updater");
 
 declare global {
@@ -22,8 +20,7 @@ export const updateChannel: "desktop" | "desktop-development" | "browser" = nati
 
 export const canInstallUpdates = updateChannel === "desktop";
 
-let pendingRestart: string | null = null;
-export const getPendingRestart = () => pendingRestart;
+export let pendingRestart: string | null = null;
 
 async function checkFromBrowser(): Promise<UpdateCheckResult> {
   try {

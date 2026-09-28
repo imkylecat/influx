@@ -53,6 +53,8 @@ const mode = options.includes("--uninstall")
 
 const sudoUser = process.platform === "linux" ? process.env.SUDO_USER : undefined;
 const homeDirectory = sudoUser ? `/home/${sudoUser}` : os.homedir();
+const influxInstallDirectory = path.join(influxDataDirectory(homeDirectory), "dist");
+const influxDevelopmentDirectory = path.join(influxDataDirectory(homeDirectory), "dev");
 
 function fluxerResourcesDirectory(): string {
   if (pathOption) return resolveResourcesPath(pathOption);
@@ -94,14 +96,6 @@ function defaultResourcesDirectory(canary: boolean): string {
       return candidates.find(hasFluxer) ?? candidates[0];
     }
   }
-}
-
-function influxInstallDirectory(): string {
-  return path.join(influxDataDirectory(homeDirectory), "dist");
-}
-
-function influxDevelopmentDirectory(): string {
-  return path.join(influxDataDirectory(homeDirectory), "dev");
 }
 
 function giveToSudoUser(target: string): void {
@@ -155,7 +149,7 @@ async function main(): Promise<void> {
     uninstall(resourcesDirectory);
     console.log(`Removed Influx from ${resourcesDirectory}. Restart Fluxer.`);
     console.log(
-      `Release files remain in ${path.dirname(influxInstallDirectory())}; delete that folder to remove them too.`,
+      `Release files remain in ${path.dirname(influxInstallDirectory)}; delete that folder to remove them too.`,
     );
     return;
   }
@@ -170,18 +164,16 @@ async function main(): Promise<void> {
     const buildDirectory = path.join(root, "dist", "desktop");
     if (!existsSync(path.join(buildDirectory, "main.js")))
       throw new Error("dist/desktop/main.js not found. Run `bun run build` first.");
-    const devDirectory = influxDevelopmentDirectory();
-    mkdirSync(devDirectory, { recursive: true });
+    mkdirSync(influxDevelopmentDirectory, { recursive: true });
     for (const file of DESKTOP_FILES)
-      copyFileSync(path.join(buildDirectory, file), path.join(devDirectory, file));
+      copyFileSync(path.join(buildDirectory, file), path.join(influxDevelopmentDirectory, file));
     giveToSudoUser(influxDataDirectory(homeDirectory));
-    mainScript = path.join(devDirectory, "main.js");
-    installed = `development build (bun run build keeps ${devDirectory} up to date)`;
+    mainScript = path.join(influxDevelopmentDirectory, "main.js");
+    installed = `development build (bun run build keeps ${influxDevelopmentDirectory} up to date)`;
   } else {
-    const installDirectory = influxInstallDirectory();
-    installed = await installRelease(installDirectory);
-    giveToSudoUser(path.dirname(installDirectory));
-    mainScript = path.join(installDirectory, "main.js");
+    installed = await installRelease(influxInstallDirectory);
+    giveToSudoUser(path.dirname(influxInstallDirectory));
+    mainScript = path.join(influxInstallDirectory, "main.js");
   }
 
   const stagedShim = path.join(resourcesDirectory, ".influx-shim.asar");

@@ -5,11 +5,11 @@ import { settings } from "./settings";
 
 const STARTUP_DELAY_MILLISECONDS = 15_000;
 
-let timer: ReturnType<typeof setTimeout> | undefined;
+export let autoUpdateTimer: ReturnType<typeof setTimeout> | undefined;
 
 export function scheduleAutoUpdate(): void {
   if (!canInstallUpdates || !settings.store.autoUpdate) return;
-  timer = setTimeout(async () => {
+  autoUpdateTimer = setTimeout(async () => {
     const check = await checkForUpdates();
     if (!check.ok || !check.available) return;
     const install = await installUpdate();
@@ -22,8 +22,4 @@ export function scheduleAutoUpdate(): void {
       showToast("error", `Influx couldn't update: ${install.error}`);
     }
   }, STARTUP_DELAY_MILLISECONDS);
-}
-
-export function cancelAutoUpdate(): void {
-  clearTimeout(timer);
 }

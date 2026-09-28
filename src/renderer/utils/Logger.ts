@@ -2,29 +2,14 @@ const BADGE_STYLE =
   "background:#7c5cff;color:#fff;border-radius:4px;padding:1px 6px;font-weight:600";
 
 export class Logger {
-  constructor(private readonly name: string) {}
+  readonly info: typeof console.info;
+  readonly warn: typeof console.warn;
+  readonly error: typeof console.error;
 
-  private print(level: "log" | "info" | "warn" | "error" | "debug", args: unknown[]): void {
-    console[level](`%cInflux%c [${this.name}]`, BADGE_STYLE, "", ...args);
-  }
-
-  log(...args: unknown[]): void {
-    this.print("log", args);
-  }
-
-  info(...args: unknown[]): void {
-    this.print("info", args);
-  }
-
-  warn(...args: unknown[]): void {
-    this.print("warn", args);
-  }
-
-  error(...args: unknown[]): void {
-    this.print("error", args);
-  }
-
-  debug(...args: unknown[]): void {
-    this.print("debug", args);
+  constructor(name: string) {
+    const badge = [`%cInflux%c [${name}]`, BADGE_STYLE, ""];
+    this.info = console.info.bind(console, ...badge);
+    this.warn = console.warn.bind(console, ...badge);
+    this.error = console.error.bind(console, ...badge);
   }
 }

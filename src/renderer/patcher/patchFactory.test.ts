@@ -34,8 +34,8 @@ describe("patchFactory", () => {
       ...patch,
       plugin: silentTyping.name,
     }));
-    let suppress = true;
-    (globalThis as any).Influx.plugins.SilentTyping = { shouldSuppress: () => suppress };
+    const store = { active: true };
+    (globalThis as any).Influx.plugins.SilentTyping = { settings: { store } };
 
     const patched = patchFactory(1, typingModule, pending, logger);
     assert.notEqual(patched, typingModule);
@@ -48,7 +48,7 @@ describe("patchFactory", () => {
     const sender = run(patched);
     sender.postTyping("123");
     assert.deepEqual(sender.sent, []);
-    suppress = false;
+    store.active = false;
     sender.postTyping("456");
     assert.deepEqual(sender.sent, ["456"]);
     assert.deepEqual(errors, []);

@@ -1,7 +1,7 @@
 import { INFLUX_SERVER_INVITE } from "@utils/constants";
 import { Components, openInvite, React } from "@webpack/common";
 
-import { getInviteEmbed, MissingComponents } from "./components";
+import { InviteEmbed, MissingComponents } from "./components";
 import { UpdatesSection } from "./UpdatesSection";
 
 const INVITE_CODE = new URL(INFLUX_SERVER_INVITE).pathname.split("/").filter(Boolean).pop()!;
@@ -11,7 +11,6 @@ export function InfluxTab() {
   const SettingsTabContent = Components.SettingsTabContent();
   const SettingsTabSection = Components.SettingsTabSection();
   const Button = Components.Button();
-  const InviteEmbed = getInviteEmbed();
   if (!SettingsTabContainer || !SettingsTabContent || !SettingsTabSection || !Button) {
     return <MissingComponents />;
   }

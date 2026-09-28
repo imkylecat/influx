@@ -19,7 +19,7 @@ const MESSAGE_LINK = /https?:\/\/([\w.-]+)\/channels\/(@me|\d+)\/(\d+)\/(\d+)/g;
 
 // Fluxer's forwarded-message frame supplies the bar and spacing; this only caps the size.
 const STYLES = `
-.influx-mle {
+.influx-message-link-embed {
   max-width: 520px;
   max-height: 20em;
   overflow: hidden;
@@ -134,7 +134,7 @@ function LinkEmbed({ link }: { link: MessageLink }) {
   const { Provider } = getInPreview();
   return (
     <div
-      className={`influx-mle ${nativeClasses("MessageAttachments.module__forwardedContainer___")}`}
+      className={`influx-message-link-embed ${nativeClasses("MessageAttachments.module__forwardedContainer___")}`}
     >
       <div className={nativeClasses("MessageAttachments.module__forwardedBar___")} />
       <div className={nativeClasses("MessageAttachments.module__forwardedContent___")}>

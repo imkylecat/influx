@@ -3,7 +3,7 @@ import { showToast } from "@webpack/common";
 
 import { settings } from "./settings";
 
-const STARTUP_DELAY_MS = 15_000;
+const STARTUP_DELAY_MILLISECONDS = 15_000;
 
 let timer: ReturnType<typeof setTimeout> | undefined;
 
@@ -21,7 +21,7 @@ export function scheduleAutoUpdate(): void {
     } else {
       showToast("error", `Influx couldn't update: ${install.error}`);
     }
-  }, STARTUP_DELAY_MS);
+  }, STARTUP_DELAY_MILLISECONDS);
 }
 
 export function cancelAutoUpdate(): void {

@@ -4,7 +4,7 @@ import { find } from "@webpack/finders";
 import type { ComponentType, ReactNode } from "react";
 
 const PLUGIN = "RelationshipNotifier";
-const MAX_NOTICES = 50;
+const MAXIMUM_NOTICES = 50;
 const BANNER_TONE = "brand";
 
 export interface Notice {
@@ -42,18 +42,18 @@ export const canShowBanner = (): boolean => nagbarFound;
 
 function savedNotices(): Notice[] {
   const saved = getPluginData(PLUGIN).notices;
-  return Array.isArray(saved) ? saved.filter((n) => typeof n?.message === "string") : [];
+  return Array.isArray(saved) ? saved.filter((notice) => typeof notice?.message === "string") : [];
 }
 
 // A MobX array, when Fluxer's MobX can be found, so the banner shows and hides as notices change.
 function getNotices(): NoticeList {
   if (notices) return notices;
   const observable = find(
-    (v) =>
-      typeof v === "function" &&
-      typeof v.box === "function" &&
-      typeof v.array === "function" &&
-      typeof v.object === "function",
+    (value) =>
+      typeof value === "function" &&
+      typeof value.box === "function" &&
+      typeof value.array === "function" &&
+      typeof value.object === "function",
   );
   const initial = savedNotices();
   notices = observable ? observable.array(initial, { deep: false }) : initial;
@@ -68,7 +68,7 @@ function persist(): void {
 export function addNotice(message: string): void {
   const list = getNotices();
   list.push({ message, at: Date.now() });
-  if (list.length > MAX_NOTICES) list.splice(0, list.length - MAX_NOTICES);
+  if (list.length > MAXIMUM_NOTICES) list.splice(0, list.length - MAXIMUM_NOTICES);
   persist();
 }
 
@@ -153,15 +153,15 @@ export function withBanner<T extends NagbarItem>(items: T[], parts: NagbarParts)
   }
 }
 
-const ID = String.raw`[\w$]+`;
+const IDENTIFIER = String.raw`[\w$]+`;
 const NAGBAR = new RegExp(
-  String.raw`\(0,${ID}\.jsx\)\((${ID}),\{isMobile:${ID},backgroundColor:(${ID}\.${ID})\[${ID}\.${ID}\.[A-Z_]+\]\.backgroundColor`,
+  String.raw`\(0,${IDENTIFIER}\.jsx\)\((${IDENTIFIER}),\{isMobile:${IDENTIFIER},backgroundColor:(${IDENTIFIER}\.${IDENTIFIER})\[${IDENTIFIER}\.${IDENTIFIER}\.[A-Z_]+\]\.backgroundColor`,
 );
 const CONTENT = new RegExp(
-  String.raw`children:\(0,${ID}\.jsx\)\((${ID}),\{isMobile:${ID},(?:onDismiss:[^,]+,)?message:`,
+  String.raw`children:\(0,${IDENTIFIER}\.jsx\)\((${IDENTIFIER}),\{isMobile:${IDENTIFIER},(?:onDismiss:[^,]+,)?message:`,
 );
 const BUTTON = new RegExp(
-  String.raw`\(0,${ID}\.jsx\)\((${ID}),\{isMobile:${ID},onClick:[^{}]{0,160}?"data-flx":"[\w.-]*nagbar[\w.-]*"`,
+  String.raw`\(0,${IDENTIFIER}\.jsx\)\((${IDENTIFIER}),\{isMobile:${IDENTIFIER},onClick:[^{}]{0,160}?"data-flx":"[\w.-]*nagbar[\w.-]*"`,
 );
 
 // Builds the object literal that hands Fluxer's nagbar parts to withBanner at render time.

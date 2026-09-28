@@ -55,8 +55,8 @@ describe("SendConfirmation", () => {
     const patched = patchFactory(
       1,
       factory,
-      sendConfirmation.patches.map((p) => ({ ...p, plugin: sendConfirmation.name })),
-      { error: (...args) => errors.push(args) },
+      sendConfirmation.patches.map((patch) => ({ ...patch, plugin: sendConfirmation.name })),
+      { error: (...values) => errors.push(values) },
     );
     assert.notEqual(patched, factory);
     assert.deepEqual(errors, []);

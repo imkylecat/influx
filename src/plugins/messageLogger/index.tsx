@@ -11,7 +11,7 @@ import type { ComponentType } from "react";
 // Fluxer only defines flag bits up to 1 << 13, so this one is free for marking deleted messages.
 // Changing flags also makes Message.equals() see a difference, which rerenders the row.
 const DELETED_FLAG = 1 << 30;
-const MAX_EDITED_MESSAGES = 2000;
+const MAXIMUM_EDITED_MESSAGES = 2000;
 const STYLE_ID = "influx-message-logger";
 
 // Fluxer's message menu actions that still work once a message is gone from the server.
@@ -114,7 +114,7 @@ function setEdits(id: string, edits: readonly PastEdit[]) {
   // Re-inserting keeps the map ordered from least to most recently edited.
   editHistory.delete(id);
   if (edits.length) editHistory.set(id, edits);
-  if (editHistory.size > MAX_EDITED_MESSAGES) {
+  if (editHistory.size > MAXIMUM_EDITED_MESSAGES) {
     editHistory.delete(editHistory.keys().next().value!);
   }
   for (const listener of editListeners) listener();
@@ -298,7 +298,9 @@ export default definePlugin({
         }
         kept++;
         if (!this.isDeleted(message)) {
-          next = next.update(id, (m) => m.withUpdates({ flags: m.flags | DELETED_FLAG }));
+          next = next.update(id, (current) =>
+            current.withUpdates({ flags: current.flags | DELETED_FLAG }),
+          );
         }
       }
       if (kept === 0) return false;

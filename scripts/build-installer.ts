@@ -4,7 +4,7 @@ import path from "node:path";
 import { $ } from "bun";
 
 const root = path.dirname(import.meta.dir);
-const outDir = path.join(root, "dist", "release");
+const outputDirectory = path.join(root, "dist", "release");
 const entry = path.join(root, "scripts", "inject.ts");
 
 const TARGETS = [
@@ -17,13 +17,13 @@ const TARGETS = [
 
 const hostTarget = `bun-${process.platform}-${process.arch}`;
 const targets = process.argv.includes("--host")
-  ? TARGETS.filter((t) => t.target === hostTarget)
+  ? TARGETS.filter((installer) => installer.target === hostTarget)
   : TARGETS;
 if (targets.length === 0) throw new Error(`No installer target for ${hostTarget}`);
 
-await mkdir(outDir, { recursive: true });
+await mkdir(outputDirectory, { recursive: true });
 for (const { target, file } of targets) {
-  const outfile = path.join(outDir, file);
+  const outfile = path.join(outputDirectory, file);
   await $`${process.execPath} build ${entry} --compile --minify --target=${target} --outfile ${outfile}`;
   if (target.startsWith("bun-darwin")) {
     if (process.platform === "darwin") {

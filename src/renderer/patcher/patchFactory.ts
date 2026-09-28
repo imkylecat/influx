@@ -17,7 +17,7 @@ function canonicalizeReplace(
 ): PatchReplacement["replace"] {
   const self = pluginReference(plugin);
   if (typeof replace === "function") {
-    return (...args) => replace(...(args as [string, ...unknown[]])).replaceAll("$self", self);
+    return (...match) => replace(...(match as [string, ...unknown[]])).replaceAll("$self", self);
   }
   return replace.replaceAll("$self", self);
 }
@@ -36,7 +36,7 @@ const evaluateFactory = (code: string, id: ModuleId, plugins: string[]): ModuleF
   );
 
 interface PatchLogger {
-  error(...args: unknown[]): void;
+  error(...values: unknown[]): void;
 }
 
 export function patchFactory(
@@ -50,11 +50,11 @@ export function patchFactory(
   let compiled: ModuleFactory | undefined;
   const appliedBy: string[] = [];
 
-  for (let i = 0; i < pending.length; i++) {
-    const patch = pending[i];
+  for (let index = 0; index < pending.length; index++) {
+    const patch = pending[index];
     if (!matchesFind(code, patch.find)) continue;
     if (patch.predicate && !patch.predicate()) continue;
-    if (!patch.all) pending.splice(i--, 1);
+    if (!patch.all) pending.splice(index--, 1);
 
     let candidate = code;
     let failure: string | undefined;

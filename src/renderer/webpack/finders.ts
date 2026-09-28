@@ -1,5 +1,5 @@
 import { Logger } from "../utils/Logger";
-import { getOriginalFactory, moduleCache, onModuleLoaded, wreq } from "./patchWebpack";
+import { getOriginalFactory, moduleCache, onModuleLoaded, webpackRequire } from "./patchWebpack";
 import type { ModuleId, WebpackModule } from "./types";
 
 const logger = new Logger("Finders");
@@ -10,16 +10,18 @@ const PROBE_PROP = "__influxProbe__";
 const answersEverything = (value: any): boolean => value[PROBE_PROP] !== undefined;
 
 function sourceMatches(source: string, code: ReadonlyArray<string | RegExp>): boolean {
-  return code.every((c) => (typeof c === "string" ? source.includes(c) : c.test(source)));
+  return code.every((part) =>
+    typeof part === "string" ? source.includes(part) : part.test(source),
+  );
 }
 
 export const filters = {
-  byProps:
-    (...props: string[]): Filter =>
+  byProperties:
+    (...properties: string[]): Filter =>
     (value) =>
       value != null &&
       (typeof value === "object" || typeof value === "function") &&
-      props.every((p) => value[p] !== undefined) &&
+      properties.every((property) => value[property] !== undefined) &&
       !answersEverything(value),
 
   byCode:
@@ -75,7 +77,8 @@ export function findAll(filter: Filter): any[] {
   return matches;
 }
 
-export const findByProps = (...props: string[]) => find(filters.byProps(...props));
+export const findByProperties = (...properties: string[]) =>
+  find(filters.byProperties(...properties));
 export const findByCode = (...code: Array<string | RegExp>) => find(filters.byCode(...code));
 export const findComponentByName = (name: string) => find(filters.byDisplayName(name));
 
@@ -123,13 +126,13 @@ export function findComponentByDisplayName(code: string, displayName: string): a
   for (const id of search(code)) {
     let exports: any;
     try {
-      exports = wreq!(id);
+      exports = webpackRequire!(id);
     } catch (error) {
       logger.error(`Requiring module ${id} for component lookup threw`, error);
       continue;
     }
     const match = [...exportCandidates({ exports })].find(
-      (c) => isComponent(c) && displayNameOf(c) === displayName,
+      (candidate) => isComponent(candidate) && displayNameOf(candidate) === displayName,
     );
     if (match) return match;
   }
@@ -140,16 +143,17 @@ export function findComponentByCode(code: string, displayName?: string): any {
   for (const id of search(code)) {
     let exports: any;
     try {
-      exports = wreq!(id);
+      exports = webpackRequire!(id);
     } catch (error) {
       logger.error(`Requiring module ${id} for component lookup threw`, error);
       continue;
     }
     const components = [...exportCandidates({ exports })].filter(isComponent);
-    const byName = displayName && components.find((c) => c.displayName === displayName);
+    const byName =
+      displayName && components.find((component) => component.displayName === displayName);
     if (byName) return byName;
-    const bySource = components.find((c) => {
-      const render = unwrapComponent(c);
+    const bySource = components.find((component) => {
+      const render = unwrapComponent(component);
       return (
         typeof render === "function" && Function.prototype.toString.call(render).includes(code)
       );
@@ -157,15 +161,15 @@ export function findComponentByCode(code: string, displayName?: string): any {
     if (bySource) return bySource;
     if (components.length === 1) return components[0];
     // Observer-wrapped components hide their source, but hooks and helpers beside them are plain functions.
-    const wrapped = components.filter((c) => typeof c === "object");
+    const wrapped = components.filter((component) => typeof component === "object");
     if (wrapped.length === 1) return wrapped[0];
   }
   return undefined;
 }
 
 export function search(...code: Array<string | RegExp>): ModuleId[] {
-  if (!wreq) return [];
-  return Object.entries(wreq.m)
+  if (!webpackRequire) return [];
+  return Object.entries(webpackRequire.m)
     .filter(([, factory]) =>
       sourceMatches(Function.prototype.toString.call(getOriginalFactory(factory)), code),
     )

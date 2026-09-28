@@ -19,8 +19,8 @@ import {
 } from "./snapshot";
 
 const PLUGIN = "RelationshipNotifier";
-const SELF_ACTION_TTL_MS = 60_000;
-const SAVE_DELAY_MS = 1_000;
+const SELF_ACTION_EXPIRY_MILLISECONDS = 60_000;
+const SAVE_DELAY_MILLISECONDS = 1_000;
 
 const settings = definePluginSettings({
   friends: {
@@ -91,7 +91,7 @@ function saveSnapshot(): void {
     if (!accountId || !snapshot) return;
     savedSnapshots()[accountId] = snapshot;
     saveSettings();
-  }, SAVE_DELAY_MS);
+  }, SAVE_DELAY_MILLISECONDS);
 }
 
 function isWanted(removal: Removal): boolean {
@@ -257,7 +257,7 @@ export default definePlugin({
       consumeSelfAction(id);
       selfActions.set(
         id,
-        setTimeout(() => selfActions.delete(id), SELF_ACTION_TTL_MS),
+        setTimeout(() => selfActions.delete(id), SELF_ACTION_EXPIRY_MILLISECONDS),
       );
     } catch {}
     return id;

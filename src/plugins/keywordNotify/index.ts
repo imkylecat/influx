@@ -3,7 +3,7 @@ import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { NativeNotification, showToast, Stores } from "@webpack/common";
 
-const MAX_BODY_LENGTH = 200;
+const MAXIMUM_BODY_LENGTH = 200;
 
 const settings = definePluginSettings({
   keywords: {
@@ -123,7 +123,8 @@ function notify(message: WireMessage): void {
   const guild = message.guild_id ? Stores.Guilds()?.getGuild(message.guild_id) : undefined;
   const where = channel?.name ? ` (#${channel.name}${guild ? `, ${guild.name}` : ""})` : "";
   const content = message.content ?? "";
-  const body = content.length > MAX_BODY_LENGTH ? `${content.slice(0, MAX_BODY_LENGTH)}…` : content;
+  const body =
+    content.length > MAXIMUM_BODY_LENGTH ? `${content.slice(0, MAXIMUM_BODY_LENGTH)}…` : content;
   const url = `/channels/${message.guild_id ?? "@me"}/${message.channel_id}/${message.id}`;
 
   const showNotification = NativeNotification();

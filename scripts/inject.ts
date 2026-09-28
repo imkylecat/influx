@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 
 import { createPackage, extractFile } from "@electron/asar";
 
-import { DESKTOP_FILES, influxDataDir } from "../src/shared/paths";
+import { DESKTOP_FILES, influxDataDirectory } from "../src/shared/paths";
 import {
   DESKTOP_ASSETS,
   downloadDesktopRelease,
@@ -30,43 +30,43 @@ const USAGE = `Installs Influx into the Fluxer desktop app.
 
 Usage: influx-installer [options]
 
-  (no options)   Install the latest Influx release; it updates itself from then on
-  --canary       Use Fluxer Canary (picked automatically when only Canary is installed)
-  --stable       Use stable Fluxer even when only Canary is found
-  --path <dir>   Fluxer's resources folder, or its .app bundle on macOS
-  --uninstall    Remove Influx and restore Fluxer's original files
-  --dev          Install this checkout's build (source checkout only)
-  --local        Install this checkout's release build (source checkout only)
-  --help         Show this help`;
+  (no options)      Install the latest Influx release; it updates itself from then on
+  --canary          Use Fluxer Canary (picked automatically when only Canary is installed)
+  --stable          Use stable Fluxer even when only Canary is found
+  --path <folder>   Fluxer's resources folder, or its .app bundle on macOS
+  --uninstall       Remove Influx and restore Fluxer's original files
+  --dev             Install this checkout's build (source checkout only)
+  --local           Install this checkout's release build (source checkout only)
+  --help            Show this help`;
 
 const compiled = /\$bunfs|~BUN/i.test(import.meta.url);
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const args = process.argv.slice(2);
-const pathArg = args.includes("--path") ? args[args.indexOf("--path") + 1] : undefined;
-const mode = args.includes("--uninstall")
+const options = process.argv.slice(2);
+const pathOption = options.includes("--path") ? options[options.indexOf("--path") + 1] : undefined;
+const mode = options.includes("--uninstall")
   ? "uninstall"
-  : args.includes("--dev")
+  : options.includes("--dev")
     ? "dev"
-    : args.includes("--local")
+    : options.includes("--local")
       ? "local"
       : "release";
 
 const sudoUser = process.platform === "linux" ? process.env.SUDO_USER : undefined;
-const homeDir = sudoUser ? `/home/${sudoUser}` : os.homedir();
+const homeDirectory = sudoUser ? `/home/${sudoUser}` : os.homedir();
 
-function fluxerResourcesDir(): string {
-  if (pathArg) return resolveResourcesPath(pathArg);
-  const stable = defaultResourcesDir(false);
-  const canary = defaultResourcesDir(true);
-  if (args.includes("--canary")) return canary;
-  if (args.includes("--stable")) return stable;
+function fluxerResourcesDirectory(): string {
+  if (pathOption) return resolveResourcesPath(pathOption);
+  const stable = defaultResourcesDirectory(false);
+  const canary = defaultResourcesDirectory(true);
+  if (options.includes("--canary")) return canary;
+  if (options.includes("--stable")) return stable;
   return !hasFluxer(stable) && hasFluxer(canary) ? canary : stable;
 }
 
-function hasFluxer(resourcesDir: string): boolean {
+function hasFluxer(resourcesDirectory: string): boolean {
   return (
-    existsSync(path.join(resourcesDir, "app.asar")) ||
-    existsSync(path.join(resourcesDir, "_app.asar"))
+    existsSync(path.join(resourcesDirectory, "app.asar")) ||
+    existsSync(path.join(resourcesDirectory, "_app.asar"))
   );
 }
 
@@ -75,13 +75,13 @@ function resolveResourcesPath(input: string): string {
   return resolved.endsWith(".app") ? path.join(resolved, "Contents", "Resources") : resolved;
 }
 
-function defaultResourcesDir(canary: boolean): string {
+function defaultResourcesDirectory(canary: boolean): string {
   switch (process.platform) {
     case "darwin":
       return `/Applications/${canary ? "Fluxer Canary" : "Fluxer"}.app/Contents/Resources`;
     case "win32":
       return path.join(
-        process.env.LOCALAPPDATA ?? path.join(homeDir, "AppData", "Local"),
+        process.env.LOCALAPPDATA ?? path.join(homeDirectory, "AppData", "Local"),
         canary ? "fluxer_desktop_canary" : "fluxer_desktop",
         "current",
         "resources",
@@ -96,43 +96,43 @@ function defaultResourcesDir(canary: boolean): string {
   }
 }
 
-function influxInstallDir(): string {
-  return path.join(influxDataDir(homeDir), "dist");
+function influxInstallDirectory(): string {
+  return path.join(influxDataDirectory(homeDirectory), "dist");
 }
 
-function influxDevDir(): string {
-  return path.join(influxDataDir(homeDir), "dev");
+function influxDevelopmentDirectory(): string {
+  return path.join(influxDataDirectory(homeDirectory), "dev");
 }
 
 function giveToSudoUser(target: string): void {
-  const uid = Number(process.env.SUDO_UID);
-  const gid = Number(process.env.SUDO_GID);
-  if (!sudoUser || !Number.isInteger(uid) || !Number.isInteger(gid)) return;
-  chownSync(target, uid, gid);
+  const userId = Number(process.env.SUDO_UID);
+  const groupId = Number(process.env.SUDO_GID);
+  if (!sudoUser || !Number.isInteger(userId) || !Number.isInteger(groupId)) return;
+  chownSync(target, userId, groupId);
   if (statSync(target).isDirectory()) {
     for (const entry of readdirSync(target)) giveToSudoUser(path.join(target, entry));
   }
 }
 
-async function installRelease(installDir: string): Promise<string> {
+async function installRelease(installDirectory: string): Promise<string> {
   if (mode === "local") {
-    const releaseDir = path.join(root, "dist", "release");
-    if (!existsSync(releaseDir))
+    const releaseDirectory = path.join(root, "dist", "release");
+    if (!existsSync(releaseDirectory))
       throw new Error("dist/release not found. Run `bun run build --release` first.");
-    mkdirSync(installDir, { recursive: true });
+    mkdirSync(installDirectory, { recursive: true });
     for (const [localName, assetName] of Object.entries(DESKTOP_ASSETS)) {
-      copyFileSync(path.join(releaseDir, assetName), path.join(installDir, localName));
+      copyFileSync(path.join(releaseDirectory, assetName), path.join(installDirectory, localName));
     }
     return "local release build";
   }
   console.log("Downloading the latest Influx release…");
   const release = await fetchLatestRelease();
-  installFiles(installDir, await downloadDesktopRelease(release));
+  installFiles(installDirectory, await downloadDesktopRelease(release));
   return `Influx ${release.version}`;
 }
 
 async function main(): Promise<void> {
-  if (args.includes("--help") || args.includes("-h")) {
+  if (options.includes("--help") || options.includes("-h")) {
     console.log(USAGE);
     return;
   }
@@ -141,54 +141,54 @@ async function main(): Promise<void> {
       `--${mode} needs a source checkout of Influx; run it with \`bun run inject --${mode}\`.`,
     );
   }
-  const resourcesDir = fluxerResourcesDir();
-  const fluxerAsar = path.join(resourcesDir, "app.asar");
-  const movedAsar = path.join(resourcesDir, "_app.asar");
+  const resourcesDirectory = fluxerResourcesDirectory();
+  const fluxerAsar = path.join(resourcesDirectory, "app.asar");
+  const movedAsar = path.join(resourcesDirectory, "_app.asar");
   if (!existsSync(fluxerAsar) && !existsSync(movedAsar)) {
     throw new Error(
-      `No app.asar in ${resourcesDir}. Pass --path to your Fluxer install (or --canary).`,
+      `No app.asar in ${resourcesDirectory}. Pass --path to your Fluxer install (or --canary).`,
     );
   }
-  rmSync(path.join(resourcesDir, "app"), { recursive: true, force: true });
+  rmSync(path.join(resourcesDirectory, "app"), { recursive: true, force: true });
 
   if (mode === "uninstall") {
-    uninstall(resourcesDir);
-    console.log(`Removed Influx from ${resourcesDir}. Restart Fluxer.`);
+    uninstall(resourcesDirectory);
+    console.log(`Removed Influx from ${resourcesDirectory}. Restart Fluxer.`);
     console.log(
-      `Release files remain in ${path.dirname(influxInstallDir())}; delete that folder to remove them too.`,
+      `Release files remain in ${path.dirname(influxInstallDirectory())}; delete that folder to remove them too.`,
     );
     return;
   }
 
   // Under sudo, folders mkdirSync creates (even ~/.config itself) would stay owned by root.
-  const createdDir = mkdirSync(influxDataDir(homeDir), { recursive: true });
-  if (createdDir) giveToSudoUser(createdDir);
+  const createdDirectory = mkdirSync(influxDataDirectory(homeDirectory), { recursive: true });
+  if (createdDirectory) giveToSudoUser(createdDirectory);
 
-  let mainJs: string;
+  let mainScript: string;
   let installed: string;
   if (mode === "dev") {
-    const buildDir = path.join(root, "dist", "desktop");
-    if (!existsSync(path.join(buildDir, "main.js")))
+    const buildDirectory = path.join(root, "dist", "desktop");
+    if (!existsSync(path.join(buildDirectory, "main.js")))
       throw new Error("dist/desktop/main.js not found. Run `bun run build` first.");
-    const devDir = influxDevDir();
-    mkdirSync(devDir, { recursive: true });
+    const devDirectory = influxDevelopmentDirectory();
+    mkdirSync(devDirectory, { recursive: true });
     for (const file of DESKTOP_FILES)
-      copyFileSync(path.join(buildDir, file), path.join(devDir, file));
-    giveToSudoUser(influxDataDir(homeDir));
-    mainJs = path.join(devDir, "main.js");
-    installed = `development build (bun run build keeps ${devDir} up to date)`;
+      copyFileSync(path.join(buildDirectory, file), path.join(devDirectory, file));
+    giveToSudoUser(influxDataDirectory(homeDirectory));
+    mainScript = path.join(devDirectory, "main.js");
+    installed = `development build (bun run build keeps ${devDirectory} up to date)`;
   } else {
-    const installDir = influxInstallDir();
-    installed = await installRelease(installDir);
-    giveToSudoUser(path.dirname(installDir));
-    mainJs = path.join(installDir, "main.js");
+    const installDirectory = influxInstallDirectory();
+    installed = await installRelease(installDirectory);
+    giveToSudoUser(path.dirname(installDirectory));
+    mainScript = path.join(installDirectory, "main.js");
   }
 
-  const stagedShim = path.join(resourcesDir, ".influx-shim.asar");
-  await buildShim(mainJs, stagedShim);
-  moveFluxerAside(resourcesDir);
+  const stagedShim = path.join(resourcesDirectory, ".influx-shim.asar");
+  await buildShim(mainScript, stagedShim);
+  moveFluxerAside(resourcesDirectory);
   renameSync(stagedShim, fluxerAsar);
-  console.log(`Installed ${installed} into ${resourcesDir}. Restart Fluxer.`);
+  console.log(`Installed ${installed} into ${resourcesDirectory}. Restart Fluxer.`);
 }
 
 function isInfluxShim(asarPath: string): boolean {
@@ -205,19 +205,20 @@ function replaceWith(from: string, to: string): void {
   renameSync(from, to);
 }
 
-function moveFluxerAside(resourcesDir: string): void {
-  const fluxerAsar = path.join(resourcesDir, "app.asar");
-  const movedAsar = path.join(resourcesDir, "_app.asar");
+function moveFluxerAside(resourcesDirectory: string): void {
+  const fluxerAsar = path.join(resourcesDirectory, "app.asar");
+  const movedAsar = path.join(resourcesDirectory, "_app.asar");
   if (existsSync(fluxerAsar) && !isInfluxShim(fluxerAsar)) {
     replaceWith(fluxerAsar, movedAsar);
     replaceWith(`${fluxerAsar}.unpacked`, `${movedAsar}.unpacked`);
   }
-  if (!existsSync(movedAsar)) throw new Error(`Fluxer's app.asar is missing from ${resourcesDir}`);
+  if (!existsSync(movedAsar))
+    throw new Error(`Fluxer's app.asar is missing from ${resourcesDirectory}`);
 }
 
-function uninstall(resourcesDir: string): void {
-  const fluxerAsar = path.join(resourcesDir, "app.asar");
-  const movedAsar = path.join(resourcesDir, "_app.asar");
+function uninstall(resourcesDirectory: string): void {
+  const fluxerAsar = path.join(resourcesDirectory, "app.asar");
+  const movedAsar = path.join(resourcesDirectory, "_app.asar");
   if (!existsSync(movedAsar)) return;
   if (existsSync(fluxerAsar) && !isInfluxShim(fluxerAsar)) {
     rmSync(movedAsar, { force: true });
@@ -229,14 +230,14 @@ function uninstall(resourcesDir: string): void {
   replaceWith(`${movedAsar}.unpacked`, `${fluxerAsar}.unpacked`);
 }
 
-async function buildShim(mainJs: string, destination: string): Promise<void> {
+async function buildShim(mainScript: string, destination: string): Promise<void> {
   const staging = mkdtempSync(path.join(os.tmpdir(), "influx-shim-"));
   try {
     writeFileSync(
       path.join(staging, "package.json"),
       `${JSON.stringify({ name: SHIM_NAME, main: "index.js" }, null, 2)}\n`,
     );
-    writeFileSync(path.join(staging, "index.js"), `require(${JSON.stringify(mainJs)});\n`);
+    writeFileSync(path.join(staging, "index.js"), `require(${JSON.stringify(mainScript)});\n`);
     rmSync(destination, { force: true });
     await createPackage(staging, destination);
   } finally {

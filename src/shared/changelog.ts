@@ -13,13 +13,13 @@ export function changelogSection(changelog: string, version: string): string | n
 }
 
 /** Chat markdown keeps every newline, so rejoin wrapped bullets and show "### Added" as a bold label. */
-export function toEmbedMarkdown(section: string, maxLength: number, moreUrl: string): string {
+export function toEmbedMarkdown(section: string, maximumLength: number, moreUrl: string): string {
   const text = section
     .replace(/\n {2,}(?=\S)/g, " ")
     .replace(/^### (.+)$/gm, "**$1**")
     .replace(/\n{3,}/g, "\n\n");
-  if (text.length <= maxLength) return text;
+  if (text.length <= maximumLength) return text;
   const more = `\n\n… [Read the full changelog](${moreUrl})`;
-  const cut = text.lastIndexOf("\n", maxLength - more.length);
-  return text.slice(0, cut > 0 ? cut : maxLength - more.length) + more;
+  const cut = text.lastIndexOf("\n", maximumLength - more.length);
+  return text.slice(0, cut > 0 ? cut : maximumLength - more.length) + more;
 }

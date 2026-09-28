@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { getPluginData } from "@api/Settings";
 import type { ModuleFactory } from "@webpack/types";
 
-import localNotes, { MAX_NOTE_LENGTH, readNote, writeNote } from ".";
+import localNotes, { MAXIMUM_NOTE_LENGTH, readNote, writeNote } from ".";
 import { patchFactory } from "../../renderer/patcher/patchFactory";
 
 describe("LocalNotes", () => {
@@ -43,8 +43,8 @@ describe("LocalNotes", () => {
     getPluginData("LocalNotes").notes = { "1": { "10": 123 }, "2": null };
     assert.equal(readNote("1", "10"), "");
     assert.equal(readNote("2", "10"), "");
-    writeNote("2", "10", "x".repeat(MAX_NOTE_LENGTH + 1));
-    assert.equal(readNote("2", "10").length, MAX_NOTE_LENGTH);
+    writeNote("2", "10", "x".repeat(MAXIMUM_NOTE_LENGTH + 1));
+    assert.equal(readNote("2", "10").length, MAXIMUM_NOTE_LENGTH);
     assert.throws(() => writeNote("", "10", "No account"));
     assert.throws(() => writeNote("1", "__proto__", "Invalid user"));
   });
@@ -54,8 +54,10 @@ describe("LocalNotes", () => {
       'return function(module){const i={jsx:(type,props)=>({type,props})},I={K:"copy"};module.exports=(e,t)=>[(0,i.jsx)(I.K,{user:e,onClose:t,"data-flx":"ui.action-menu.user-context-menu.render-advanced-menu-group.copy-user-id-menu-item"})]}',
     )() as ModuleFactory;
     const errors: unknown[] = [];
-    const pending = localNotes.patches.map((p) => ({ ...p, plugin: localNotes.name }));
-    const patched = patchFactory(1, factory, pending, { error: (...args) => errors.push(args) });
+    const pending = localNotes.patches.map((patch) => ({ ...patch, plugin: localNotes.name }));
+    const patched = patchFactory(1, factory, pending, {
+      error: (...values) => errors.push(values),
+    });
     assert.notEqual(patched, factory);
     assert.deepEqual(errors, []);
     assert.equal(pending.length, 0);

@@ -17,8 +17,8 @@ const Influx = {
   webpack: {
     ...finders,
     common,
-    get wreq() {
-      return webpack.wreq;
+    get webpackRequire() {
+      return webpack.webpackRequire;
     },
     moduleCache: webpack.moduleCache,
     pendingPatches: Plugins.pendingPatches,
@@ -59,7 +59,7 @@ function init(): void {
   document.addEventListener(
     "DOMContentLoaded",
     () => {
-      if (!webpack.wreq)
+      if (!webpack.webpackRequire)
         logger.error(
           `Never saw Fluxer's webpack runtime (${webpack.CHUNK_GLOBAL}). Was Influx injected too late?`,
         );

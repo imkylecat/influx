@@ -8,7 +8,7 @@ export const CHUNK_GLOBAL = "rspackChunkfluxer_app";
 
 const ORIGINAL_FACTORY = Symbol("influx.originalFactory");
 
-export let wreq: WebpackRequire | undefined;
+export let webpackRequire: WebpackRequire | undefined;
 
 export const moduleCache = new Map<ModuleId, WebpackModule>();
 
@@ -24,10 +24,10 @@ export function getOriginalFactory(factory: ModuleFactory): ModuleFactory {
   return (factory as any)[ORIGINAL_FACTORY] ?? factory;
 }
 
-function looksLikeWebpackRequire(fn: unknown, modules: unknown): fn is WebpackRequire {
-  if (typeof fn !== "function" || modules == null || typeof modules !== "object") return false;
+function looksLikeWebpackRequire(value: unknown, modules: unknown): value is WebpackRequire {
+  if (typeof value !== "function" || modules == null || typeof modules !== "object") return false;
   const factories = Object.values(modules).slice(0, 10);
-  return factories.length > 0 && factories.every((f) => typeof f === "function");
+  return factories.length > 0 && factories.every((factory) => typeof factory === "function");
 }
 
 export function installWebpackHook(pendingPatches: Patch[]): void {
@@ -69,10 +69,10 @@ export function installWebpackHook(pendingPatches: Patch[]): void {
         configurable: true,
         enumerable: true,
       });
-      if (wreq || !looksLikeWebpackRequire(this, modules)) return;
+      if (webpackRequire || !looksLikeWebpackRequire(this, modules)) return;
 
       delete (Function.prototype as any).m;
-      wreq = this;
+      webpackRequire = this;
       logger.info("Captured Fluxer webpack runtime");
 
       for (const id of Object.keys(modules)) {

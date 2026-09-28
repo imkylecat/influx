@@ -55,36 +55,38 @@ interface OptionBase {
 
 export type SelectOption = string | { label: string; value: string };
 
-export type OptionDef =
+export type OptionDefinition =
   | (OptionBase & { type: "boolean"; default: boolean })
   | (OptionBase & { type: "number"; default: number })
   | (OptionBase & { type: "string"; default: string })
   | (OptionBase & { type: "select"; options: readonly SelectOption[]; default: string });
 
-type OptionValue<O extends OptionDef> = O extends { type: "boolean" }
+type OptionValue<O extends OptionDefinition> = O extends { type: "boolean" }
   ? boolean
   : O extends { type: "number" }
     ? number
     : string;
-type OptionValues<D extends Record<string, OptionDef>> = {
+type OptionValues<D extends Record<string, OptionDefinition>> = {
   -readonly [K in keyof D]: OptionValue<D[K]>;
 };
 
-export interface PluginSettings<D extends Record<string, OptionDef> = Record<string, OptionDef>> {
-  readonly defs: D;
+export interface PluginSettings<
+  D extends Record<string, OptionDefinition> = Record<string, OptionDefinition>,
+> {
+  readonly definitions: D;
   readonly store: OptionValues<D>;
   pluginName?: string;
 }
 
-export function definePluginSettings<const D extends Record<string, OptionDef>>(
-  defs: D,
+export function definePluginSettings<const D extends Record<string, OptionDefinition>>(
+  definitions: D,
 ): PluginSettings<D> {
   const pluginSettings: PluginSettings<D> = {
-    defs,
+    definitions,
     store: new Proxy({} as OptionValues<D>, {
       get(_, key: string) {
         const data = pluginSettings.pluginName ? getPluginData(pluginSettings.pluginName) : {};
-        return key in data ? data[key] : defs[key]?.default;
+        return key in data ? data[key] : definitions[key]?.default;
       },
       set(_, key: string, value) {
         const plugin = pluginSettings.pluginName;

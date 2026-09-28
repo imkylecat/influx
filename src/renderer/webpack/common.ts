@@ -4,7 +4,7 @@ import {
   filters,
   find,
   findByCode,
-  findByProps,
+  findByProperties,
   findComponentByCode,
   findComponentByDisplayName,
   findComponentByName,
@@ -13,8 +13,8 @@ import {
 
 export let React: typeof import("react");
 
-waitFor(filters.byProps("useState", "createElement", "Fragment"), (m) => {
-  React = m;
+waitFor(filters.byProperties("useState", "createElement", "Fragment"), (module) => {
+  React = module;
 });
 
 type AnyComponent = ComponentType<any>;
@@ -124,7 +124,7 @@ function lazyModule<T = any>(...props: string[]): () => T | undefined {
   return () => {
     let module = lookupCache.get(key);
     if (!module) {
-      module = findByProps(...props);
+      module = findByProperties(...props);
       if (module) lookupCache.set(key, module);
     }
     return module;
@@ -256,7 +256,7 @@ export function showToast(
   message: string,
   options: { timeout?: number; onClick?(): void } = {},
 ): void {
-  const toasts = findByProps("createToast", "getCurrentToast");
+  const toasts = findByProperties("createToast", "getCurrentToast");
   if (!toasts) {
     console.warn(`[Influx] Couldn't find Fluxer's toasts: ${message}`);
     return;

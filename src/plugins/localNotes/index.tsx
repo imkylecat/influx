@@ -3,7 +3,7 @@ import { getPluginData, saveSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { Components, Modals, React, showToast, Stores } from "@webpack/common";
 
-export const MAX_NOTE_LENGTH = 4000;
+export const MAXIMUM_NOTE_LENGTH = 4000;
 
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -24,7 +24,7 @@ export function writeNote(accountId: string, userId: string, note: string): void
   const data = getPluginData("LocalNotes");
   const accounts = { ...record(data.notes) };
   const notes = { ...record(accounts[accountId]) };
-  if (note.trim()) notes[userId] = note.slice(0, MAX_NOTE_LENGTH);
+  if (note.trim()) notes[userId] = note.slice(0, MAXIMUM_NOTE_LENGTH);
   else delete notes[userId];
   if (Object.keys(notes).length) accounts[accountId] = notes;
   else delete accounts[accountId];
@@ -75,7 +75,7 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
             }
             minRows={4}
             maxRows={12}
-            maxLength={MAX_NOTE_LENGTH}
+            maxLength={MAXIMUM_NOTE_LENGTH}
             showCharacterCount
             autoFocus
           />

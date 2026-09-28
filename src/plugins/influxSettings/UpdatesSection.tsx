@@ -23,7 +23,7 @@ type UpdateState =
 
 const CHANNEL_LABELS = {
   desktop: "Desktop",
-  "desktop-dev": "Desktop, development build",
+  "desktop-development": "Desktop, development build",
   browser: "Browser extension",
 };
 
@@ -58,7 +58,7 @@ export function UpdatesSection() {
   const autoUpdateDescription =
     updateChannel === "desktop"
       ? "Download and install new Influx versions when Fluxer starts. They load the next time Fluxer restarts."
-      : updateChannel === "desktop-dev"
+      : updateChannel === "desktop-development"
         ? "Not available for development builds. Update with git pull && bun run build."
         : "Not available in the browser extension. Browsers only let extensions update through their store.";
 

@@ -23,13 +23,13 @@ export interface PatchReplacement {
   replace: string | ((substring: string, ...groups: any[]) => string);
 }
 
-export interface PatchDef {
+export interface PatchDefinition {
   find: string | RegExp;
   replacement: PatchReplacement | PatchReplacement[];
   all?: boolean;
   predicate?(): boolean;
 }
 
-export interface Patch extends PatchDef {
+export interface Patch extends PatchDefinition {
   plugin: string;
 }

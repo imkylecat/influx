@@ -250,7 +250,8 @@ describe("MessageLogger", () => {
     const patched = patchFactory(1, groupsModule, pendingFor(messageLogger), logger);
     assert.deepEqual(errors, []);
     const groups = run(patched);
-    const ids = (m: FakeMessage) => groups(m).map((g: any) => g.items.map((item: any) => item.id));
+    const ids = (fakeMessage: FakeMessage) =>
+      groups(fakeMessage).map((group: any) => group.items.map((item: any) => item.id));
     assert.deepEqual(ids(message("1", "hi")), [
       ["reply", "message_copy_id", undefined],
       ["report_message"],
@@ -268,7 +269,7 @@ describe("MessageLogger", () => {
     const patched = patchFactory(1, menuModule, pendingFor(messageLogger), logger);
     assert.deepEqual(errors, []);
     (globalThis as any).Influx.plugins.MessageLogger = {
-      renderMenuItems: (m: FakeMessage) => `items for ${m.id}`,
+      renderMenuItems: (fakeMessage: FakeMessage) => `items for ${fakeMessage.id}`,
     };
     const menu = run(patched);
     const children = menu(message("1", "hi"), "delete", "stickers");

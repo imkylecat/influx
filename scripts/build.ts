@@ -7,15 +7,15 @@ import { fileURLToPath } from "node:url";
 
 import type { BuildConfig, BunPlugin } from "bun";
 
-import { influxDataDir } from "../src/shared/paths";
+import { influxDataDirectory } from "../src/shared/paths";
 import { DESKTOP_ASSETS } from "../src/shared/release";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const dist = path.join(root, "dist");
-const pluginsDir = path.join(root, "src/plugins");
+const pluginsDirectory = path.join(root, "src/plugins");
 const watch = process.argv.includes("--watch");
 const release = process.argv.includes("--release");
-const devInstallDir = path.join(influxDataDir(), "dev");
+const developmentInstallDirectory = path.join(influxDataDirectory(), "dev");
 
 const { version } = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
 
@@ -28,19 +28,19 @@ const pluginDiscovery: BunPlugin = {
     }));
     build.onLoad({ filter: /.*/, namespace: "influx-plugins" }, async () => {
       const entries: string[] = [];
-      for (const dir of (await readdir(pluginsDir, { withFileTypes: true })).filter((d) =>
-        d.isDirectory(),
+      for (const directory of (await readdir(pluginsDirectory, { withFileTypes: true })).filter(
+        (entry) => entry.isDirectory(),
       )) {
         const entry = ["index.ts", "index.tsx"]
-          .map((f) => path.join(pluginsDir, dir.name, f))
+          .map((file) => path.join(pluginsDirectory, directory.name, file))
           .find(existsSync);
         if (entry) entries.push(entry);
       }
       const imports = entries
-        .map((entry, i) => `import p${i} from ${JSON.stringify(entry)};`)
+        .map((entry, index) => `import plugin${index} from ${JSON.stringify(entry)};`)
         .join("\n");
       return {
-        contents: `${imports}\nexport default [${entries.map((_, i) => `p${i}`).join(", ")}];`,
+        contents: `${imports}\nexport default [${entries.map((_, index) => `plugin${index}`).join(", ")}];`,
         loader: "ts",
       };
     });
@@ -50,7 +50,7 @@ const pluginDiscovery: BunPlugin = {
 const common = {
   sourcemap: release ? "none" : "inline",
   minify: release,
-  define: { INFLUX_VERSION: JSON.stringify(version), INFLUX_DEV: JSON.stringify(!release) },
+  define: { INFLUX_VERSION: JSON.stringify(version), INFLUX_DEVELOPMENT: JSON.stringify(!release) },
 } satisfies Partial<BuildConfig>;
 
 const renderer: BuildConfig = {
@@ -99,11 +99,11 @@ async function buildAll(): Promise<void> {
   }
   if (results.some((result) => !result.success)) throw new Error("Build failed");
 
-  if (!release && existsSync(devInstallDir)) {
+  if (!release && existsSync(developmentInstallDirectory)) {
     for (const result of results) {
       for (const output of result.outputs) {
         if (path.dirname(output.path) === path.join(dist, "desktop")) {
-          await cp(output.path, path.join(devInstallDir, path.basename(output.path)));
+          await cp(output.path, path.join(developmentInstallDirectory, path.basename(output.path)));
         }
       }
     }
@@ -115,11 +115,11 @@ async function buildAll(): Promise<void> {
 // Poll source metadata so watch mode also detects new plugin directories on platforms
 // where recursive filesystem notifications miss newly created files.
 async function sourceSnapshot(): Promise<string> {
-  async function scan(dir: string): Promise<string[]> {
-    const entries = await readdir(dir, { withFileTypes: true });
+  async function scan(directory: string): Promise<string[]> {
+    const entries = await readdir(directory, { withFileTypes: true });
     const files = await Promise.all(
       entries.map(async (entry) => {
-        const file = path.join(dir, entry.name);
+        const file = path.join(directory, entry.name);
         return entry.isDirectory() ? scan(file) : [file];
       }),
     );
@@ -129,8 +129,8 @@ async function sourceSnapshot(): Promise<string> {
   return JSON.stringify(
     await Promise.all(
       files.sort().map(async (file) => {
-        const info = await stat(file);
-        return [file, info.mtimeMs, info.ctimeMs, info.size];
+        const stats = await stat(file);
+        return [file, stats.mtimeMs, stats.ctimeMs, stats.size];
       }),
     ),
   );
@@ -157,14 +157,14 @@ if (watch) {
 }
 
 async function stageRelease() {
-  const releaseDir = path.join(dist, "release");
-  await mkdir(releaseDir, { recursive: true });
-  const sums: string[] = [];
+  const releaseDirectory = path.join(dist, "release");
+  await mkdir(releaseDirectory, { recursive: true });
+  const checksums: string[] = [];
   for (const [file, asset] of Object.entries(DESKTOP_ASSETS)) {
     const data = await readFile(path.join(dist, "desktop", file));
-    await writeFile(path.join(releaseDir, asset), data);
-    sums.push(`${createHash("sha256").update(data).digest("hex")}  ${asset}`);
+    await writeFile(path.join(releaseDirectory, asset), data);
+    checksums.push(`${createHash("sha256").update(data).digest("hex")}  ${asset}`);
   }
-  await writeFile(path.join(releaseDir, "SHA256SUMS"), `${sums.join("\n")}\n`);
+  await writeFile(path.join(releaseDirectory, "SHA256SUMS"), `${checksums.join("\n")}\n`);
   console.log(`Staged release ${version} in dist/release/`);
 }

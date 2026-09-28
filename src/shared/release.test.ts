@@ -13,7 +13,7 @@ import {
   installFiles,
   NoReleaseError,
   parseChecksums,
-  type ReleaseInfo,
+  type Release,
 } from "./release";
 
 const sha256 = (data: string) => createHash("sha256").update(data).digest("hex");
@@ -21,13 +21,13 @@ const sha256 = (data: string) => createHash("sha256").update(data).digest("hex")
 function fakeGitHub(
   files: Record<string, string>,
   tamper?: string,
-): { fetch: Fetch; release: ReleaseInfo } {
-  const sums = Object.entries(files).map(([name, data]) => `${sha256(data)}  ${name}`);
-  const served: Record<string, string> = { ...files, SHA256SUMS: `${sums.join("\n")}\n` };
+): { fetch: Fetch; release: Release } {
+  const checksums = Object.entries(files).map(([name, data]) => `${sha256(data)}  ${name}`);
+  const served: Record<string, string> = { ...files, SHA256SUMS: `${checksums.join("\n")}\n` };
   if (tamper) served[tamper] += "// injected";
   const url = (name: string) => `https://example.test/${name}`;
   const fetch: Fetch = async (requested) => {
-    const name = Object.keys(served).find((n) => url(n) === requested);
+    const name = Object.keys(served).find((file) => url(file) === requested);
     return name ? new Response(served[name]) : new Response("missing", { status: 404 });
   };
   return {
@@ -36,7 +36,7 @@ function fakeGitHub(
       version: "1.2.0",
       url: "https://example.test",
       notes: "",
-      assets: Object.fromEntries(Object.keys(served).map((n) => [n, url(n)])),
+      assets: Object.fromEntries(Object.keys(served).map((name) => [name, url(name)])),
     },
   };
 }
@@ -120,20 +120,20 @@ describe("downloadDesktopRelease", () => {
 
 describe("installFiles", () => {
   it("replaces existing files and leaves no temporary files", () => {
-    const dir = mkdtempSync(path.join(os.tmpdir(), "influx-test-"));
+    const directory = mkdtempSync(path.join(os.tmpdir(), "influx-test-"));
     try {
-      writeFileSync(path.join(dir, "main.js"), "old");
+      writeFileSync(path.join(directory, "main.js"), "old");
       installFiles(
-        dir,
+        directory,
         new Map([
           ["main.js", Buffer.from("new")],
           ["renderer.js", Buffer.from("r")],
         ]),
       );
-      assert.equal(readFileSync(path.join(dir, "main.js"), "utf8"), "new");
-      assert.deepEqual(readdirSync(dir).sort(), ["main.js", "renderer.js"]);
+      assert.equal(readFileSync(path.join(directory, "main.js"), "utf8"), "new");
+      assert.deepEqual(readdirSync(directory).sort(), ["main.js", "renderer.js"]);
     } finally {
-      rmSync(dir, { recursive: true, force: true });
+      rmSync(directory, { recursive: true, force: true });
     }
   });
 });

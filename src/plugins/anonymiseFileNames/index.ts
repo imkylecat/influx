@@ -3,7 +3,7 @@ import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 
 const SPOILER_PREFIX = "SPOILER_";
-const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+const CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 const settings = definePluginSettings({
   method: {
@@ -30,7 +30,7 @@ const settings = definePluginSettings({
 
 function randomName(length: number): string {
   const bytes = crypto.getRandomValues(new Uint8Array(length));
-  return Array.from(bytes, (b) => CHARSET[b % CHARSET.length]).join("");
+  return Array.from(bytes, (byte) => CHARACTERS[byte % CHARACTERS.length]).join("");
 }
 
 function baseName(index: number): string {
@@ -70,8 +70,8 @@ export default definePlugin({
 
   anonymise(files: File[]): File[] {
     try {
-      return files.map((file, i) => {
-        const name = anonymiseName(file.name, baseName(i));
+      return files.map((file, index) => {
+        const name = anonymiseName(file.name, baseName(index));
         return name === file.name
           ? file
           : new File([file], name, { type: file.type, lastModified: file.lastModified });

@@ -14,20 +14,24 @@ const fluxerAsar = path.join(process.resourcesPath, "_app.asar");
 const fluxerPackage = JSON.parse(readFileSync(path.join(fluxerAsar, "package.json"), "utf8"));
 
 const internalApp = app as typeof app & {
-  setAppPath(p: string): void;
-  setVersion(v: string): void;
+  setAppPath(appPath: string): void;
+  setVersion(version: string): void;
 };
 internalApp.setAppPath(fluxerAsar);
 internalApp.setVersion(fluxerPackage.version);
 app.setName(fluxerPackage.productName ?? fluxerPackage.name);
 
-function allowEval(csp: string): string {
-  const directives = csp.split(";").map((d) => d.trim());
-  const target = directives.some((d) => d.startsWith("script-src "))
+function allowEval(policy: string): string {
+  const directives = policy.split(";").map((directive) => directive.trim());
+  const target = directives.some((directive) => directive.startsWith("script-src "))
     ? "script-src "
     : "default-src ";
   return directives
-    .map((d) => (d.startsWith(target) && !d.includes("'unsafe-eval'") ? `${d} 'unsafe-eval'` : d))
+    .map((directive) =>
+      directive.startsWith(target) && !directive.includes("'unsafe-eval'")
+        ? `${directive} 'unsafe-eval'`
+        : directive,
+    )
     .join("; ");
 }
 

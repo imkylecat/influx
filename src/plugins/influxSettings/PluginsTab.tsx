@@ -1,20 +1,28 @@
 import {
   getPluginsNeedingReload,
   isPluginEnabled,
-  type PluginDef,
+  type PluginDefinition,
   plugins,
   setPluginEnabled,
 } from "@api/Plugins";
-import type { OptionDef } from "@api/Settings";
+import type { OptionDefinition } from "@api/Settings";
 import { findIcon, Modals, nativeClasses, openUserProfile, React } from "@webpack/common";
 
 import { iconOrFallback, SettingsPage, useSettingsComponents } from "./components";
 import { settings } from "./settings";
 
 const humanize = (key: string): string =>
-  key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase());
+  key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (character) => character.toUpperCase());
 
-function OptionField({ plugin, name, def }: { plugin: PluginDef; name: string; def: OptionDef }) {
+function OptionField({
+  plugin,
+  name,
+  definition,
+}: {
+  plugin: PluginDefinition;
+  name: string;
+  definition: OptionDefinition;
+}) {
   const store = plugin.settings!.store as Record<string, any>;
   const [value, setValue] = React.useState(store[name]);
   const update = (next: unknown) => {
@@ -23,12 +31,12 @@ function OptionField({ plugin, name, def }: { plugin: PluginDef; name: string; d
   };
   const { Switch, Input, Combobox } = useSettingsComponents();
 
-  switch (def.type) {
+  switch (definition.type) {
     case "boolean":
       return (
         <Switch
           label={humanize(name)}
-          description={def.description}
+          description={definition.description}
           value={Boolean(value)}
           onChange={update}
         />
@@ -37,9 +45,9 @@ function OptionField({ plugin, name, def }: { plugin: PluginDef; name: string; d
       return (
         <Combobox
           label={humanize(name)}
-          description={def.description}
+          description={definition.description}
           value={String(value)}
-          options={def.options.map((option) =>
+          options={definition.options.map((option) =>
             typeof option === "string" ? { label: option, value: option } : option,
           )}
           onChange={update}
@@ -50,12 +58,12 @@ function OptionField({ plugin, name, def }: { plugin: PluginDef; name: string; d
       return (
         <Input
           label={humanize(name)}
-          footer={def.description}
-          type={def.type === "number" ? "number" : "text"}
+          footer={definition.description}
+          type={definition.type === "number" ? "number" : "text"}
           value={String(value ?? "")}
-          onChange={(e: { currentTarget: HTMLInputElement }) => {
-            const raw = e.currentTarget.value;
-            if (def.type === "string") return update(raw);
+          onChange={(event: { currentTarget: HTMLInputElement }) => {
+            const raw = event.currentTarget.value;
+            if (definition.type === "string") return update(raw);
             const parsed = Number(raw);
             setValue(raw);
             if (raw.trim() !== "" && Number.isFinite(parsed)) store[name] = parsed;
@@ -67,7 +75,11 @@ function OptionField({ plugin, name, def }: { plugin: PluginDef; name: string; d
 
 type PluginFilter = "all" | "enabled" | "disabled" | "configurable";
 
-const FILTERS: Array<{ value: PluginFilter; label: string; test(plugin: PluginDef): boolean }> = [
+const FILTERS: Array<{
+  value: PluginFilter;
+  label: string;
+  test(plugin: PluginDefinition): boolean;
+}> = [
   { value: "all", label: "Show all", test: () => true },
   { value: "enabled", label: "Show enabled", test: (plugin) => isPluginEnabled(plugin) },
   { value: "disabled", label: "Show disabled", test: (plugin) => !isPluginEnabled(plugin) },
@@ -85,10 +97,10 @@ const EMPTY_MESSAGES: Record<PluginFilter, string> = {
   configurable: "No plugins have settings.",
 };
 
-function visibleOptions(plugin: PluginDef): Array<[string, OptionDef]> {
-  return Object.entries((plugin.settings?.defs ?? {}) as Record<string, OptionDef>).filter(
-    ([, def]) => !def.hidden,
-  );
+function visibleOptions(plugin: PluginDefinition): Array<[string, OptionDefinition]> {
+  return Object.entries(
+    (plugin.settings?.definitions ?? {}) as Record<string, OptionDefinition>,
+  ).filter(([, definition]) => !definition.hidden);
 }
 
 // Laid out like the rows on Fluxer's Advanced settings tab.
@@ -99,7 +111,7 @@ const badge = (...variants: string[]) =>
     ...variants.map((variant) => `SettingsStatusBadge.module__${variant}___`),
   );
 
-function PluginSettingsModal({ plugin }: { plugin: PluginDef }) {
+function PluginSettingsModal({ plugin }: { plugin: PluginDefinition }) {
   const { ModalRoot, ModalHeader, ModalContent, ModalContentLayout } = useSettingsComponents();
   const close = () => Modals()?.pop();
   return (
@@ -113,8 +125,8 @@ function PluginSettingsModal({ plugin }: { plugin: PluginDef }) {
             </p>
           )}
           <div className={row("controlStackCompact")}>
-            {visibleOptions(plugin).map(([name, def]) => (
-              <OptionField key={name} plugin={plugin} name={name} def={def} />
+            {visibleOptions(plugin).map(([name, definition]) => (
+              <OptionField key={name} plugin={plugin} name={name} definition={definition} />
             ))}
           </div>
         </ModalContentLayout>
@@ -123,7 +135,7 @@ function PluginSettingsModal({ plugin }: { plugin: PluginDef }) {
   );
 }
 
-function openPluginSettings(plugin: PluginDef): void {
+function openPluginSettings(plugin: PluginDefinition): void {
   const modals = Modals();
   modals?.push(modals.modal(() => <PluginSettingsModal plugin={plugin} />));
 }
@@ -133,7 +145,7 @@ function PluginRow({
   needsReload,
   onToggle,
 }: {
-  plugin: PluginDef;
+  plugin: PluginDefinition;
   needsReload: boolean;
   onToggle(): void;
 }) {
@@ -158,9 +170,9 @@ function PluginRow({
         <p className={row("settingDescription")}>{plugin.description}</p>
         <p className={row("settingDescription")}>
           By{" "}
-          {plugin.authors.map((author, i) => (
+          {plugin.authors.map((author, index) => (
             <React.Fragment key={author.id}>
-              {i > 0 && ", "}
+              {index > 0 && ", "}
               <button
                 type="button"
                 className="influx-author"
@@ -198,12 +210,12 @@ function PluginRow({
   );
 }
 
-function matchesQuery(plugin: PluginDef, query: string): boolean {
-  const q = query.trim().toLowerCase();
+function matchesQuery(plugin: PluginDefinition, query: string): boolean {
+  const normalizedQuery = query.trim().toLowerCase();
   return (
-    !q ||
-    [plugin.name, plugin.description, ...plugin.authors.map((a) => a.name)].some((text) =>
-      text.toLowerCase().includes(q),
+    !normalizedQuery ||
+    [plugin.name, plugin.description, ...plugin.authors.map((author) => author.name)].some((text) =>
+      text.toLowerCase().includes(normalizedQuery),
     )
   );
 }
@@ -214,11 +226,11 @@ function PluginsPage() {
   const [query, setQuery] = React.useState("");
   const [filter, setFilterState] = React.useState<PluginFilter>(
     () =>
-      (FILTERS.some((f) => f.value === settings.store.pluginFilter)
+      (FILTERS.some((option) => option.value === settings.store.pluginFilter)
         ? settings.store.pluginFilter
         : "all") as PluginFilter,
   );
-  const [, rerender] = React.useReducer((n: number) => n + 1, 0);
+  const [, rerender] = React.useReducer((count: number) => count + 1, 0);
 
   const { Container, Content, Section, Input, Combobox, Button, WarningAlert, StatusSlate } =
     useSettingsComponents();
@@ -228,8 +240,8 @@ function PluginsPage() {
     setFilterState(value);
   };
 
-  const all = Object.values(plugins).sort((a, b) => a.name.localeCompare(b.name));
-  const activeFilter = FILTERS.find((f) => f.value === filter) ?? FILTERS[0];
+  const all = Object.values(plugins).sort((first, second) => first.name.localeCompare(second.name));
+  const activeFilter = FILTERS.find((option) => option.value === filter) ?? FILTERS[0];
   const shown = all.filter((plugin) => activeFilter.test(plugin) && matchesQuery(plugin, query));
   const enabledCount = all.filter(isPluginEnabled).length;
   const needsReload = getPluginsNeedingReload();

@@ -5,7 +5,7 @@ import path from "node:path";
 
 import { changelogSection, toEmbedMarkdown } from "../src/shared/changelog";
 
-const EMBED_DESCRIPTION_MAX_LENGTH = 4096;
+const EMBED_DESCRIPTION_MAXIMUM_LENGTH = 4096;
 const INFLUX_PURPLE = 0x7b5cff;
 
 const webhookUrl = process.env.FLUXER_WEBHOOK_URL;
@@ -33,7 +33,7 @@ const response = await fetch(webhookUrl, {
         title: `Influx ${version}`,
         url: releaseUrl,
         color: INFLUX_PURPLE,
-        description: toEmbedMarkdown(section, EMBED_DESCRIPTION_MAX_LENGTH, releaseUrl),
+        description: toEmbedMarkdown(section, EMBED_DESCRIPTION_MAXIMUM_LENGTH, releaseUrl),
       },
     ],
     allowed_mentions: { parse: [] },

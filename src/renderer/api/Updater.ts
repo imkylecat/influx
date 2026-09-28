@@ -14,9 +14,9 @@ declare global {
 
 const native = window.InfluxNative;
 
-export const updateChannel: "desktop" | "desktop-dev" | "browser" = native
-  ? INFLUX_DEV
-    ? "desktop-dev"
+export const updateChannel: "desktop" | "desktop-development" | "browser" = native
+  ? INFLUX_DEVELOPMENT
+    ? "desktop-development"
     : "desktop"
   : "browser";
 

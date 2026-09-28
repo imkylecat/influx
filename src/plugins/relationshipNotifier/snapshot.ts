@@ -1,12 +1,5 @@
 import type { GuildWire, ReadyPayload, RelationshipWire } from "@webpack/fluxer";
 
-const RelationshipType = {
-  FRIEND: 1,
-  BLOCKED: 2,
-  INCOMING_REQUEST: 3,
-  OUTGOING_REQUEST: 4,
-} as const;
-
 interface KnownRelationship {
   type: number;
   name: string;
@@ -50,12 +43,11 @@ export function snapshotFromReady(ready: ReadyPayload, previous?: Snapshot): Sna
   return { relationships, guilds };
 }
 
-type RelationshipRemovalKind = Exclude<Removal["kind"], "guild">;
-
-const REMOVAL_KINDS: Record<number, RelationshipRemovalKind | undefined> = {
-  [RelationshipType.FRIEND]: "friend",
-  [RelationshipType.INCOMING_REQUEST]: "incomingRequest",
-  [RelationshipType.OUTGOING_REQUEST]: "outgoingRequest",
+// Keyed by Fluxer's relationship type. Type 2, a blocked user, isn't reported.
+const REMOVAL_KINDS: Record<number, Exclude<Removal["kind"], "guild"> | undefined> = {
+  1: "friend",
+  3: "incomingRequest",
+  4: "outgoingRequest",
 };
 
 export function relationshipRemoval(id: string, known: KnownRelationship): Removal | null {

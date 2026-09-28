@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-27
+
 ### Added
 
 - SendConfirmation plugin: asks before sending in selected channels (or all channels), with
@@ -148,7 +150,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - ForceOwnerCrown plugin: shows the server owner's crown even in servers that hide it.
 - SilentTyping plugin: stops Fluxer from telling others that you're typing.
 
-[Unreleased]: https://github.com/imkylecat/influx/compare/v0.2.5...HEAD
+[Unreleased]: https://github.com/imkylecat/influx/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/imkylecat/influx/compare/v0.2.5...v0.3.0
 [0.2.5]: https://github.com/imkylecat/influx/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/imkylecat/influx/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/imkylecat/influx/compare/v0.2.2...v0.2.3

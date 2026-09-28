@@ -2,14 +2,13 @@ import { existsSync } from "node:fs";
 import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { fileURLToPath } from "node:url";
 
 import type { BuildConfig, BunPlugin } from "bun";
 
 import { influxDataDirectory } from "../src/shared/paths";
 import { DESKTOP_ASSETS } from "../src/shared/release";
 
-const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const root = path.dirname(import.meta.dir);
 const dist = path.join(root, "dist");
 const pluginsDirectory = path.join(root, "src/plugins");
 const watch = process.argv.includes("--watch");

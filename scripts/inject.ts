@@ -12,7 +12,6 @@ import {
 } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { createPackage, extractFile } from "@electron/asar";
 
@@ -35,7 +34,7 @@ Usage: influx-installer [options]
   --help            Show this help`;
 
 const compiled = /\$bunfs|~BUN/i.test(import.meta.url);
-const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const root = path.dirname(import.meta.dir);
 const options = process.argv.slice(2);
 const pathOption = options.includes("--path") ? options[options.indexOf("--path") + 1] : undefined;
 const mode = options.includes("--uninstall")

@@ -36,7 +36,7 @@ const PREVIEW_BEHAVIOR = {
 };
 
 const settings = definePluginSettings({
-  maxEmbeds: {
+  maximumPreviews: {
     type: "number",
     description: "The most message links to preview in one message.",
     default: 3,
@@ -232,7 +232,7 @@ export default definePlugin({
     if (!message.content?.includes("/channels/")) return null;
     const links = parseLinks(message.content)
       .filter((link) => link.messageId !== message.id)
-      .slice(0, Math.max(0, settings.store.maxEmbeds));
+      .slice(0, Math.max(0, settings.store.maximumPreviews));
     const ErrorBoundary = Components.ErrorBoundary();
     if (!links.length || !ErrorBoundary) return null;
     return (

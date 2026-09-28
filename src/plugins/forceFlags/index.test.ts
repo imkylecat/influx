@@ -44,7 +44,7 @@ describe("ForceFlags", () => {
     const patched = patchFactory(1, guildModule, pendingFor(forceFlags), logger);
     assert.deepEqual(errors, []);
     const Guild = run(patched);
-    store.guildFeatures = "1: +VANITY_URL -DISCOVERABLE";
+    store.serverFeatures = "1: +VANITY_URL -DISCOVERABLE";
     assert.deepEqual(
       [...new Guild({ id: "1", features: ["DISCOVERABLE", "VERIFIED"] }).features],
       ["VERIFIED", "VANITY_URL"],

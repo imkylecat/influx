@@ -11,7 +11,7 @@ beforeEach(() => {
   sendConfirmation.settings.pluginName = sendConfirmation.name;
   const data = getPluginData(sendConfirmation.name);
   delete data.blockHoneypotChannels;
-  delete data.channelIds;
+  delete data.confirmChannels;
   delete data.confirmAll;
 });
 
@@ -24,13 +24,13 @@ describe("SendConfirmation", () => {
 
   it("matches complete channel IDs and prioritizes blocking over confirmation", () => {
     const data = getPluginData(sendConfirmation.name);
-    data.channelIds = "123, 456\n789 1513407003270057984";
+    data.confirmChannels = "123, 456\n789 1513407003270057984";
     for (const id of ["123", "456", "789"]) assert.equal(sendPolicy(id), "confirm");
     assert.equal(sendPolicy("12"), "allow");
     assert.equal(sendPolicy(HONEYPOT_CHANNEL_IDS[0]), "block");
     data.blockHoneypotChannels = false;
     assert.equal(sendPolicy(HONEYPOT_CHANNEL_IDS[0]), "confirm");
-    data.channelIds = "";
+    data.confirmChannels = "";
     assert.equal(sendPolicy(HONEYPOT_CHANNEL_IDS[0]), "allow");
     data.confirmAll = true;
     assert.equal(sendPolicy("999"), "confirm");

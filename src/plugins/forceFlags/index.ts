@@ -9,7 +9,7 @@ const settings = definePluginSettings({
       "User ID, then flags to add (+) or remove (-); separate users with ;. For example: 123456789: +STAFF -SPAMMER; 987654321: +PARTNER. Flags: STAFF, PARTNER, BUG_HUNTER, FRIENDLY_BOT, FRIENDLY_BOT_MANUAL_APPROVAL, SPAMMER, or a number. Reload Fluxer to apply.",
     default: "",
   },
-  guildFeatures: {
+  serverFeatures: {
     type: "string",
     description:
       "Server ID, then features to add (+) or remove (-); separate servers with ;. For example: 123456789: +VANITY_URL -DISCOVERABLE. Reload Fluxer to apply.",
@@ -85,7 +85,7 @@ export default definePlugin({
       find: "this.features=new Set(e.features)",
       replacement: {
         match: /this\.features=new Set\(e\.features\)/,
-        replace: "this.features=$self.guildFeatures(e.id,new Set(e.features))",
+        replace: "this.features=$self.serverFeatures(e.id,new Set(e.features))",
       },
     },
   ],
@@ -103,9 +103,9 @@ export default definePlugin({
     }
   },
 
-  guildFeatures(id: string | undefined, features: Set<string>) {
+  serverFeatures(id: string | undefined, features: Set<string>) {
     try {
-      const overrides = overridesFor(settings.store.guildFeatures, id);
+      const overrides = overridesFor(settings.store.serverFeatures, id);
       if (!overrides) return features;
       for (const name of overrides.add) features.add(name);
       for (const name of overrides.remove) features.delete(name);

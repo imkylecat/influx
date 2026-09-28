@@ -49,7 +49,7 @@ const settings = definePluginSettings({
     description: "Keep a banner at the top of Fluxer until you dismiss it, even across restarts.",
     default: true,
   },
-  toast: {
+  popup: {
     type: "boolean",
     description: "Also show a short pop-up notice.",
     default: false,
@@ -102,8 +102,8 @@ function isWanted(removal: Removal): boolean {
 
 function notify(message: string): void {
   if (settings.store.banner) addNotice(message);
-  // Without a banner, fall back to a toast so the notice isn't silently dropped.
-  if (settings.store.toast || !settings.store.banner || !nagbarFound) {
+  // Without a banner, fall back to a pop-up so the notice isn't silently dropped.
+  if (settings.store.popup || !settings.store.banner || !nagbarFound) {
     showToast("info", message, { timeout: 10_000 });
   }
   if (!settings.store.desktopNotifications) return;

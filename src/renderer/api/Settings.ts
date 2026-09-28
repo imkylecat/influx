@@ -20,10 +20,40 @@ interface SettingsData {
   plugins: Record<string, PluginSettingsData>;
 }
 
+// Settings saved under plugin and option names that have since changed.
+const RENAMED_PLUGINS: Record<string, string> = { AnonymiseFileNames: "AnonymizeFileNames" };
+const RENAMED_OPTIONS: Record<string, Record<string, string>> = {
+  ForceFlags: { guildFeatures: "serverFeatures" },
+  MessageLinkEmbeds: { maxEmbeds: "maximumPreviews" },
+  RelationshipNotifier: { toast: "popup" },
+  SendConfirmation: { channelIds: "confirmChannels" },
+};
+
+function migrate({ plugins }: SettingsData): void {
+  for (const [from, to] of Object.entries(RENAMED_PLUGINS)) {
+    if (!(from in plugins)) continue;
+    plugins[to] ??= plugins[from];
+    delete plugins[from];
+  }
+  for (const [plugin, options] of Object.entries(RENAMED_OPTIONS)) {
+    const data = plugins[plugin];
+    if (!data) continue;
+    for (const [from, to] of Object.entries(options)) {
+      if (!(from in data)) continue;
+      data[to] ??= data[from];
+      delete data[from];
+    }
+  }
+}
+
 function load(): SettingsData {
   try {
     const raw = storage?.getItem(STORAGE_KEY);
-    if (raw) return { plugins: {}, ...JSON.parse(raw) };
+    if (raw) {
+      const data: SettingsData = { plugins: {}, ...JSON.parse(raw) };
+      migrate(data);
+      return data;
+    }
   } catch (error) {
     logger.error("Failed to load settings, using defaults", error);
   }

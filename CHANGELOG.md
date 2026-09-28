@@ -20,6 +20,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- AnonymiseFileNames is now AnonymizeFileNames.
+- Some settings have clearer names: ForceFlags "Server Features", MessageLinkEmbeds "Maximum
+  Previews", RelationshipNotifier "Popup" and SendConfirmation "Confirm Channels". Your settings
+  carry over.
 - MessageLogger makes deleted messages read-only: the hover bar and message menu no longer offer
   replies, reactions, edits, pins or other actions Fluxer's server would reject.
 - Tests now live next to their plugins and modules. Shared plugin tests are split into separate files.

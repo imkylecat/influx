@@ -44,7 +44,7 @@ function baseName(index: number): string {
   }
 }
 
-export function anonymiseName(name: string, base: string): string {
+export function anonymizeName(name: string, base: string): string {
   const spoiler = name.startsWith(SPOILER_PREFIX) ? SPOILER_PREFIX : "";
   const rest = name.slice(spoiler.length);
   // Keep compound extensions like .tar.gz, but not a dotted name like "my.holiday.photo.png".
@@ -53,7 +53,7 @@ export function anonymiseName(name: string, base: string): string {
 }
 
 export default definePlugin({
-  name: "AnonymiseFileNames",
+  name: "AnonymizeFileNames",
   description: "Renames files you upload so their original names aren't shared.",
   authors: [Contributor.Kairu],
   settings,
@@ -63,21 +63,21 @@ export default definePlugin({
       find: /addFiles\(\i,\i\)\{return \i\(function\*/,
       replacement: {
         match: /addFiles\((\i),(\i)\)\{return \i\(function\*\(\)\{if\(0===\2\.length\)return\[\];/,
-        replace: "$&$2=$self.anonymise($2);",
+        replace: "$&$2=$self.anonymize($2);",
       },
     },
   ],
 
-  anonymise(files: File[]): File[] {
+  anonymize(files: File[]): File[] {
     try {
       return files.map((file, index) => {
-        const name = anonymiseName(file.name, baseName(index));
+        const name = anonymizeName(file.name, baseName(index));
         return name === file.name
           ? file
           : new File([file], name, { type: file.type, lastModified: file.lastModified });
       });
     } catch (error) {
-      console.error("[Influx] AnonymiseFileNames failed, uploading with original names", error);
+      console.error("[Influx] AnonymizeFileNames failed, uploading with original names", error);
       return files;
     }
   },

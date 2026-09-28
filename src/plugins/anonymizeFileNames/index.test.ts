@@ -3,18 +3,18 @@ import assert from "node:assert/strict";
 
 import type { ModuleFactory } from "@webpack/types";
 
-import anonymiseFileNames, { anonymiseName } from ".";
+import anonymizeFileNames, { anonymizeName } from ".";
 import { patchFactory } from "../../renderer/patcher/patchFactory";
 import { errors, logger, pendingFor, resetPatching, run } from "../../renderer/patcher/testing";
 
-beforeEach(() => resetPatching(anonymiseFileNames));
+beforeEach(() => resetPatching(anonymizeFileNames));
 
-describe("AnonymiseFileNames", () => {
+describe("AnonymizeFileNames", () => {
   it("keeps the extension and spoiler prefix", () => {
-    assert.equal(anonymiseName("holiday photo.PNG", "abc"), "abc.PNG");
-    assert.equal(anonymiseName("SPOILER_secret.jpg", "abc"), "SPOILER_abc.jpg");
-    assert.equal(anonymiseName("backup.tar.gz", "abc"), "abc.tar.gz");
-    assert.equal(anonymiseName("README", "abc"), "abc");
+    assert.equal(anonymizeName("holiday photo.PNG", "abc"), "abc.PNG");
+    assert.equal(anonymizeName("SPOILER_secret.jpg", "abc"), "SPOILER_abc.jpg");
+    assert.equal(anonymizeName("backup.tar.gz", "abc"), "abc.tar.gz");
+    assert.equal(anonymizeName("README", "abc"), "abc");
   });
 
   it("renames files passed to CloudUpload.addFiles", async () => {
@@ -24,7 +24,7 @@ describe("AnonymiseFileNames", () => {
         "class U{createAttachments(e,t){return Promise.resolve(t.map(f=>f.name))}addFiles(e,t){return v(function*(){if(0===t.length)return[];let n=yield this.createAttachments(e,t);return n}).call(this)}}" +
         "e.exports=new U}",
     )() as ModuleFactory;
-    const patched = patchFactory(1, uploadModule, pendingFor(anonymiseFileNames), logger);
+    const patched = patchFactory(1, uploadModule, pendingFor(anonymizeFileNames), logger);
     assert.notEqual(patched, uploadModule);
     assert.deepEqual(errors, []);
     const names: string[] = await run(patched).addFiles("1", [new File(["x"], "me.png")]);

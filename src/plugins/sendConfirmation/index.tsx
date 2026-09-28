@@ -11,7 +11,7 @@ const settings = definePluginSettings({
     description: "Block messages to known honeypot channels, even if you confirm sending.",
     default: true,
   },
-  channelIds: {
+  confirmChannels: {
     type: "string",
     description: "Require confirmation in these channel IDs, separated by commas or spaces.",
     default: "",
@@ -27,7 +27,8 @@ export function sendPolicy(channelId: string): "block" | "confirm" | "allow" {
   if (settings.store.blockHoneypotChannels && HONEYPOT_CHANNEL_IDS.includes(channelId)) {
     return "block";
   }
-  return settings.store.confirmAll || settings.store.channelIds.split(/[\s,]+/).includes(channelId)
+  return settings.store.confirmAll ||
+    settings.store.confirmChannels.split(/[\s,]+/).includes(channelId)
     ? "confirm"
     : "allow";
 }

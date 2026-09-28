@@ -20,7 +20,6 @@ import {
 
 const logger = new Logger("RelationshipNotifier");
 const SELF_ACTION_EXPIRY_MILLISECONDS = 60_000;
-const SAVE_DELAY_MILLISECONDS = 1_000;
 
 const settings = definePluginSettings({
   friends: {
@@ -75,7 +74,6 @@ function consumeSelfAction(id: string): boolean {
 // The snapshot is kept per account, since Fluxer can switch between several.
 let accountId: string | null = null;
 let snapshot: Snapshot | null = null;
-let saveTimer: ReturnType<typeof setTimeout> | undefined;
 let stopListening: (() => void) | undefined;
 
 function savedSnapshots(): Record<string, Snapshot> {
@@ -85,12 +83,9 @@ function savedSnapshots(): Record<string, Snapshot> {
 }
 
 function saveSnapshot(): void {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    if (!accountId || !snapshot) return;
-    savedSnapshots()[accountId] = snapshot;
-    saveSettings();
-  }, SAVE_DELAY_MILLISECONDS);
+  if (!accountId || !snapshot) return;
+  savedSnapshots()[accountId] = snapshot;
+  saveSettings();
 }
 
 function isWanted(removal: Removal): boolean {
@@ -243,7 +238,6 @@ export default definePlugin({
 
   stop() {
     stopListening?.();
-    clearTimeout(saveTimer);
     for (const timer of selfActions.values()) clearTimeout(timer);
     selfActions.clear();
   },

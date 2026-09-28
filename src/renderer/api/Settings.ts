@@ -2,6 +2,7 @@ import { Logger } from "../utils/Logger";
 
 const logger = new Logger("Settings");
 const STORAGE_KEY = "InfluxSettings";
+const SAVE_DELAY_MILLISECONDS = 1_000;
 
 const storage: Storage | null = (() => {
   try {
@@ -62,16 +63,28 @@ function load(): SettingsData {
 
 export const settings: SettingsData = load();
 
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
+
+function writeSettings(): void {
+  if (saveTimer === undefined) return;
+  clearTimeout(saveTimer);
+  saveTimer = undefined;
+  try {
+    storage!.setItem(STORAGE_KEY, JSON.stringify(settings));
+  } catch (error) {
+    logger.error("Failed to save settings", error);
+  }
+}
+
+if (storage) window.addEventListener("pagehide", writeSettings);
+
+// Writes to storage once changes stop coming.
 export function saveSettings(): void {
   if (!storage) {
     logger.error("No localStorage available; settings will not persist");
     return;
   }
-  try {
-    storage.setItem(STORAGE_KEY, JSON.stringify(settings));
-  } catch (error) {
-    logger.error("Failed to save settings", error);
-  }
+  saveTimer ??= setTimeout(writeSettings, SAVE_DELAY_MILLISECONDS);
 }
 
 export function getPluginData(plugin: string): PluginSettingsData {

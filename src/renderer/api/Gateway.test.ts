@@ -1,9 +1,7 @@
 import { describe, it } from "bun:test";
 import assert from "node:assert/strict";
 
-import { patchFactory } from "../patcher/patchFactory";
-import { errors, logger, run } from "../patcher/testing";
-import type { ModuleFactory } from "../webpack/types";
+import { compile, errors, runPatched } from "../patcher/testing";
 import * as Gateway from "./Gateway";
 import { type GatewayHandler, hookGatewayEvents, onGatewayEvents } from "./Gateway";
 
@@ -40,16 +38,15 @@ describe("Gateway", () => {
 
   it("hooks Fluxer's handler registry once it is filled", () => {
     // Shape of Fluxer's compiled gateway handler registry.
-    const registryModule = new Function(
-      'return function(e){let t=new Map;t.set("READY",()=>{}),t.set("SESSIONS_REPLACE",()=>{}),e.exports=t}',
-    )() as ModuleFactory;
+    const registryModule = compile(
+      'function(e){let t=new Map;t.set("READY",()=>{}),t.set("SESSIONS_REPLACE",()=>{}),e.exports=t}',
+    );
     errors.length = 0;
     (globalThis as any).Influx = { Gateway };
-    const patched = patchFactory(1, registryModule, [Gateway.gatewayPatch], logger);
-    assert.deepEqual(errors, []);
+    const registry = runPatched([Gateway.gatewayPatch], registryModule);
     const seen: unknown[] = [];
     const stop = onGatewayEvents("Test", { READY: (data) => seen.push(data) });
-    run(patched).get("READY")("ready", "context");
+    registry.get("READY")("ready", "context");
     stop();
     assert.deepEqual(seen, ["ready"]);
   });

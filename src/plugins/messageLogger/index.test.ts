@@ -3,11 +3,9 @@ import assert from "node:assert/strict";
 
 import { getPluginData } from "@api/Settings";
 import * as common from "@webpack/common";
-import type { ModuleFactory } from "@webpack/types";
 
 import messageLogger from ".";
-import { patchFactory } from "../../renderer/patcher/patchFactory";
-import { errors, logger, pendingFor, resetPatching, run } from "../../renderer/patcher/testing";
+import { compile, pendingFor, resetPatching, runPatched } from "../../renderer/patcher/testing";
 
 beforeEach(() => resetPatching(messageLogger));
 
@@ -65,8 +63,8 @@ class FakeChannelMessages {
 }
 
 // Shape of Fluxer's compiled MessagingMessages store, with ChannelMessages as s.W.
-const storeModule = new Function(
-  "return function(e,t,n){const s={W:null};" +
+const storeModule = compile(
+  "function(e,t,n){const s={W:null};" +
     "class M{commitMessages(e){s.W.current=e}notifyChange(){}" +
     "handleMessageDelete(e){let t=s.W.get(e.channelId);if(!(null==t?void 0:t.has(e.id)))return!1;let n=t;n=n.remove(e.id);return this.commitMessages(n),this.notifyChange(),!0}" +
     "handleMessageDeleteBulk(e){let t=s.W.get(e.channelId);if(!t)return!1;let n=t.removeIds(e.ids);if(n===t)return!1;return this.commitMessages(n),this.notifyChange(),!0}" +
@@ -74,7 +72,7 @@ const storeModule = new Function(
     'handleOptimisticEdit(e){var t,n;let{channelId:i,messageId:a,content:r}=e,o=s.W.get(i);if(!o)return null;let l=o.get(a);if(!l)return null;let u={originalContent:l.content},c=o.update(a,e=>e.withUpdates({content:r,state:"EDITING"}));return this.commitMessages(c),this.notifyChange(),u}' +
     'handleEditRollback(e){let{channelId:t,messageId:n,originalContent:i}=e,r=s.W.get(t);if(!(null==r?void 0:r.has(n)))return;let o=r.update(n,e=>e.withUpdates({content:i,state:"SENT"}));this.commitMessages(o),this.notifyChange()}}' +
     "e.exports={store:new M,channels:s}}",
-)() as ModuleFactory;
+);
 
 describe("MessageLogger", () => {
   beforeEach(() => {
@@ -101,10 +99,8 @@ describe("MessageLogger", () => {
 
   function setup() {
     const pending = pendingFor(messageLogger);
-    const patched = patchFactory(1, storeModule, pending, logger);
-    assert.deepEqual(errors, []);
+    const { store, channels } = runPatched(pending, storeModule);
     assert.equal(pending.length, 6, "only the patches for other modules are left");
-    const { store, channels } = run(patched);
     channels.W = {
       current: new FakeChannelMessages(
         new Map([
@@ -145,13 +141,11 @@ describe("MessageLogger", () => {
   });
 
   it("tags deleted rows and adds Fluxer's failed-message class", () => {
-    const rowModule = new Function(
-      "return function(e,t,n){" +
+    const rowModule = compile(
+      "function(e,t,n){" +
         'e.exports=(b,ty)=>({"data-flx-edited":null!=b.editedTimestamp?"true":void 0,"data-flx-compact":void 0,className:ty,ref:null})}',
-    )() as ModuleFactory;
-    const patched = patchFactory(1, rowModule, pendingFor(messageLogger), logger);
-    assert.deepEqual(errors, []);
-    const props = run(patched);
+    );
+    const props = runPatched(pendingFor(messageLogger), rowModule);
     const live = props(message("1", "hi"), "row");
     assert.equal(live.className, "row");
     assert.equal(live["data-influx-deleted"], undefined);
@@ -212,14 +206,12 @@ describe("MessageLogger", () => {
 
   it("gives deleted messages read-only permissions", () => {
     // Shape of Fluxer's compiled message permissions, where a is its read-only channel check.
-    const permissionsModule = new Function(
-      "return function(e,t,n){const tN={A:{isBlocked:()=>!1}},u={sC:c=>!!c.readOnly};" +
+    const permissionsModule = compile(
+      "function(e,t,n){const tN={A:{isBlocked:()=>!1}},u={sC:c=>!!c.readOnly};" +
         'function tW(e){return!1}const modal="channel.message-action-utils.request-message-pin.confirm-modal";' +
         "e.exports=function(e,t){let n=!t.guildId,i=tN.A.isBlocked(e.author.id),a=(0,u.sC)(t),o=tW(e);return{canSendMessages:!o&&!a,canEditMessage:!a}}}",
-    )() as ModuleFactory;
-    const patched = patchFactory(1, permissionsModule, pendingFor(messageLogger), logger);
-    assert.deepEqual(errors, []);
-    const permissions = run(patched);
+    );
+    const permissions = runPatched(pendingFor(messageLogger), permissionsModule);
     const channel = { guildId: "g" };
     assert.deepEqual(permissions(message("1", "hi"), channel), {
       canSendMessages: true,
@@ -234,14 +226,12 @@ describe("MessageLogger", () => {
 
   it("keeps only local actions in a deleted message's menu", () => {
     // Shape of Fluxer's compiled message action groups.
-    const groupsModule = new Function(
-      'return function(e,t,n){const i={jsx:(t,p)=>p},a={ul:e=>!0},m={},B={reply:"reply",copyMessageId:"message_copy_id",reportMessage:"report_message"},ea=()=>{};' +
+    const groupsModule = compile(
+      'function(e,t,n){const i={jsx:(t,p)=>p},a={ul:e=>!0},m={},B={reply:"reply",copyMessageId:"message_copy_id",reportMessage:"report_message"},ea=()=>{};' +
         'e.exports=e=>{let l=[{items:[{id:B.reply},{id:B.copyMessageId},{label:"Retry"}]}];' +
         'return(0,a.ul)(e)&&l.push({items:[{id:B.reportMessage,icon:(0,i.jsx)(m.ll,{size:20,"data-flx":"channel.message-action-menu.groups.report-message-icon"}),label:"Report",onClick:ea,danger:!0}]}),l}}',
-    )() as ModuleFactory;
-    const patched = patchFactory(1, groupsModule, pendingFor(messageLogger), logger);
-    assert.deepEqual(errors, []);
-    const groups = run(patched);
+    );
+    const groups = runPatched(pendingFor(messageLogger), groupsModule);
     const ids = (fakeMessage: FakeMessage) =>
       groups(fakeMessage).map((group: any) => group.items.map((item: any) => item.id));
     assert.deepEqual(ids(message("1", "hi")), [
@@ -253,17 +243,15 @@ describe("MessageLogger", () => {
 
   it("adds its menu items after the danger group", () => {
     // Shape of Fluxer's compiled message context menu.
-    const menuModule = new Function(
-      'return function(e,t,n){const i={jsx:(t,p)=>p,jsxs:(t,p)=>p},x={r:"group"},T={G:"submenu"};' +
+    const menuModule = compile(
+      'function(e,t,n){const i={jsx:(t,p)=>p,jsxs:(t,p)=>p},x={r:"group"},T={G:"submenu"};' +
         'e.exports=(e,eG,D)=>[eG?(0,i.jsxs)(x.r,{"data-flx":"ui.action-menu.message-context-menu.render-danger-group.menu-group",children:[(0,i.jsx)(T.G,{render:()=>(0,i.jsx)(ee,{reactions:[],channelId:e.channelId,messageId:e.id,' +
         '"data-flx":"ui.action-menu.message-context-menu.render-danger-group.remove-reactions-submenu"}),"data-flx":"ui.action-menu.message-context-menu.render-danger-group.menu-item-submenu"}),eG]}):null,D]}',
-    )() as ModuleFactory;
-    const patched = patchFactory(1, menuModule, pendingFor(messageLogger), logger);
-    assert.deepEqual(errors, []);
+    );
     (globalThis as any).Influx.plugins.MessageLogger = {
       renderMenuItems: (fakeMessage: FakeMessage) => `items for ${fakeMessage.id}`,
     };
-    const menu = run(patched);
+    const menu = runPatched(pendingFor(messageLogger), menuModule);
     const children = menu(message("1", "hi"), "delete", "stickers");
     assert.equal(children.length, 3);
     assert.equal(children[1], "items for 1");

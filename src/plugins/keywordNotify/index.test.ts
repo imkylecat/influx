@@ -1,11 +1,8 @@
 import { beforeEach, describe, it } from "bun:test";
 import assert from "node:assert/strict";
 
-import type { ModuleFactory } from "@webpack/types";
-
 import keywordNotify, { matchesKeywords } from ".";
-import { patchFactory } from "../../renderer/patcher/patchFactory";
-import { errors, logger, pendingFor, resetPatching, run } from "../../renderer/patcher/testing";
+import { compile, pendingFor, resetPatching, runPatched } from "../../renderer/patcher/testing";
 
 beforeEach(() => resetPatching(keywordNotify));
 
@@ -28,13 +25,11 @@ describe("KeywordNotify", () => {
   });
 
   it("highlights keyword hits with Fluxer's mention class", () => {
-    const rowModule = new Function(
-      "return function(e,t,n){const eM={L8:'mentioned'};" +
+    const rowModule = compile(
+      "function(e,t,n){const eM={L8:'mentioned'};" +
         'e.exports=(C,b)=>[!C&&b.isMentioned()&&eM.L8,"channel.message.article.alt-click"]}',
-    )() as ModuleFactory;
-    const patched = patchFactory(1, rowModule, pendingFor(keywordNotify), logger);
-    assert.deepEqual(errors, []);
-    const classes = run(patched);
+    );
+    const classes = runPatched(pendingFor(keywordNotify), rowModule);
     const row = (content: string) => ({
       content,
       author: { id: "2" },

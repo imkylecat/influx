@@ -2,11 +2,9 @@ import { beforeEach, describe, it } from "bun:test";
 import assert from "node:assert/strict";
 
 import { getPluginData } from "@api/Settings";
-import type { ModuleFactory } from "@webpack/types";
 
 import localNotes, { MAXIMUM_NOTE_LENGTH, readNote, writeNote } from ".";
-import { patchFactory } from "../../renderer/patcher/patchFactory";
-import { errors, logger, pendingFor, resetPatching, run } from "../../renderer/patcher/testing";
+import { compile, pendingFor, resetPatching, runPatched } from "../../renderer/patcher/testing";
 
 describe("LocalNotes", () => {
   beforeEach(() => {
@@ -51,21 +49,19 @@ describe("LocalNotes", () => {
   });
 
   it("adds the local action beside Copy User ID without replacing it", () => {
-    const factory = new Function(
-      'return function(module){const i={jsx:(type,props)=>({type,props})},I={K:"copy"};module.exports=(e,t)=>[(0,i.jsx)(I.K,{user:e,onClose:t,"data-flx":"ui.action-menu.user-context-menu.render-advanced-menu-group.copy-user-id-menu-item"})]}',
-    )() as ModuleFactory;
+    const factory = compile(
+      'function(module){const i={jsx:(type,props)=>({type,props})},I={K:"copy"};module.exports=(e,t)=>[(0,i.jsx)(I.K,{user:e,onClose:t,"data-flx":"ui.action-menu.user-context-menu.render-advanced-menu-group.copy-user-id-menu-item"})]}',
+    );
     resetPatching({
       ...localNotes,
       renderMenuItem: (user: unknown, onClose: unknown) => ({ user, onClose }),
     });
     const pending = pendingFor(localNotes);
-    const patched = patchFactory(1, factory, pending, logger);
-    assert.notEqual(patched, factory);
-    assert.deepEqual(errors, []);
+    const renderItems = runPatched(pending, factory);
     assert.equal(pending.length, 0);
     const user = { id: "10" };
     const close = () => {};
-    const items = run(patched)(user, close);
+    const items = renderItems(user, close);
     assert.equal(items[0].type, "copy");
     assert.deepEqual(items[1], { user, onClose: close });
   });

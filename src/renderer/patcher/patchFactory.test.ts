@@ -1,17 +1,16 @@
 import { beforeEach, describe, it } from "bun:test";
 import assert from "node:assert/strict";
 
-import type { ModuleFactory, Patch } from "@webpack/types";
+import type { Patch } from "@webpack/types";
 
 import silentTyping from "../../plugins/silentTyping";
 import { canonicalizeMatch, patchFactory } from "./patchFactory";
-import { errors, logger, pendingFor, resetPatching, run } from "./testing";
+import { compile, errors, logger, pendingFor, resetPatching, run } from "./testing";
 
-const typingModule = new Function(
-  "return " +
-    "function(e,t,n){class r{constructor(){this.sent=[]}postTyping(e){try{this.sent.push(e)}catch(t){console.error(`Failed to send typing indicator to channel ${e}:`,t)}}}" +
+const typingModule = compile(
+  "function(e,t,n){class r{constructor(){this.sent=[]}postTyping(e){try{this.sent.push(e)}catch(t){console.error(`Failed to send typing indicator to channel ${e}:`,t)}}}" +
     "e.exports=new r}",
-)() as ModuleFactory;
+);
 
 beforeEach(() => resetPatching());
 

@@ -22,7 +22,7 @@
   },
   "overrides": [
     {
-      "files": ["**/*.test.ts"],
+      "files": ["**/*.test.ts", "src/renderer/patcher/testing.ts"],
       "rules": {
         "typescript/no-implied-eval": "off"
       }

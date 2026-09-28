@@ -1,11 +1,8 @@
 import { beforeEach, describe, it } from "bun:test";
 import assert from "node:assert/strict";
 
-import type { ModuleFactory } from "@webpack/types";
-
 import forceFlags, { parseOverrides, toggleOverride } from ".";
-import { patchFactory } from "../../renderer/patcher/patchFactory";
-import { errors, logger, pendingFor, resetPatching, run } from "../../renderer/patcher/testing";
+import { compile, pendingFor, resetPatching, runPatched } from "../../renderer/patcher/testing";
 
 beforeEach(() => resetPatching(forceFlags));
 
@@ -40,14 +37,12 @@ describe("ForceFlags", () => {
       "ui.action-menu.group-dm-context-menu.group-dm-member-context-menu",
     ]) {
       // Excerpt of the menu's last group in Fluxer's compiled code.
-      const menuModule = new Function(
-        `return function(e,t,n){const i={jsx:(type,props)=>props.children??type};e.exports=(u,c)=>(0,i.jsx)("group",{children:[(0,i.jsx)("copy",{user:u,onClose:c,"data-flx":"${menu}.copy-user-id-menu-item"}),"after"]})}`,
-      )() as ModuleFactory;
-      const patched = patchFactory(1, menuModule, pendingFor(forceFlags), logger);
-      assert.deepEqual(errors, []);
+      const menuModule = compile(
+        `function(e,t,n){const i={jsx:(type,props)=>props.children??type};e.exports=(u,c)=>(0,i.jsx)("group",{children:[(0,i.jsx)("copy",{user:u,onClose:c,"data-flx":"${menu}.copy-user-id-menu-item"}),"after"]})}`,
+      );
       const user = { id: "1" };
       assert.deepEqual(
-        run(patched)(user, () => {}),
+        runPatched(pendingFor(forceFlags), menuModule)(user, () => {}),
         ["copy", { forceFlags: user }, "after"],
       );
     }
@@ -60,13 +55,11 @@ describe("ForceFlags", () => {
     };
     resetPatching(stub);
     // Excerpt of Fluxer's compiled GuildContextMenu.
-    const menuModule = new Function(
-      'return function(e,t,n){const i={jsx:(type,props)=>props.children??type,jsxs:(type,props)=>props.children,Fragment:"fragment"};e.exports=({guild:g,onClose:c})=>(0,i.jsxs)(i.Fragment,{children:[(0,i.jsx)("renderer",{"data-flx":"ui.action-menu.guild-context-menu.data-menu-renderer"}),(0,i.jsx)("group",{"data-flx":"ui.action-menu.guild-context-menu.menu-group",children:(0,i.jsx)("mute",{guild:g,onClose:c,"data-flx":"ui.action-menu.guild-context-menu.mute-community-menu-item"})})]})}',
-    )() as ModuleFactory;
-    const patched = patchFactory(1, menuModule, pendingFor(forceFlags), logger);
-    assert.deepEqual(errors, []);
+    const menuModule = compile(
+      'function(e,t,n){const i={jsx:(type,props)=>props.children??type,jsxs:(type,props)=>props.children,Fragment:"fragment"};e.exports=({guild:g,onClose:c})=>(0,i.jsxs)(i.Fragment,{children:[(0,i.jsx)("renderer",{"data-flx":"ui.action-menu.guild-context-menu.data-menu-renderer"}),(0,i.jsx)("group",{"data-flx":"ui.action-menu.guild-context-menu.menu-group",children:(0,i.jsx)("mute",{guild:g,onClose:c,"data-flx":"ui.action-menu.guild-context-menu.mute-community-menu-item"})})]})}',
+    );
     const guild = { id: "1" };
-    assert.deepEqual(run(patched)({ guild, onClose: () => {} }), [
+    assert.deepEqual(runPatched(pendingFor(forceFlags), menuModule)({ guild, onClose: () => {} }), [
       "renderer",
       "mute",
       { forceFeatures: guild },
@@ -75,12 +68,10 @@ describe("ForceFlags", () => {
 
   it("overrides flags in Fluxer's UserRecord, even on existing users", () => {
     // Excerpt of Fluxer's compiled UserRecord.
-    const userModule = new Function(
-      'return function(e,t,n){function c(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}e.exports=class{constructor(e){var l;c(this,"id",void 0),c(this,"flags",void 0),this.id=e.id,this.flags=e.flags,this.mentionFlags=null!=(l=e.mention_flags)?l:0}withUpdates(e){var g;return new this.constructor({id:this.id,flags:null!=(g=e.flags)?g:this.flags,mention_flags:"mention_flags"in e?e.mention_flags:this.mentionFlags||void 0})}toJSON(){return{id:this.id,flags:this.flags,mention_flags:this.mentionFlags||void 0}}}}',
-    )() as ModuleFactory;
-    const patched = patchFactory(1, userModule, pendingFor(forceFlags), logger);
-    assert.deepEqual(errors, []);
-    const User = run(patched);
+    const userModule = compile(
+      'function(e,t,n){function c(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}e.exports=class{constructor(e){var l;c(this,"id",void 0),c(this,"flags",void 0),this.id=e.id,this.flags=e.flags,this.mentionFlags=null!=(l=e.mention_flags)?l:0}withUpdates(e){var g;return new this.constructor({id:this.id,flags:null!=(g=e.flags)?g:this.flags,mention_flags:"mention_flags"in e?e.mention_flags:this.mentionFlags||void 0})}toJSON(){return{id:this.id,flags:this.flags,mention_flags:this.mentionFlags||void 0}}}}',
+    );
+    const User = runPatched(pendingFor(forceFlags), userModule);
     store.userFlags = "1: +STAFF +PARTNER -SPAMMER; 2: +8";
     const user = new User({ id: "1", flags: 64 });
     assert.equal(user.flags, 1 | 4);
@@ -96,12 +87,10 @@ describe("ForceFlags", () => {
 
   it("overrides features in Fluxer's GuildRecord", () => {
     // Excerpt of Fluxer's compiled GuildRecord constructor.
-    const guildModule = new Function(
-      "return function(e,t,n){e.exports=class{constructor(e){this.id=e.id,this.features=new Set(e.features),this.ownerId=e.owner_id}}}",
-    )() as ModuleFactory;
-    const patched = patchFactory(1, guildModule, pendingFor(forceFlags), logger);
-    assert.deepEqual(errors, []);
-    const Guild = run(patched);
+    const guildModule = compile(
+      "function(e,t,n){e.exports=class{constructor(e){this.id=e.id,this.features=new Set(e.features),this.ownerId=e.owner_id}}}",
+    );
+    const Guild = runPatched(pendingFor(forceFlags), guildModule);
     store.serverFeatures = "1: +VANITY_URL -DISCOVERABLE";
     assert.deepEqual(
       [...new Guild({ id: "1", features: ["DISCOVERABLE", "VERIFIED"] }).features],

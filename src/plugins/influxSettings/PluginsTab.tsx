@@ -18,8 +18,11 @@ import {
 import { iconOrFallback, MissingComponents, SettingsSearch } from "./components";
 import { settings } from "./settings";
 
+// Turns a setting's key into a label in sentence case, like Fluxer's own: "logDeletes" is "Log deletes".
 const humanize = (key: string): string =>
-  key.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (character) => character.toUpperCase());
+  key
+    .replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`)
+    .replace(/^./, (character) => character.toUpperCase());
 
 function OptionField({
   plugin,

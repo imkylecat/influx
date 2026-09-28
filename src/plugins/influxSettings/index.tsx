@@ -10,7 +10,6 @@ import { settings } from "./settings";
 import { STYLES } from "./styles";
 
 const CATEGORY = "influx";
-const CATEGORY_LABEL = "Influx";
 const STYLE_ID = "influx-settings-styles";
 
 interface SettingsTab {
@@ -45,7 +44,7 @@ export default definePlugin({
       find: 'case"user_settings":return',
       replacement: {
         match: /switch\((\i)\)\{case"user_settings":/,
-        replace: 'if($1==="influx")return $self.categoryLabel;$&',
+        replace: 'if($1==="influx")return"Influx";$&',
       },
     },
     {
@@ -74,7 +73,6 @@ export default definePlugin({
   ],
 
   captureInviteEmbed,
-  categoryLabel: CATEGORY_LABEL,
   versionLabel: `Influx ${INFLUX_VERSION}`,
   tabComponents: Object.fromEntries(TABS.map((tab) => [tab.type, tab.component])),
 

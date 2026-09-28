@@ -11,10 +11,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- SendConfirmation plugin: asks before sending in selected channels (or all channels), with
-  default-on blocking for known honeypot channels.
-- LocalNotes plugin: adds a local note action to user menus, with a native editor to save or delete
-  private notes. Notes stay on this device and are stored separately for each account.
+- SendConfirmation plugin: asks before you send in chosen channels, or in every channel. It also
+  blocks messages to known honeypot channels unless you turn that off.
+- LocalNotes plugin: adds "Local note" to user menus, where you can write, change or delete a
+  private note about someone. Notes stay on this device and are kept separately for each account.
 - SilentTyping adds a keyboard button to the chat bar that turns it on or off. Like the GIF and
   sticker buttons, it's hidden on mobile and in narrow chat bars.
 - MessageLogger adds "Remove deleted message" and "Clear edit history" to the message menu, and can
@@ -27,34 +27,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Previews", RelationshipNotifier "Popup" and SendConfirmation "Confirm Channels".
 - MessageLogger makes deleted messages read-only: the hover bar and message menu no longer offer
   replies, reactions, edits, pins or other actions Fluxer's server would reject.
-- The Plugins tab uses Fluxer's native styling for search, filters, author links, and missing
-  component notices. MessageLogger uses native styling to dim past edits.
-- MessageLinkEmbeds uses Fluxer's error boundary to hide previews that fail to render.
-- Plugin descriptions, settings, notifications, and other text use clearer wording and US English.
-- Plugins get native components directly from the shared component registry. Native module lookups
-  share one caching helper.
-- Internal names now spell out abbreviations. Removed redundant wrapper functions, unused exports,
-  and unnecessary comments, and replaced duplicated helpers with shared or built-in functions.
-- Tests now live next to their plugins and modules. Shared plugin tests are split into separate files.
-- Updated `@electron/asar` to 4.3.1.
-- TypeScript now targets ESNext and uses its library definitions.
-- Oxlint now checks types and enables additional checks for imports, documentation, promises,
-  accessibility, and React.
-- Oxfmt now sorts imports, and existing imports follow that order.
-- Visual Studio Code now uses Oxc to format files on save.
-- Contributor guidelines now cover limiting changes to the request, writing concise US English,
-  avoiding abbreviations and unnecessary comments, using native components directly, avoiding
-  redundant wrapper functions, and running Oxlint before Oxfmt.
+- The Plugins tab and MessageLogger's past edits look more like the rest of Fluxer.
+- Plugin descriptions, settings, notifications and other text use clearer wording and US English.
+- Lots of behind-the-scenes cleanup, with no change to how Influx works.
 
 ### Fixed
 
-- Resolved Oxlint errors and moved lint exceptions from inline comments into the shared configuration.
 - MessageLogger didn't log your own edits when "Don't log your own messages" was turned off. An edit
   that fails to save is no longer kept in the history.
-- The Linux installer didn't find Fluxer installed from the Arch package, which uses `/opt/fluxer`
-  rather than `/opt/Fluxer`.
-- The Linux installer left `~/.config` owned by root when it had to create it, so Fluxer couldn't
-  save its settings.
+- The Linux installer couldn't find Fluxer when it was installed from the Arch package.
+- Running the Linux installer with sudo could stop Fluxer from saving its settings.
 
 ## [0.2.5] - 2026-09-23
 

@@ -12,7 +12,7 @@ export function run(factory: ModuleFactory): any {
 export const pendingFor = (plugin: { name: string; patches: Patch[] | Omit<Patch, "plugin">[] }) =>
   plugin.patches.map((patch) => ({ ...patch, plugin: plugin.name }) as Patch);
 
-export function resetPatching(...plugins: { name: string }[]): void {
+export function resetPatching(...plugins: { name: string; [key: string]: unknown }[]): void {
   errors.length = 0;
   (globalThis as any).Influx = {
     plugins: Object.fromEntries(plugins.map((plugin) => [plugin.name, plugin])),

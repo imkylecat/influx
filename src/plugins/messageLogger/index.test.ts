@@ -62,12 +62,6 @@ class FakeChannelMessages {
     for (const id of ids) next.delete(id);
     return new FakeChannelMessages(next);
   }
-  nextAfter() {
-    return null;
-  }
-  withPatch() {
-    return this;
-  }
 }
 
 // Shape of Fluxer's compiled MessagingMessages store, with ChannelMessages as s.W.

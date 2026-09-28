@@ -6,6 +6,7 @@ import type { ModuleFactory } from "@webpack/types";
 
 import localNotes, { MAXIMUM_NOTE_LENGTH, readNote, writeNote } from ".";
 import { patchFactory } from "../../renderer/patcher/patchFactory";
+import { errors, logger, pendingFor, resetPatching, run } from "../../renderer/patcher/testing";
 
 describe("LocalNotes", () => {
   beforeEach(() => {
@@ -53,30 +54,19 @@ describe("LocalNotes", () => {
     const factory = new Function(
       'return function(module){const i={jsx:(type,props)=>({type,props})},I={K:"copy"};module.exports=(e,t)=>[(0,i.jsx)(I.K,{user:e,onClose:t,"data-flx":"ui.action-menu.user-context-menu.render-advanced-menu-group.copy-user-id-menu-item"})]}',
     )() as ModuleFactory;
-    const errors: unknown[] = [];
-    const pending = localNotes.patches.map((patch) => ({ ...patch, plugin: localNotes.name }));
-    const patched = patchFactory(1, factory, pending, {
-      error: (...values) => errors.push(values),
+    resetPatching({
+      ...localNotes,
+      renderMenuItem: (user: unknown, onClose: unknown) => ({ user, onClose }),
     });
+    const pending = pendingFor(localNotes);
+    const patched = patchFactory(1, factory, pending, logger);
     assert.notEqual(patched, factory);
     assert.deepEqual(errors, []);
     assert.equal(pending.length, 0);
-    const previous = (globalThis as any).Influx;
-    try {
-      (globalThis as any).Influx = {
-        plugins: {
-          LocalNotes: { renderMenuItem: (user: unknown, onClose: unknown) => ({ user, onClose }) },
-        },
-      };
-      const module = { exports: null as any };
-      patched(module as any, {}, (() => {}) as any);
-      const user = { id: "10" };
-      const close = () => {};
-      const items = module.exports(user, close);
-      assert.equal(items[0].type, "copy");
-      assert.deepEqual(items[1], { user, onClose: close });
-    } finally {
-      (globalThis as any).Influx = previous;
-    }
+    const user = { id: "10" };
+    const close = () => {};
+    const items = run(patched)(user, close);
+    assert.equal(items[0].type, "copy");
+    assert.deepEqual(items[1], { user, onClose: close });
   });
 });

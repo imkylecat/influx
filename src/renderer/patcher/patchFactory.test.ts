@@ -5,7 +5,7 @@ import type { ModuleFactory, Patch } from "@webpack/types";
 
 import silentTyping from "../../plugins/silentTyping";
 import { canonicalizeMatch, patchFactory } from "./patchFactory";
-import { errors, logger, resetPatching, run } from "./testing";
+import { errors, logger, pendingFor, resetPatching, run } from "./testing";
 
 const typingModule = new Function(
   "return " +
@@ -30,10 +30,7 @@ describe("canonicalizeMatch", () => {
 
 describe("patchFactory", () => {
   it("applies SilentTyping and consults $self at runtime", () => {
-    const pending: Patch[] = silentTyping.patches.map((patch) => ({
-      ...patch,
-      plugin: silentTyping.name,
-    }));
+    const pending = pendingFor(silentTyping);
     const store = { active: true };
     (globalThis as any).Influx.plugins.SilentTyping = { settings: { store } };
 

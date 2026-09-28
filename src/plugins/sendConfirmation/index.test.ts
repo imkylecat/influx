@@ -6,6 +6,7 @@ import type { ModuleFactory } from "@webpack/types";
 
 import sendConfirmation, { HONEYPOT_CHANNEL_IDS, sendPolicy } from ".";
 import { patchFactory } from "../../renderer/patcher/patchFactory";
+import { errors, logger, pendingFor, resetPatching, run } from "../../renderer/patcher/testing";
 
 beforeEach(() => {
   const data = getPluginData(sendConfirmation.name);
@@ -50,52 +51,36 @@ describe("SendConfirmation", () => {
       function reserve(e,t){return Q.A.reserveLocalSend(e,t)}
       module.exports={send,reserve,events};
     }`)() as ModuleFactory;
-    const errors: unknown[] = [];
-    const patched = patchFactory(
-      1,
-      factory,
-      sendConfirmation.patches.map((patch) => ({ ...patch, plugin: sendConfirmation.name })),
-      { error: (...values) => errors.push(values) },
-    );
+    let approve = false;
+    resetPatching({
+      ...sendConfirmation,
+      blocked: (id: string) => sendPolicy(id) === "block",
+      authorize: async () => approve,
+    });
+    const patched = patchFactory(1, factory, pendingFor(sendConfirmation), logger);
     assert.notEqual(patched, factory);
     assert.deepEqual(errors, []);
-    const previous = (globalThis as any).Influx;
-    let approve = false;
-    try {
-      (globalThis as any).Influx = {
-        plugins: {
-          SendConfirmation: {
-            blocked: (id: string) => sendPolicy(id) === "block",
-            authorize: async () => approve,
-          },
-        },
-      };
-      const module = { exports: {} as any };
-      patched(module as any, {}, (() => {}) as any);
-      const { send, reserve, events } = module.exports;
-      assert.equal(reserve(HONEYPOT_CHANNEL_IDS[0], "1"), false);
-      assert.deepEqual(events, []);
-      const message = {
-        nonce: "1",
-        content: "Keep this",
-        hasAttachments: true,
-        stickers: [{ id: "5" }],
-      };
-      assert.equal(await send("123", message), null);
-      assert.deepEqual(events, [["recover", "123", "1", true]]);
-      events.length = 0;
-      approve = true;
-      assert.equal(await send("123", message), message);
-      assert.deepEqual(events, [
-        ["consume", "123", "1"],
-        ["upload", message],
-        ["Enqueueing message for channel", "123"],
-      ]);
-      events.length = 0;
-      assert.equal(reserve("123", "2"), true);
-      assert.deepEqual(events, [["reserve", "123", "2"]]);
-    } finally {
-      (globalThis as any).Influx = previous;
-    }
+    const { send, reserve, events } = run(patched);
+    assert.equal(reserve(HONEYPOT_CHANNEL_IDS[0], "1"), false);
+    assert.deepEqual(events, []);
+    const message = {
+      nonce: "1",
+      content: "Keep this",
+      hasAttachments: true,
+      stickers: [{ id: "5" }],
+    };
+    assert.equal(await send("123", message), null);
+    assert.deepEqual(events, [["recover", "123", "1", true]]);
+    events.length = 0;
+    approve = true;
+    assert.equal(await send("123", message), message);
+    assert.deepEqual(events, [
+      ["consume", "123", "1"],
+      ["upload", message],
+      ["Enqueueing message for channel", "123"],
+    ]);
+    events.length = 0;
+    assert.equal(reserve("123", "2"), true);
+    assert.deepEqual(events, [["reserve", "123", "2"]]);
   });
 });

@@ -22,10 +22,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - AnonymiseFileNames is now AnonymizeFileNames.
 - Some settings have clearer names: ForceFlags "Server Features", MessageLinkEmbeds "Maximum
-  Previews", RelationshipNotifier "Popup" and SendConfirmation "Confirm Channels". Your settings
-  carry over.
+  Previews", RelationshipNotifier "Popup" and SendConfirmation "Confirm Channels".
 - MessageLogger makes deleted messages read-only: the hover bar and message menu no longer offer
   replies, reactions, edits, pins or other actions Fluxer's server would reject.
+- The Plugins tab uses Fluxer's native styling for search, filters, author links, and missing
+  component notices. MessageLogger uses native styling to dim past edits.
+- MessageLinkEmbeds uses Fluxer's error boundary to hide previews that fail to render.
+- Plugin descriptions, settings, notifications, and other text use clearer wording and US English.
+- Plugins get native components directly from the shared component registry. Native module lookups
+  share one caching helper.
+- Internal names now spell out abbreviations. Removed redundant wrapper functions, unused exports,
+  and unnecessary comments, and replaced duplicated helpers with shared or built-in functions.
 - Tests now live next to their plugins and modules. Shared plugin tests are split into separate files.
 - Updated `@electron/asar` to 4.3.1.
 - TypeScript now targets ESNext and uses its library definitions.
@@ -34,10 +41,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Oxfmt now sorts imports, and existing imports follow that order.
 - Visual Studio Code now uses Oxc to format files on save.
 - Contributor guidelines now cover limiting changes to the request, writing concise US English,
-  avoiding abbreviations and unnecessary comments, and running Oxlint before Oxfmt.
+  avoiding abbreviations and unnecessary comments, using native components directly, avoiding
+  redundant wrapper functions, and running Oxlint before Oxfmt.
 
 ### Fixed
 
+- Resolved Oxlint errors and moved lint exceptions from inline comments into the shared configuration.
 - MessageLogger didn't log your own edits when "Don't log your own messages" was turned off. An edit
   that fails to save is no longer kept in the history.
 - The Linux installer didn't find Fluxer installed from the Arch package, which uses `/opt/fluxer`

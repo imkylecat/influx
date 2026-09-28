@@ -191,7 +191,7 @@ function PluginRow({
               {index > 0 && ", "}
               <button
                 type="button"
-                className="influx-author"
+                className={nativeClasses("CallMessage.module__callLink___")}
                 onClick={() => void openUserProfile(author.id)}
               >
                 {author.name}
@@ -299,30 +299,26 @@ export function PluginsTab() {
           description={`Influx v${window.Influx.version}. ${enabledCount} of ${all.length} plugins enabled.`}
         >
           <div className={row("section")}>
-            <div className="influx-plugin-toolbar">
-              <div className="influx-plugin-search">
-                <Input
-                  placeholder="Search plugins"
-                  aria-label="Search plugins"
-                  leftIcon={SearchIcon && <SearchIcon size={20} weight="bold" />}
-                  value={query}
-                  onChange={(e: { currentTarget: HTMLInputElement }) =>
-                    setQuery(e.currentTarget.value)
-                  }
-                />
-              </div>
-              <div className="influx-plugin-filter">
-                <Combobox
-                  aria-label="Filter plugins"
-                  value={filter}
-                  isSearchable={false}
-                  options={FILTERS.map((f) => ({
-                    value: f.value,
-                    label: `${f.label} (${all.filter(f.test).length})`,
-                  }))}
-                  onChange={(value: PluginFilter) => setFilter(value)}
-                />
-              </div>
+            <div className={nativeClasses("GuildAuditLogTab.module__filterRow___")}>
+              <Input
+                placeholder="Search plugins"
+                aria-label="Search plugins"
+                leftIcon={SearchIcon && <SearchIcon size={20} weight="bold" />}
+                value={query}
+                onChange={(event: { currentTarget: HTMLInputElement }) =>
+                  setQuery(event.currentTarget.value)
+                }
+              />
+              <Combobox
+                aria-label="Filter plugins"
+                value={filter}
+                isSearchable={false}
+                options={FILTERS.map((option) => ({
+                  value: option.value,
+                  label: `${option.label} (${all.filter(option.test).length})`,
+                }))}
+                onChange={setFilter}
+              />
             </div>
             {shown.length > 0 && (
               <div className={row("itemList")}>

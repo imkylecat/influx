@@ -1,4 +1,4 @@
-import { findIcon, React } from "@webpack/common";
+import { findIcon, nativeClasses, React } from "@webpack/common";
 import type { ComponentType } from "react";
 
 export const PluginIconFallback = ({ className }: { className?: string }) => (
@@ -25,7 +25,7 @@ export function captureInviteEmbed<T extends ComponentType<any>>(component: T): 
 }
 
 export const MissingComponents = () => (
-  <div className="influx-missing-components">
+  <div className={nativeClasses("AdvancedSettingsTab.module__emptyState___")}>
     Influx couldn't load this page. Fluxer probably changed; update Influx.
   </div>
 );

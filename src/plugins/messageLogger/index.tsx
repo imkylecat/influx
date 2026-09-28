@@ -30,9 +30,6 @@ const STYLES = `
 [data-influx-deleted] [data-flx$="message-attachments"] {
   opacity: 0.6;
 }
-.influx-ml-edit {
-  opacity: 0.6;
-}
 `;
 
 const settings = definePluginSettings({
@@ -164,12 +161,13 @@ function PastEdits({
   const edits = React.useSyncExternalStore(subscribeToEdits, () => editHistory.get(message.id));
   if (!settings.store.logEdits || !edits?.length) return null;
   const Tooltip = Components.Tooltip();
-  // Fluxer's own "(edited)" label.
+  // Dimmed like a message that's still sending, with Fluxer's own "(edited)" label.
+  const pastEditClass = nativeClasses("Message.module__messageSending___");
   const editedClass = nativeClasses("Message.module__editedTimestamp___");
   const editedLabelClass = nativeClasses("Message.module__editedLabel___");
   return (
-    <div className="influx-ml-edits">
-      {edits.map((edit, i) => {
+    <>
+      {edits.map((edit, index) => {
         const time = edit.timestamp.toLocaleString();
         const label = (
           <span className={editedClass} title={Tooltip ? undefined : time}>
@@ -178,13 +176,13 @@ function PastEdits({
           </span>
         );
         return (
-          <div key={i} className="influx-ml-edit">
+          <div key={index} className={pastEditClass}>
             <Markdown content={edit.content} options={options} />
             {Tooltip ? <Tooltip text={time}>{label}</Tooltip> : label}
           </div>
         );
       })}
-    </div>
+    </>
   );
 }
 

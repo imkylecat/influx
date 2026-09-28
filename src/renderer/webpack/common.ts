@@ -67,6 +67,8 @@ export const Components = {
   ModalFooter: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalFooter")),
   // The full message row, as rendered in pins, confirm modals, and unread-channel previews.
   Message: lazy(() => findComponentByCode("channel.message.message-view-context-provider")),
+  // Lexical's error boundary. It calls onError, and shows a red box unless fallback is set, even to null.
+  ErrorBoundary: lazy(() => findComponentByCode("An error was thrown.")),
 };
 
 const icons = new Map<string, AnyComponent>();

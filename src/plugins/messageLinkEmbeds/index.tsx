@@ -11,7 +11,7 @@ import {
   RestClient,
   Stores,
 } from "@webpack/common";
-import type { Context, ReactNode } from "react";
+import type { Context } from "react";
 
 const STYLE_ID = "influx-message-link-embeds";
 // Matches Fluxer's own jump links, e.g. https://web.fluxer.app/channels/@me/<channel>/<message>.
@@ -212,27 +212,6 @@ function LinkEmbeds({ links }: { links: MessageLink[] }) {
   );
 }
 
-let SafeBoundary: any;
-
-function getBoundary() {
-  SafeBoundary ??= class extends React.Component<{ children: ReactNode }, { failed: boolean }> {
-    state = { failed: false };
-
-    static getDerivedStateFromError() {
-      return { failed: true };
-    }
-
-    componentDidCatch(error: unknown) {
-      console.error("[Influx] MessageLinkEmbeds failed to render", error);
-    }
-
-    render() {
-      return this.state.failed ? null : this.props.children;
-    }
-  };
-  return SafeBoundary;
-}
-
 export default definePlugin({
   name: "MessageLinkEmbeds",
   description: "Shows a preview of the message behind any Fluxer message link.",
@@ -254,12 +233,17 @@ export default definePlugin({
     const links = parseLinks(message.content)
       .filter((link) => link.messageId !== message.id)
       .slice(0, Math.max(0, settings.store.maxEmbeds));
-    if (!links.length) return null;
-    const Boundary = getBoundary();
+    const ErrorBoundary = Components.ErrorBoundary();
+    if (!links.length || !ErrorBoundary) return null;
     return (
-      <Boundary>
+      <ErrorBoundary
+        fallback={null}
+        onError={(error: unknown) =>
+          console.error("[Influx] MessageLinkEmbeds failed to render", error)
+        }
+      >
         <LinkEmbeds links={links} />
-      </Boundary>
+      </ErrorBoundary>
     );
   },
 

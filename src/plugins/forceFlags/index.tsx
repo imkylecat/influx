@@ -94,7 +94,6 @@ export function parseOverrides(text: string): Map<string, Overrides> {
   return overrides;
 }
 
-/** Removes id's override of name, or adds one forcing it on or off if there isn't one. */
 export function toggleOverride(text: string, id: string, name: string, enabled: boolean): string {
   const overrides = parseOverrides(text);
   const target = overrides.get(id) ?? { add: [], remove: [] };
@@ -173,7 +172,6 @@ export default definePlugin({
       ],
     },
     {
-      // GuildRecord constructor.
       find: "this.features=new Set(e.features)",
       replacement: {
         match: /this\.features=new Set\(e\.features\)/,

@@ -12,7 +12,6 @@ export function run(factory: ModuleFactory): any {
 export const pendingFor = (plugin: { name: string; patches: Patch[] | Omit<Patch, "plugin">[] }) =>
   plugin.patches.map((patch) => ({ ...patch, plugin: plugin.name }) as Patch);
 
-// Clears logged errors and gives patched code these plugins as $self.
 export function resetPatching(...plugins: { name: string }[]): void {
   errors.length = 0;
   (globalThis as any).Influx = {

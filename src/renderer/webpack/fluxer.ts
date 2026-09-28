@@ -10,10 +10,8 @@ export interface FluxerUser {
 }
 
 export interface FluxerChannel {
-  id: string;
   name?: string;
   guildId?: string;
-  type: number;
 }
 
 export interface FluxerGuild {
@@ -59,7 +57,6 @@ export interface MessageWire {
   channel_id: string;
   guild_id?: string;
   content?: string;
-  flags?: number;
   mention_everyone?: boolean;
   mentions?: Array<{ id: string }>;
   author: { id: string; username: string; global_name?: string | null; bot?: boolean };

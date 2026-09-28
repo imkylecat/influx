@@ -4,12 +4,7 @@ export interface WebpackModule {
   exports: any;
 }
 
-export type ModuleFactory = (
-  this: unknown,
-  module: WebpackModule,
-  exports: any,
-  require: WebpackRequire,
-) => void;
+export type ModuleFactory = (module: WebpackModule, exports: any, require: WebpackRequire) => void;
 
 export interface WebpackRequire {
   (id: ModuleId): any;

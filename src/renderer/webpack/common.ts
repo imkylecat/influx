@@ -11,13 +11,7 @@ import {
   findComponentByName,
   waitFor,
 } from "./finders";
-import type {
-  FluxerChannel,
-  FluxerGuild,
-  FluxerMessage,
-  FluxerMessagesStore,
-  FluxerUser,
-} from "./fluxer";
+import type { FluxerChannel, FluxerGuild, FluxerMessage, FluxerMessagesStore } from "./fluxer";
 import { moduleChanges } from "./patchWebpack";
 
 const logger = new Logger("Common");
@@ -118,10 +112,9 @@ export const Modals = lazy<{
 }>(() => findByProperties("push", "pop", "modal", "pushWithKey"));
 
 export const Stores = {
-  Users: lazy<{
-    currentUserId: string | null;
-    getUser(id: string): FluxerUser | undefined;
-  }>(() => findByProperties("getUser", "getUserByTag", "getCurrentUser")),
+  Users: lazy<{ currentUserId: string | null }>(() =>
+    findByProperties("getUser", "getUserByTag", "getCurrentUser"),
+  ),
   Channels: lazy<{ getChannel(id: string): FluxerChannel | undefined }>(() =>
     findByProperties("getChannel", "getGuildChannels", "getPrivateChannels"),
   ),
@@ -177,7 +170,6 @@ type ShowNotification = (options: {
   title: string;
   body: string;
   url?: string;
-  playSound?: boolean;
 }) => Promise<unknown>;
 
 // Fluxer's own notifications: native on desktop, the service worker or Notification API in browsers.

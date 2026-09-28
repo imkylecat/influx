@@ -32,24 +32,26 @@ export function writeNote(accountId: string, userId: string, note: string): void
   saveSettings();
 }
 
-function editorComponents() {
-  const Root = Components.ModalRoot();
-  const Header = Components.ModalHeader();
-  const Content = Components.ModalContent();
-  const Layout = Components.ModalContentLayout();
-  const Footer = Components.ModalFooter();
-  const Textarea = Components.Textarea();
-  const Button = Components.Button();
-  return Root && Header && Content && Layout && Footer && Textarea && Button
-    ? { Root, Header, Content, Layout, Footer, Textarea, Button }
-    : undefined;
-}
-
 function NoteModal({ accountId, userId }: { accountId: string; userId: string }) {
   const [note, setNote] = React.useState(() => readNote(accountId, userId));
-  const parts = editorComponents();
-  if (!parts) return null;
-  const { Root, Header, Content, Layout, Footer, Textarea, Button } = parts;
+  const ModalRoot = Components.ModalRoot();
+  const ModalHeader = Components.ModalHeader();
+  const ModalContent = Components.ModalContent();
+  const ModalContentLayout = Components.ModalContentLayout();
+  const ModalFooter = Components.ModalFooter();
+  const Textarea = Components.Textarea();
+  const Button = Components.Button();
+  if (
+    !ModalRoot ||
+    !ModalHeader ||
+    !ModalContent ||
+    !ModalContentLayout ||
+    !ModalFooter ||
+    !Textarea ||
+    !Button
+  ) {
+    return null;
+  }
   const close = () => Modals()?.pop();
   const save = (value: string) => {
     if (Stores.Users()?.currentUserId !== accountId) {
@@ -61,10 +63,10 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
     close();
   };
   return (
-    <Root size="small" onClose={close}>
-      <Header title="Local note" onClose={close} />
-      <Content>
-        <Layout>
+    <ModalRoot size="small" onClose={close}>
+      <ModalHeader title="Local note" onClose={close} />
+      <ModalContent>
+        <ModalContentLayout>
           <Textarea
             label="Note"
             footer="Saved only in this browser or app for your account. Clearing local data removes it."
@@ -79,9 +81,9 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
             showCharacterCount
             autoFocus
           />
-        </Layout>
-      </Content>
-      <Footer>
+        </ModalContentLayout>
+      </ModalContent>
+      <ModalFooter>
         <Button variant="secondary" onClick={close}>
           Cancel
         </Button>
@@ -89,8 +91,8 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
           Delete note
         </Button>
         <Button onClick={() => save(note)}>Save</Button>
-      </Footer>
-    </Root>
+      </ModalFooter>
+    </ModalRoot>
   );
 }
 
@@ -120,7 +122,17 @@ export default definePlugin({
         onClick={() => {
           const accountId = Stores.Users()?.currentUserId;
           const modals = Modals();
-          if (!accountId || !modals || !editorComponents()) {
+          if (
+            !accountId ||
+            !modals ||
+            !Components.ModalRoot() ||
+            !Components.ModalHeader() ||
+            !Components.ModalContent() ||
+            !Components.ModalContentLayout() ||
+            !Components.ModalFooter() ||
+            !Components.Textarea() ||
+            !Components.Button()
+          ) {
             showToast("error", "Couldn't open local notes. Try updating Influx.");
             return;
           }

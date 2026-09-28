@@ -1,4 +1,4 @@
-import { React, Components, findIcon, Modals } from "@webpack/common";
+import { findIcon, React } from "@webpack/common";
 import type { ComponentType } from "react";
 
 export const PluginIconFallback = ({ className }: { className?: string }) => (
@@ -25,49 +25,8 @@ export function captureInviteEmbed<T extends ComponentType<any>>(component: T): 
   return component;
 }
 
-const SETTINGS_COMPONENTS = {
-  Container: Components.SettingsTabContainer,
-  Content: Components.SettingsTabContent,
-  Section: Components.SettingsTabSection,
-  Switch: Components.Switch,
-  Input: Components.Input,
-  Combobox: Components.Combobox,
-  Button: Components.Button,
-  WarningAlert: Components.WarningAlert,
-  StatusSlate: Components.StatusSlate,
-  ModalRoot: Components.ModalRoot,
-  ModalHeader: Components.ModalHeader,
-  ModalContent: Components.ModalContent,
-  ModalContentLayout: Components.ModalContentLayout,
-  ExternalLink: Components.ExternalLink,
-};
-
-type SettingsComponents = Record<keyof typeof SETTINGS_COMPONENTS, ComponentType<any>>;
-
-function resolveSettingsComponents(): { components: SettingsComponents; missing: string[] } {
-  const components = {} as SettingsComponents;
-  const missing: string[] = [];
-  for (const [name, lookup] of Object.entries(SETTINGS_COMPONENTS)) {
-    const component = lookup();
-    if (component) components[name as keyof SettingsComponents] = component;
-    else missing.push(name);
-  }
-  if (!Modals()) missing.push("Modals");
-  return { components, missing };
-}
-
-export const useSettingsComponents = (): SettingsComponents =>
-  resolveSettingsComponents().components;
-
-export function SettingsPage({ children }: { children: () => JSX.Element }) {
-  const { missing } = resolveSettingsComponents();
-  if (missing.length > 0) {
-    return (
-      <div className="influx-missing-components">
-        Influx couldn't find Fluxer's {missing.join(", ")} component{missing.length > 1 ? "s" : ""}.
-        Fluxer probably changed; update Influx.
-      </div>
-    );
-  }
-  return children();
-}
+export const MissingComponents = () => (
+  <div className="influx-missing-components">
+    Influx couldn't load this page. Fluxer probably changed; update Influx.
+  </div>
+);

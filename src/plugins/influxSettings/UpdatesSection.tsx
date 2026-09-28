@@ -7,9 +7,8 @@ import {
   restartToUpdate,
   updateChannel,
 } from "@api/Updater";
-import { nativeClasses, openExternal, React } from "@webpack/common";
+import { Components, nativeClasses, openExternal, React } from "@webpack/common";
 
-import { useSettingsComponents } from "./components";
 import { settings } from "./settings";
 
 type UpdateState =
@@ -28,12 +27,17 @@ const CHANNEL_LABELS = {
 };
 
 export function UpdatesSection() {
-  const { Section, Switch, Button, WarningAlert, ExternalLink } = useSettingsComponents();
   const pending = getPendingRestart();
   const [state, setState] = React.useState<UpdateState>(
     pending ? { kind: "installed", version: pending } : { kind: "idle" },
   );
   const [autoUpdate, setAutoUpdate] = React.useState(settings.store.autoUpdate);
+  const SettingsTabSection = Components.SettingsTabSection();
+  const Switch = Components.Switch();
+  const Button = Components.Button();
+  const WarningAlert = Components.WarningAlert();
+  const ExternalLink = Components.ExternalLink();
+  if (!SettingsTabSection || !Switch || !Button || !WarningAlert || !ExternalLink) return null;
 
   const check = async () => {
     setState({ kind: "checking" });
@@ -104,7 +108,7 @@ export function UpdatesSection() {
     );
 
   return (
-    <Section
+    <SettingsTabSection
       title="Updates"
       description={
         <>
@@ -139,6 +143,6 @@ export function UpdatesSection() {
         )}
         <ExternalLink href={RELEASES_URL}>All releases and changelogs</ExternalLink>
       </div>
-    </Section>
+    </SettingsTabSection>
   );
 }

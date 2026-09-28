@@ -6,9 +6,16 @@ import {
   setPluginEnabled,
 } from "@api/Plugins";
 import type { OptionDefinition } from "@api/Settings";
-import { findIcon, Modals, nativeClasses, openUserProfile, React } from "@webpack/common";
+import {
+  Components,
+  findIcon,
+  Modals,
+  nativeClasses,
+  openUserProfile,
+  React,
+} from "@webpack/common";
 
-import { iconOrFallback, SettingsPage, useSettingsComponents } from "./components";
+import { iconOrFallback, MissingComponents } from "./components";
 import { settings } from "./settings";
 
 const humanize = (key: string): string =>
@@ -29,7 +36,10 @@ function OptionField({
     store[name] = next;
     setValue(next);
   };
-  const { Switch, Input, Combobox } = useSettingsComponents();
+  const Switch = Components.Switch();
+  const Input = Components.Input();
+  const Combobox = Components.Combobox();
+  if (!Switch || !Input || !Combobox) return null;
 
   switch (definition.type) {
     case "boolean":
@@ -112,7 +122,11 @@ const badge = (...variants: string[]) =>
   );
 
 function PluginSettingsModal({ plugin }: { plugin: PluginDefinition }) {
-  const { ModalRoot, ModalHeader, ModalContent, ModalContentLayout } = useSettingsComponents();
+  const ModalRoot = Components.ModalRoot();
+  const ModalHeader = Components.ModalHeader();
+  const ModalContent = Components.ModalContent();
+  const ModalContentLayout = Components.ModalContentLayout();
+  if (!ModalRoot || !ModalHeader || !ModalContent || !ModalContentLayout) return null;
   const close = () => Modals()?.pop();
   return (
     <ModalRoot size="medium" onClose={close}>
@@ -150,8 +164,10 @@ function PluginRow({
   onToggle(): void;
 }) {
   const enabled = isPluginEnabled(plugin);
-  const { Switch, Button } = useSettingsComponents();
+  const Switch = Components.Switch();
+  const Button = Components.Button();
   const GearIcon = findIcon("GearIcon");
+  if (!Switch || !Button) return null;
 
   return (
     <div className={row("settingRow")}>
@@ -220,9 +236,7 @@ function matchesQuery(plugin: PluginDefinition, query: string): boolean {
   );
 }
 
-export const PluginsTab = () => <SettingsPage>{() => <PluginsPage />}</SettingsPage>;
-
-function PluginsPage() {
+export function PluginsTab() {
   const [query, setQuery] = React.useState("");
   const [filter, setFilterState] = React.useState<PluginFilter>(
     () =>
@@ -232,8 +246,26 @@ function PluginsPage() {
   );
   const [, rerender] = React.useReducer((count: number) => count + 1, 0);
 
-  const { Container, Content, Section, Input, Combobox, Button, WarningAlert, StatusSlate } =
-    useSettingsComponents();
+  const SettingsTabContainer = Components.SettingsTabContainer();
+  const SettingsTabContent = Components.SettingsTabContent();
+  const SettingsTabSection = Components.SettingsTabSection();
+  const Input = Components.Input();
+  const Combobox = Components.Combobox();
+  const Button = Components.Button();
+  const WarningAlert = Components.WarningAlert();
+  const StatusSlate = Components.StatusSlate();
+  if (
+    !SettingsTabContainer ||
+    !SettingsTabContent ||
+    !SettingsTabSection ||
+    !Input ||
+    !Combobox ||
+    !Button ||
+    !WarningAlert ||
+    !StatusSlate
+  ) {
+    return <MissingComponents />;
+  }
 
   const setFilter = (value: PluginFilter) => {
     settings.store.pluginFilter = value;
@@ -248,8 +280,8 @@ function PluginsPage() {
   const SearchIcon = findIcon("MagnifyingGlassIcon");
 
   return (
-    <Container>
-      <Content>
+    <SettingsTabContainer>
+      <SettingsTabContent>
         {needsReload.length > 0 && (
           <WarningAlert
             title="Reload required"
@@ -262,7 +294,7 @@ function PluginsPage() {
             Reload Fluxer to apply changes to {needsReload.join(", ")}.
           </WarningAlert>
         )}
-        <Section
+        <SettingsTabSection
           title="Installed plugins"
           description={`Influx v${window.Influx.version}. ${enabledCount} of ${all.length} plugins enabled.`}
         >
@@ -314,8 +346,8 @@ function PluginsPage() {
               }
             />
           )}
-        </Section>
-      </Content>
-    </Container>
+        </SettingsTabSection>
+      </SettingsTabContent>
+    </SettingsTabContainer>
   );
 }

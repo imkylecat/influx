@@ -1,22 +1,26 @@
 import { INFLUX_SERVER_INVITE } from "@utils/constants";
-import { React, openInvite } from "@webpack/common";
+import { Components, openInvite, React } from "@webpack/common";
 
-import { getInviteEmbed, SettingsPage, useSettingsComponents } from "./components";
+import { getInviteEmbed, MissingComponents } from "./components";
 import { UpdatesSection } from "./UpdatesSection";
 
 const INVITE_CODE = new URL(INFLUX_SERVER_INVITE).pathname.split("/").filter(Boolean).pop()!;
 
-export const InfluxTab = () => <SettingsPage>{() => <InfluxPage />}</SettingsPage>;
-
-function InfluxPage() {
-  const { Container, Content, Section, Button } = useSettingsComponents();
+export function InfluxTab() {
+  const SettingsTabContainer = Components.SettingsTabContainer();
+  const SettingsTabContent = Components.SettingsTabContent();
+  const SettingsTabSection = Components.SettingsTabSection();
+  const Button = Components.Button();
   const InviteEmbed = getInviteEmbed();
+  if (!SettingsTabContainer || !SettingsTabContent || !SettingsTabSection || !Button) {
+    return <MissingComponents />;
+  }
 
   return (
-    <Container>
-      <Content>
+    <SettingsTabContainer>
+      <SettingsTabContent>
         <UpdatesSection />
-        <Section
+        <SettingsTabSection
           title="Influx community"
           description="Join the Influx server on Fluxer to get help, suggest plugins, and follow development."
           actions={
@@ -28,8 +32,8 @@ function InfluxPage() {
           }
         >
           {InviteEmbed && <InviteEmbed code={INVITE_CODE} />}
-        </Section>
-      </Content>
-    </Container>
+        </SettingsTabSection>
+      </SettingsTabContent>
+    </SettingsTabContainer>
   );
 }

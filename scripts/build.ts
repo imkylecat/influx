@@ -46,30 +46,29 @@ const pluginDiscovery: BunPlugin = {
 };
 
 const common = {
+  outdir: path.join(dist, "desktop"),
   sourcemap: release ? "none" : "inline",
   minify: release,
   define: { INFLUX_VERSION: JSON.stringify(version), INFLUX_DEVELOPMENT: JSON.stringify(!release) },
 } satisfies Partial<BuildConfig>;
 
-const renderer: BuildConfig = {
-  ...common,
-  entrypoints: [path.join(root, "src/renderer/index.ts")],
-  format: "iife",
-  target: "browser",
-  plugins: [pluginDiscovery],
-  jsx: {
-    runtime: "classic",
-    factory: "React.createElement",
-    fragment: "React.Fragment",
-  },
-};
-
 const builds: BuildConfig[] = [
-  { ...renderer, outdir: path.join(dist, "desktop"), naming: "renderer.js" },
+  {
+    ...common,
+    entrypoints: [path.join(root, "src/renderer/index.ts")],
+    naming: "renderer.js",
+    format: "iife",
+    target: "browser",
+    plugins: [pluginDiscovery],
+    jsx: {
+      runtime: "classic",
+      factory: "React.createElement",
+      fragment: "React.Fragment",
+    },
+  },
   {
     ...common,
     entrypoints: ["main", "preload"].map((name) => path.join(root, `src/desktop/${name}.ts`)),
-    outdir: path.join(dist, "desktop"),
     naming: "[name].js",
     format: "cjs",
     target: "node",
@@ -102,7 +101,13 @@ async function buildAll(): Promise<void> {
       await cp(path.join(dist, "desktop", file), path.join(developmentInstallDirectory, file));
     }
   }
-  if (release) await stageRelease();
+  if (release) {
+    await mkdir(path.join(dist, "release"), { recursive: true });
+    for (const [file, asset] of Object.entries(DESKTOP_ASSETS)) {
+      await cp(path.join(dist, "desktop", file), path.join(dist, "release", asset));
+    }
+    console.log(`Staged release ${version} in dist/release/`);
+  }
   console.log("Built desktop and browser bundles.");
 }
 
@@ -148,13 +153,4 @@ if (watch) {
   }
 } else {
   await buildAll();
-}
-
-async function stageRelease() {
-  const releaseDirectory = path.join(dist, "release");
-  await mkdir(releaseDirectory, { recursive: true });
-  for (const [file, asset] of Object.entries(DESKTOP_ASSETS)) {
-    await cp(path.join(dist, "desktop", file), path.join(releaseDirectory, asset));
-  }
-  console.log(`Staged release ${version} in dist/release/`);
 }

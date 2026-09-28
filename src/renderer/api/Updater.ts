@@ -1,5 +1,6 @@
 import type { InfluxNative, UpdateCheckResult, UpdateInstallResult } from "../../desktop/types";
-import { compareVersions, LATEST_RELEASE_API, RELEASES_URL } from "../../shared/version";
+import { fetchLatestRelease, NoReleaseError } from "../../shared/github";
+import { compareVersions } from "../../shared/version";
 import { Logger } from "../utils/Logger";
 
 const logger = new Logger("Updater");
@@ -24,29 +25,20 @@ export let pendingRestart: string | null = null;
 
 async function checkFromBrowser(): Promise<UpdateCheckResult> {
   try {
-    const response = await fetch(LATEST_RELEASE_API, {
-      headers: { Accept: "application/vnd.github+json" },
-    });
-    if (response.status === 404)
-      return { ok: false, error: `No Influx release has been published yet (${RELEASES_URL})` };
-    if (!response.ok) return { ok: false, error: `GitHub returned ${response.status}` };
-    const release = (await response.json()) as {
-      tag_name: string;
-      html_url: string;
-      body: string | null;
-    };
-    const latest = release.tag_name.replace(/^v/, "");
+    const release = await fetchLatestRelease();
     return {
       ok: true,
-      current: INFLUX_VERSION,
-      latest,
-      available: compareVersions(latest, INFLUX_VERSION) > 0,
+      latest: release.version,
+      available: compareVersions(release.version, INFLUX_VERSION) > 0,
       pendingRestart: null,
-      url: release.html_url,
-      notes: release.body ?? "",
+      url: release.url,
     };
   } catch (error) {
-    return { ok: false, error: `Couldn't check for updates: ${String(error)}` };
+    const message =
+      error instanceof NoReleaseError
+        ? error.message
+        : `Couldn't check for updates: ${String(error)}`;
+    return { ok: false, error: message };
   }
 }
 

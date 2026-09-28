@@ -16,14 +16,9 @@ import { fileURLToPath } from "node:url";
 
 import { createPackage, extractFile } from "@electron/asar";
 
+import { fetchLatestRelease, NoReleaseError } from "../src/shared/github";
 import { influxDataDirectory } from "../src/shared/paths";
-import {
-  DESKTOP_ASSETS,
-  downloadDesktopRelease,
-  fetchLatestRelease,
-  installFiles,
-  NoReleaseError,
-} from "../src/shared/release";
+import { DESKTOP_ASSETS, downloadDesktopRelease, installFiles } from "../src/shared/release";
 
 const SHIM_NAME = "influx-shim";
 const USAGE = `Installs Influx into the Fluxer desktop app.

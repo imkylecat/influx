@@ -1,13 +1,7 @@
 import { app, ipcMain, net } from "electron";
 
-import {
-  downloadDesktopRelease,
-  type Fetch,
-  fetchLatestRelease,
-  installFiles,
-  NoReleaseError,
-  type Release,
-} from "../shared/release";
+import { type Fetch, fetchLatestRelease, NoReleaseError, type Release } from "../shared/github";
+import { downloadDesktopRelease, installFiles } from "../shared/release";
 import { compareVersions } from "../shared/version";
 import { IPC_UPDATER_CHECK, IPC_UPDATER_INSTALL, IPC_UPDATER_RESTART } from "./constants";
 import type { UpdateCheckResult, UpdateInstallResult } from "./types";
@@ -24,12 +18,10 @@ export function registerUpdater(installDirectory: string): void {
       const baseline = installedVersion ?? INFLUX_VERSION;
       return {
         ok: true,
-        current: INFLUX_VERSION,
         latest: latest.version,
         available: compareVersions(latest.version, baseline) > 0,
         pendingRestart: installedVersion,
         url: latest.url,
-        notes: latest.notes,
       };
     } catch (error) {
       const message =

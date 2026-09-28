@@ -1,13 +1,5 @@
 export type UpdateCheckResult =
-  | {
-      ok: true;
-      current: string;
-      latest: string;
-      available: boolean;
-      pendingRestart: string | null;
-      url: string;
-      notes: string;
-    }
+  | { ok: true; latest: string; available: boolean; pendingRestart: string | null; url: string }
   | { ok: false; error: string };
 
 export type UpdateInstallResult = { ok: true; version: string } | { ok: false; error: string };

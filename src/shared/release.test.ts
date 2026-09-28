@@ -5,15 +5,8 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "n
 import os from "node:os";
 import path from "node:path";
 
-import {
-  downloadDesktopRelease,
-  type Fetch,
-  fetchLatestRelease,
-  installFiles,
-  NoReleaseError,
-  parseChecksums,
-  type Release,
-} from "./release";
+import { type Fetch, fetchLatestRelease, NoReleaseError, type Release } from "./github";
+import { downloadDesktopRelease, installFiles, parseChecksums } from "./release";
 import { compareVersions } from "./version";
 
 const sha256 = (data: string) => createHash("sha256").update(data).digest("hex");
@@ -35,7 +28,6 @@ function fakeGitHub(
     release: {
       version: "1.2.0",
       url: "https://example.test",
-      notes: "",
       assets: Object.fromEntries(Object.keys(served).map((name) => [name, url(name)])),
     },
   };
@@ -83,7 +75,6 @@ describe("fetchLatestRelease", () => {
     const body = {
       tag_name: "v2.0.1",
       html_url: "u",
-      body: null,
       assets: [{ name: "SHA256SUMS", browser_download_url: "d" }],
     };
     const release = await fetchLatestRelease(async () => Response.json(body));

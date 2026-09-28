@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-import { LATEST_RELEASE_API, RELEASES_URL } from "./version";
+import { type Fetch, type Release, USER_AGENT } from "./github";
 
 export const DESKTOP_ASSETS = {
   "main.js": "influx-main.js",
@@ -10,43 +10,6 @@ export const DESKTOP_ASSETS = {
   "renderer.js": "influx-renderer.js",
 } as const;
 const CHECKSUMS_ASSET = "SHA256SUMS";
-
-export type Fetch = (url: string, init?: { headers?: Record<string, string> }) => Promise<Response>;
-
-export interface Release {
-  version: string;
-  url: string;
-  notes: string;
-  assets: Record<string, string>;
-}
-
-export class NoReleaseError extends Error {
-  constructor() {
-    super(`No Influx release has been published yet (${RELEASES_URL})`);
-  }
-}
-
-const HEADERS = { Accept: "application/vnd.github+json", "User-Agent": "Influx-Updater" };
-
-export async function fetchLatestRelease(fetchImplementation: Fetch = fetch): Promise<Release> {
-  const response = await fetchImplementation(LATEST_RELEASE_API, { headers: HEADERS });
-  if (response.status === 404) throw new NoReleaseError();
-  if (!response.ok) throw new Error(`GitHub returned ${response.status} for the latest release`);
-  const release = (await response.json()) as {
-    tag_name: string;
-    html_url: string;
-    body: string | null;
-    assets: Array<{ name: string; browser_download_url: string }>;
-  };
-  return {
-    version: release.tag_name.replace(/^v/, ""),
-    url: release.html_url,
-    notes: release.body ?? "",
-    assets: Object.fromEntries(
-      release.assets.map((asset) => [asset.name, asset.browser_download_url]),
-    ),
-  };
-}
 
 export function parseChecksums(text: string): Map<string, string> {
   const checksums = new Map<string, string>();
@@ -59,7 +22,7 @@ export function parseChecksums(text: string): Map<string, string> {
 
 async function download(fetchImplementation: Fetch, url: string): Promise<Buffer> {
   const response = await fetchImplementation(url, {
-    headers: { "User-Agent": HEADERS["User-Agent"] },
+    headers: { "User-Agent": USER_AGENT },
   });
   if (!response.ok) throw new Error(`Download failed (${response.status}): ${url}`);
   return Buffer.from(await response.arrayBuffer());

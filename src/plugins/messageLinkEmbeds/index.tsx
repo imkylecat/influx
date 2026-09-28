@@ -12,6 +12,7 @@ import {
   RestClient,
   Stores,
 } from "@webpack/common";
+import type { FluxerMessage } from "@webpack/fluxer";
 import type { Context } from "react";
 
 const STYLE_ID = "influx-message-link-embeds";
@@ -52,7 +53,10 @@ interface MessageLink {
   messageId: string;
 }
 
-type LoadState = { status: "loading" } | { status: "loaded"; message: any } | { status: "error" };
+type LoadState =
+  | { status: "loading" }
+  | { status: "loaded"; message: FluxerMessage }
+  | { status: "error" };
 
 const cache = new Map<string, Promise<LoadState>>();
 

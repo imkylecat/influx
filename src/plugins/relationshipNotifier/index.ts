@@ -4,15 +4,13 @@ import { definePluginSettings, getPluginData, saveSettings } from "@api/Settings
 import { Contributor } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import { NativeNotification, showToast, Stores } from "@webpack/common";
+import type { GuildWire, ReadyPayload, RelationshipWire } from "@webpack/fluxer";
 
 import { addNotice, hasNotices, nagbarFound, nagbarPartsSource, withBanner } from "./banner";
 import {
   describeRemoval,
   diffSnapshots,
-  type GuildWire,
   guildName,
-  type ReadyPayload,
-  type RelationshipWire,
   relationshipName,
   relationshipRemoval,
   type Removal,
@@ -109,6 +107,7 @@ function notify(message: string): void {
   if (!settings.store.desktopNotifications) return;
   void NativeNotification()?.({ title: "Influx", body: message }).catch((error) =>
     logger.error("Couldn't show a notification", error),
+  );
 }
 
 function report(removal: Removal, whileAway: boolean): void {

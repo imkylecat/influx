@@ -1,3 +1,5 @@
+import type { GuildWire, ReadyPayload, RelationshipWire } from "@webpack/fluxer";
+
 const RelationshipType = {
   FRIEND: 1,
   BLOCKED: 2,
@@ -14,26 +16,6 @@ interface KnownRelationship {
 export interface Snapshot {
   relationships: Record<string, KnownRelationship>;
   guilds: Record<string, string | null>;
-}
-
-export interface RelationshipWire {
-  id: string;
-  type: number;
-  nickname?: string | null;
-  user?: { username?: string; global_name?: string | null };
-}
-
-export interface GuildWire {
-  id: string;
-  name?: string;
-  unavailable?: boolean;
-  properties?: { name?: string };
-}
-
-export interface ReadyPayload {
-  user?: { id: string };
-  relationships?: RelationshipWire[];
-  guilds?: GuildWire[];
 }
 
 export type Removal =

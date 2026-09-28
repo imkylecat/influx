@@ -11,6 +11,14 @@ import {
   findComponentByName,
   waitFor,
 } from "./finders";
+import type {
+  FluxerChannel,
+  FluxerGuild,
+  FluxerMessage,
+  FluxerMessagesStore,
+  FluxerUser,
+} from "./fluxer";
+
 const logger = new Logger("Common");
 
 export let React: typeof import("react");
@@ -89,30 +97,6 @@ export function findIcon(name: string): AnyComponent | undefined {
   return icon;
 }
 
-export interface FluxerUser {
-  id: string;
-  username: string;
-  globalName: string | null;
-  displayName: string;
-  avatar: string | null;
-  bot?: boolean;
-  flags: number;
-}
-
-export interface FluxerChannel {
-  id: string;
-  name?: string;
-  guildId?: string;
-  type: number;
-}
-
-export interface FluxerGuild {
-  id: string;
-  name: string;
-  features: ReadonlySet<string>;
-  toJSON(): object;
-}
-
 export const Modals = lazy<{
   push(modal: unknown): void;
   pop(): void;
@@ -134,13 +118,9 @@ export const Stores = {
     // Rebuilds the server's record, as when the server sends an update.
     handleGuildUpdate(guild: object): void;
   }>(() => findByProperties("getGuild", "getGuildRoles", "getOwnedGuilds")),
-  Messages: lazy<{
-    getMessage(channelId: string, messageId: string): any;
-    // A channel's loaded messages, without creating an empty list for unloaded channels.
-    getCachedMessages(channelId: string): any;
-    commitMessages(messages: any): void;
-    notifyChange(): void;
-  }>(() => findByProperties("getMessage", "handleMessageDelete", "handleMessageDeleteBulk")),
+  Messages: lazy<FluxerMessagesStore>(() =>
+    findByProperties("getMessage", "handleMessageDelete", "handleMessageDeleteBulk"),
+  ),
   Navigation: lazy<{
     navigateToGuild(guildId: string, channelId?: string, messageId?: string, mode?: string): void;
     navigateToDM(channelId?: string, messageId?: string, mode?: string): void;
@@ -178,7 +158,7 @@ export const RestClient = lazy<{
 }>(() => findByProperties("installAuth", "carriesAuthorization", "get"));
 
 // Fluxer's Message model class; its constructor takes a message as the API sends it.
-export const MessageRecord = lazy<new (wire: unknown, options?: object) => any>(() =>
+export const MessageRecord = lazy<new (wire: unknown, options?: object) => FluxerMessage>(() =>
   findByCode("this.editedTimestamp=e.edited_timestamp"),
 );
 

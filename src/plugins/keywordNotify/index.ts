@@ -4,6 +4,7 @@ import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import { NativeNotification, showToast, Stores } from "@webpack/common";
+import type { FluxerMessage, MessageWire } from "@webpack/fluxer";
 
 const MAXIMUM_BODY_LENGTH = 200;
 const logger = new Logger("KeywordNotify");
@@ -43,23 +44,6 @@ const settings = definePluginSettings({
   },
 });
 
-interface WireMessage {
-  id: string;
-  channel_id: string;
-  guild_id?: string;
-  content?: string;
-  flags?: number;
-  mention_everyone?: boolean;
-  mentions?: Array<{ id: string }>;
-  author: { id: string; username: string; global_name?: string | null; bot?: boolean };
-  member?: { nick?: string | null };
-}
-
-interface RenderedMessage {
-  content?: string;
-  author?: { id: string; bot?: boolean };
-}
-
 let compiled: { source: string; patterns: RegExp[] } | undefined;
 
 function patterns(): RegExp[] {
@@ -98,24 +82,23 @@ export function matchesKeywords(content: string | undefined): boolean {
   });
 }
 
-function isFromIgnored(author: { id: string; bot?: boolean } | undefined): boolean {
-  if (!author) return true;
+function isFromIgnored(author: { id: string; bot?: boolean }): boolean {
   if (author.id === Stores.Users()?.currentUserId) return true;
   return settings.store.ignoreBots && Boolean(author.bot);
 }
 
 // Fluxer already notifies for mentions, so don't send a second one.
-function mentionsMe(message: WireMessage): boolean {
+function mentionsMe(message: MessageWire): boolean {
   const me = Stores.Users()?.currentUserId;
   return Boolean(message.mention_everyone || message.mentions?.some((user) => user.id === me));
 }
 
 // Like Fluxer's own notifications, skip the channel you're already reading.
-function isViewing(message: WireMessage): boolean {
+function isViewing(message: MessageWire): boolean {
   return document.hasFocus() && location.pathname.split("/")[3] === message.channel_id;
 }
 
-function notify(message: WireMessage): void {
+function notify(message: MessageWire): void {
   const name = message.member?.nick || message.author.global_name || message.author.username;
   const channel = Stores.Channels()?.getChannel(message.channel_id);
   const guild = message.guild_id ? Stores.Guilds()?.getGuild(message.guild_id) : undefined;
@@ -135,7 +118,7 @@ function notify(message: WireMessage): void {
   }
 }
 
-function onMessageCreate(message: WireMessage): void {
+function onMessageCreate(message: MessageWire): void {
   // Fluxer already notifies for every DM and group DM message by default.
   if (!settings.store.notify || !message.guild_id || isFromIgnored(message.author)) return;
   if (mentionsMe(message) || isViewing(message) || !matchesKeywords(message.content)) return;

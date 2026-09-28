@@ -1,6 +1,7 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
+import type { FluxerMessage } from "@webpack/fluxer";
 
 const settings = definePluginSettings({
   hideReplies: {
@@ -9,11 +10,6 @@ const settings = definePluginSettings({
     default: false,
   },
 });
-
-interface StreamMessage {
-  blocked?: boolean;
-  referencedMessage?: { blocked?: boolean } | null;
-}
 
 export default definePlugin({
   name: "NoBlockedMessages",
@@ -33,7 +29,7 @@ export default definePlugin({
     },
   ],
 
-  shouldHide(message: StreamMessage): boolean {
+  shouldHide(message: FluxerMessage): boolean {
     if (message.blocked) return true;
     return settings.store.hideReplies && message.referencedMessage?.blocked === true;
   },

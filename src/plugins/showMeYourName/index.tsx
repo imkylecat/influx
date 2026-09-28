@@ -3,6 +3,8 @@ import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import { nativeClasses, NicknameLookup, React, Stores } from "@webpack/common";
+import type { FluxerMessage, FluxerUser } from "@webpack/fluxer";
+
 const logger = new Logger("ShowMeYourName");
 
 const settings = definePluginSettings({
@@ -22,18 +24,10 @@ const settings = definePluginSettings({
   },
 });
 
-interface Author {
-  username: string;
-  discriminator?: string;
-  displayName?: string | null;
-  globalName?: string | null;
-  tag?: string;
-}
-
 // Fluxer's own streamer-mode truncation: keep the first character.
 const truncate = (name: string) => `${Array.from(name.trim())[0] ?? ""}…`;
 
-function label(author: Author): string {
+function label(author: FluxerUser): string {
   const { username, discriminator } = author;
   const hasDiscriminator = discriminator && discriminator !== "0";
   return settings.store.format === "tag" && hasDiscriminator
@@ -59,10 +53,7 @@ export default definePlugin({
     },
   ],
 
-  renderUsername(
-    author: Author | undefined,
-    message: { channelId?: string; webhookId?: string | null } | undefined,
-  ) {
+  renderUsername(author: FluxerUser | undefined, message: FluxerMessage | undefined) {
     try {
       // A webhook's "username" is just its display name.
       if (!author?.username || message?.webhookId != null) return null;

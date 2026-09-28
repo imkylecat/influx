@@ -4,6 +4,7 @@ import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
 import { Logger } from "@utils/Logger";
 import { Components, nativeClasses, React, Stores } from "@webpack/common";
+import type { FluxerChannelMessages, FluxerMessage, FluxerMessagesStore } from "@webpack/fluxer";
 import type { ComponentType } from "react";
 
 // Fluxer only defines flag bits up to 1 << 13, so this one is free for marking deleted messages.
@@ -69,30 +70,6 @@ const settings = definePluginSettings({
   },
 });
 
-interface Message {
-  id: string;
-  channelId: string;
-  guildId?: string | null;
-  content: string;
-  flags: number;
-  state: string;
-  timestamp: Date;
-  editedTimestamp: Date | null;
-  author: { id: string; bot?: boolean };
-  withUpdates(updates: { flags: number }): Message;
-}
-
-interface ChannelMessages {
-  get(id: string): Message | undefined;
-  update(id: string, updater: (message: Message) => Message): ChannelMessages;
-  removeIds(ids: string[]): ChannelMessages;
-}
-
-interface MessagesStore {
-  commitMessages(messages: ChannelMessages): void;
-  notifyChange(): void;
-}
-
 interface ActionGroup {
   items: { id?: string }[];
 }
@@ -126,7 +103,7 @@ function subscribeToEdits(listener: () => void) {
 const listed = (ids: string, id: string | null | undefined) =>
   id != null && ids.split(/[\s,]+/).includes(id);
 
-function isIgnored(message: Message): boolean {
+function isIgnored(message: FluxerMessage): boolean {
   if (message.state === "SENDING" || message.state === "FAILED") return true;
   const { ignoreBots, ignoreSelf, ignoreUsers, ignoreChannels, ignoreServers } = settings.store;
   if (ignoreBots && message.author.bot) return true;
@@ -139,9 +116,9 @@ function isIgnored(message: Message): boolean {
   return listed(ignoreServers, guildId);
 }
 
-function removeDeletedMessage(message: Message) {
+function removeDeletedMessage(message: FluxerMessage) {
   const store = Stores.Messages();
-  const messages: ChannelMessages | undefined = store?.getCachedMessages(message.channelId);
+  const messages = store?.getCachedMessages(message.channelId);
   if (!store || !messages?.get(message.id)) return;
   store.commitMessages(messages.removeIds([message.id]));
   store.notifyChange();
@@ -153,7 +130,7 @@ function PastEdits({
   Markdown,
   options,
 }: {
-  message: Message;
+  message: FluxerMessage;
   Markdown: ComponentType<any>;
   options: unknown;
 }) {
@@ -280,7 +257,11 @@ export default definePlugin({
     },
   ],
 
-  keepDeleted(store: MessagesStore, messages: ChannelMessages | undefined, ids: string[]): boolean {
+  keepDeleted(
+    store: FluxerMessagesStore,
+    messages: FluxerChannelMessages | undefined,
+    ids: string[],
+  ): boolean {
     if (!settings.store.logDeletes || !messages) return false;
     try {
       let next = messages;
@@ -311,7 +292,10 @@ export default definePlugin({
     }
   },
 
-  recordEdit(messages: ChannelMessages | undefined, update: { id: string; content?: string }) {
+  recordEdit(
+    messages: FluxerChannelMessages | undefined,
+    update: { id: string; content?: string },
+  ) {
     if (!settings.store.logEdits || update.content == null) return;
     const message = messages?.get(update.id);
     // An EDITING message already shows your unconfirmed edit, which was recorded when you saved it.
@@ -328,18 +312,18 @@ export default definePlugin({
     if (edits?.at(-1)?.content === restoredContent) setEdits(id, edits.slice(0, -1));
   },
 
-  isDeleted(message: Message | undefined): boolean {
+  isDeleted(message: FluxerMessage | undefined): boolean {
     return message != null && (message.flags & DELETED_FLAG) !== 0;
   },
 
-  rowClass(className: string | undefined, message: Message | undefined): string | undefined {
+  rowClass(className: string | undefined, message: FluxerMessage | undefined): string | undefined {
     if (!this.isDeleted(message)) return className;
     return [className, nativeClasses("Message.module__messageFailed___")].filter(Boolean).join(" ");
   },
 
   PastEdits,
 
-  filterActions(message: Message, groups: ActionGroup[]): ActionGroup[] {
+  filterActions(message: FluxerMessage, groups: ActionGroup[]): ActionGroup[] {
     if (!this.isDeleted(message)) return groups;
     return groups.map((group) => ({
       ...group,
@@ -347,7 +331,7 @@ export default definePlugin({
     }));
   },
 
-  renderMenuItems(message: Message) {
+  renderMenuItems(message: FluxerMessage) {
     const MenuGroup = Components.MenuGroup();
     const MenuItem = Components.MenuItem();
     if (!MenuGroup || !MenuItem) return null;

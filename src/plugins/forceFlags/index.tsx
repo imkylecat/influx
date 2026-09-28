@@ -1,7 +1,8 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
-import { Components, type FluxerGuild, type FluxerUser, React, Stores } from "@webpack/common";
+import { Components, React, Stores } from "@webpack/common";
+import type { FluxerGuild, FluxerUser } from "@webpack/fluxer";
 
 const settings = definePluginSettings({
   userFlags: {

@@ -75,23 +75,15 @@ export const findByProperties = (...properties: string[]) =>
 export const findByCode = (...code: Array<string | RegExp>) => find(filters.byCode(...code));
 export const findComponentByName = (name: string) => find(filters.byDisplayName(name));
 
-export function waitFor(filter: Filter, callback: (value: any) => void): () => void {
+export function waitFor(filter: Filter, callback: (value: any) => void): void {
   const existing = find(filter);
-  if (existing !== undefined) {
-    callback(existing);
-    return () => {};
-  }
+  if (existing !== undefined) return callback(existing);
   const unsubscribe = onModuleLoaded((module) => {
     const match = firstMatch(module, filter);
     if (match === undefined) return;
     unsubscribe();
-    try {
-      callback(match);
-    } catch (error) {
-      logger.error("waitFor callback threw", error);
-    }
+    callback(match);
   });
-  return unsubscribe;
 }
 
 const isComponent = (value: any): boolean =>

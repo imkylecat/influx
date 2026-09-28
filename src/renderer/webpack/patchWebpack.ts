@@ -11,7 +11,7 @@ export const moduleCache = new Map<ModuleId, WebpackModule>();
 // Counts factories added and modules loaded, so lookups that found nothing know when to retry.
 export let moduleChanges = 0;
 
-type ModuleListener = (module: WebpackModule, id: ModuleId) => void;
+type ModuleListener = (module: WebpackModule) => void;
 const moduleListeners = new Set<ModuleListener>();
 
 export function onModuleLoaded(listener: ModuleListener): () => void {
@@ -45,7 +45,7 @@ export function installWebpackHook(pendingPatches: Patch[]): void {
       moduleChanges++;
       for (const listener of moduleListeners) {
         try {
-          listener(module, id);
+          listener(module);
         } catch (error) {
           logger.error("Module listener threw", error);
         }

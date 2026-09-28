@@ -70,21 +70,32 @@ export default definePlugin({
         replace: "{...$self.tabComponents,",
       },
     },
+    {
+      find: '"ui.action-menu.settings-context-menu.menu-group--3"',
+      replacement: {
+        match:
+          /\i\.length>0&&(\(0,\i\.jsx\)\(\i\.\i,\{"data-flx":")ui\.action-menu\.settings-context-menu\.menu-group--3(",children:)\i(\.map\(\i\)\}\))/,
+        replace: "$1influx.settings-context-menu.menu-group$2$self.influxTabs()$3,$&",
+      },
+    },
   ],
 
   captureInviteEmbed,
   versionLabel: `Influx ${INFLUX_VERSION}`,
   tabComponents: Object.fromEntries(TABS.map((tab) => [tab.type, tab.component])),
 
-  addTabs(tabs: SettingsTab[]): SettingsTab[] {
-    const ours = TABS.map(({ type, label, icon }) => ({
+  influxTabs(): SettingsTab[] {
+    return TABS.map(({ type, label, icon }) => ({
       type,
       label,
       category: CATEGORY,
       icon: iconOrFallback(icon),
     }));
+  },
+
+  addTabs(tabs: SettingsTab[]): SettingsTab[] {
     const developerIndex = tabs.findIndex((tab) => tab.category === "developer");
-    tabs.splice(developerIndex === -1 ? tabs.length : developerIndex, 0, ...ours);
+    tabs.splice(developerIndex === -1 ? tabs.length : developerIndex, 0, ...this.influxTabs());
     return tabs;
   },
 

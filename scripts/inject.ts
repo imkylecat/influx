@@ -138,7 +138,6 @@ async function main(): Promise<void> {
       `No app.asar in ${resourcesDirectory}. Pass --path to your Fluxer install (or --canary).`,
     );
   }
-  rmSync(path.join(resourcesDirectory, "app"), { recursive: true, force: true });
 
   if (mode === "uninstall") {
     uninstall(resourcesDirectory);

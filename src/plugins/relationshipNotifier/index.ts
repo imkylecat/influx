@@ -107,20 +107,7 @@ function notify(message: string): void {
     showToast("info", message, { timeout: 10_000 });
   }
   if (!settings.store.desktopNotifications) return;
-  const showNotification = NativeNotification();
-  if (showNotification) {
-    void showNotification({ title: "Influx", body: message }).catch((error) =>
-    );
-    return;
-  }
-  if (typeof Notification === "undefined") return;
-  if (Notification.permission === "granted") {
-    new Notification("Influx", { body: message });
-  } else if (Notification.permission === "default") {
-    void Notification.requestPermission().then((permission) => {
-      if (permission === "granted") new Notification("Influx", { body: message });
-    });
-  }
+  void NativeNotification()?.({ title: "Influx", body: message }).catch((error) =>
     logger.error("Couldn't show a notification", error),
 }
 

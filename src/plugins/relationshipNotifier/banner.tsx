@@ -31,11 +31,6 @@ let notices: Notice[] | undefined;
 // Whether the nagbar patch found all of Fluxer's banner parts. Without them, notices go to toasts.
 export let nagbarFound = false;
 
-function savedNotices(): Notice[] {
-  const saved = getPluginData("RelationshipNotifier").notices;
-  return Array.isArray(saved) ? saved.filter((notice) => typeof notice?.message === "string") : [];
-}
-
 // A MobX array, when Fluxer's MobX can be found, so the banner shows and hides as notices change.
 function getNotices(): Notice[] {
   if (notices) return notices;
@@ -46,7 +41,10 @@ function getNotices(): Notice[] {
       typeof value.array === "function" &&
       typeof value.object === "function",
   );
-  const initial = savedNotices();
+  const saved = getPluginData("RelationshipNotifier").notices;
+  const initial = Array.isArray(saved)
+    ? saved.filter((notice) => typeof notice?.message === "string")
+    : [];
   notices = observable ? observable.array(initial, { deep: false }) : initial;
   return notices!;
 }
@@ -64,14 +62,12 @@ export function addNotice(message: string): void {
 }
 
 function dismissLatest(): void {
-  const list = getNotices();
-  if (list.length) list.splice(list.length - 1, 1);
+  getNotices().pop();
   persist();
 }
 
 function dismissAll(): void {
-  const list = getNotices();
-  list.splice(0, list.length);
+  getNotices().splice(0);
   persist();
 }
 

@@ -63,9 +63,7 @@ function initialize(): void {
     "DOMContentLoaded",
     () => {
       if (!webpack.webpackRequire)
-        logger.error(
-          `Never saw Fluxer's webpack runtime (${webpack.CHUNK_GLOBAL}). Was Influx injected too late?`,
-        );
+        logger.error("Never saw Fluxer's webpack runtime. Was Influx injected too late?");
       Plugins.startAllPlugins();
       logger.info(
         `Loaded version ${INFLUX_VERSION} with ${Object.keys(Plugins.plugins).length} plugins`,

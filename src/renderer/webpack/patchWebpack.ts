@@ -4,8 +4,6 @@ import type { ModuleFactory, ModuleId, Patch, WebpackModule, WebpackRequire } fr
 
 const logger = new Logger("Webpack");
 
-export const CHUNK_GLOBAL = "rspackChunkfluxer_app";
-
 const ORIGINAL_FACTORY = Symbol("influx.originalFactory");
 
 export let webpackRequire: WebpackRequire | undefined;

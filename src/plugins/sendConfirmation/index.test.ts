@@ -8,7 +8,6 @@ import sendConfirmation, { HONEYPOT_CHANNEL_IDS, sendPolicy } from ".";
 import { patchFactory } from "../../renderer/patcher/patchFactory";
 
 beforeEach(() => {
-  sendConfirmation.settings.pluginName = sendConfirmation.name;
   const data = getPluginData(sendConfirmation.name);
   delete data.blockHoneypotChannels;
   delete data.confirmChannels;

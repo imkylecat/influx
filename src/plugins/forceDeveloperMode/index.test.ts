@@ -40,7 +40,6 @@ describe("ForceDeveloperMode staff", () => {
     assert.deepEqual(errors, []);
     const User = run(patched);
     const store = forceDeveloperMode.settings.store as Record<string, unknown>;
-    forceDeveloperMode.settings.pluginName = "ForceDeveloperMode";
 
     store.forceStaff = false;
     assert.equal(new User({ id: "1", is_staff: false }).isStaff(), false);

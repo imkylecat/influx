@@ -12,7 +12,6 @@ beforeEach(() => resetPatching(keywordNotify));
 describe("KeywordNotify", () => {
   const store = keywordNotify.settings.store as Record<string, unknown>;
   beforeEach(() => {
-    keywordNotify.settings.pluginName = "KeywordNotify";
     store.keywords = "cat, deploy failed, /colou?r/";
     store.wholeWords = true;
     store.caseSensitive = false;

@@ -18,6 +18,7 @@ export interface PluginDefinition {
 }
 
 export default function definePlugin<P extends PluginDefinition>(plugin: P & ThisType<P>): P {
+  if (plugin.settings) plugin.settings.pluginName = plugin.name;
   return plugin;
 }
 
@@ -39,7 +40,6 @@ export function registerPlugins(list: PluginDefinition[]): void {
       continue;
     }
     plugins[plugin.name] = plugin;
-    if (plugin.settings) plugin.settings.pluginName = plugin.name;
     const enabled = isPluginEnabled(plugin);
     enabledAtStartup.set(plugin.name, enabled);
     if (!enabled) continue;

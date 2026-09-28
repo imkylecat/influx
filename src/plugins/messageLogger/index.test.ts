@@ -84,7 +84,6 @@ const storeModule = new Function(
 
 describe("MessageLogger", () => {
   beforeEach(() => {
-    messageLogger.settings.pluginName = messageLogger.name;
     const data = getPluginData(messageLogger.name);
     delete data.ignoreUsers;
     delete data.ignoreChannels;

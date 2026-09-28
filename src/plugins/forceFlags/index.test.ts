@@ -11,9 +11,6 @@ beforeEach(() => resetPatching(forceFlags));
 
 describe("ForceFlags", () => {
   const store = forceFlags.settings.store as Record<string, unknown>;
-  beforeEach(() => {
-    forceFlags.settings.pluginName = "ForceFlags";
-  });
 
   it("parses overrides per ID", () => {
     const parsed = parseOverrides(" 1: +staff -SPAMMER; 2:+PARTNER, 64 ; nonsense");

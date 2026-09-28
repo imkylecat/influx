@@ -2,6 +2,7 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
+import { idListIncludes } from "@utils/idList";
 import { Logger } from "@utils/Logger";
 import { Components, nativeClasses, React, Stores } from "@webpack/common";
 import type { FluxerChannelMessages, FluxerMessage, FluxerMessagesStore } from "@webpack/fluxer";
@@ -100,20 +101,20 @@ function subscribeToEdits(listener: () => void) {
   };
 }
 
-const listed = (ids: string, id: string | null | undefined) =>
-  id != null && ids.split(/[\s,]+/).includes(id);
-
 function isIgnored(message: FluxerMessage): boolean {
   if (message.state === "SENDING" || message.state === "FAILED") return true;
   const { ignoreBots, ignoreSelf, ignoreUsers, ignoreChannels, ignoreServers } = settings.store;
   if (ignoreBots && message.author.bot) return true;
   if (ignoreSelf && message.author.id === Stores.Users()?.currentUserId) return true;
-  if (listed(ignoreUsers, message.author.id) || listed(ignoreChannels, message.channelId)) {
+  if (
+    idListIncludes(ignoreUsers, message.author.id) ||
+    idListIncludes(ignoreChannels, message.channelId)
+  ) {
     return true;
   }
   if (!ignoreServers) return false;
   const guildId = message.guildId ?? Stores.Channels()?.getChannel(message.channelId)?.guildId;
-  return listed(ignoreServers, guildId);
+  return idListIncludes(ignoreServers, guildId);
 }
 
 function removeDeletedMessage(message: FluxerMessage) {

@@ -1,6 +1,7 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
+import { idListIncludes } from "@utils/idList";
 import { Logger } from "@utils/Logger";
 import { Components, Modals, React, showToast, Stores } from "@webpack/common";
 
@@ -29,8 +30,7 @@ export function sendPolicy(channelId: string): "block" | "confirm" | "allow" {
   if (settings.store.blockHoneypotChannels && HONEYPOT_CHANNEL_IDS.includes(channelId)) {
     return "block";
   }
-  return settings.store.confirmAll ||
-    settings.store.confirmChannels.split(/[\s,]+/).includes(channelId)
+  return settings.store.confirmAll || idListIncludes(settings.store.confirmChannels, channelId)
     ? "confirm"
     : "allow";
 }

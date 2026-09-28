@@ -36,13 +36,11 @@ function OptionField({
     store[name] = next;
     setValue(next);
   };
-  const Switch = Components.Switch();
-  const Input = Components.Input();
-  const Combobox = Components.Combobox();
-  if (!Switch || !Input || !Combobox) return null;
 
   switch (definition.type) {
-    case "boolean":
+    case "boolean": {
+      const Switch = Components.Switch();
+      if (!Switch) return null;
       return (
         <Switch
           label={humanize(name)}
@@ -51,7 +49,10 @@ function OptionField({
           onChange={update}
         />
       );
-    case "select":
+    }
+    case "select": {
+      const Combobox = Components.Combobox();
+      if (!Combobox) return null;
       return (
         <Combobox
           label={humanize(name)}
@@ -63,8 +64,11 @@ function OptionField({
           onChange={update}
         />
       );
+    }
     case "number":
-    case "string":
+    case "string": {
+      const Input = Components.Input();
+      if (!Input) return null;
       return (
         <Input
           label={humanize(name)}
@@ -80,6 +84,7 @@ function OptionField({
           }}
         />
       );
+    }
   }
 }
 

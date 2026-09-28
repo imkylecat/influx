@@ -11,14 +11,6 @@ interface Notice {
   at: number;
 }
 
-interface NoticeList {
-  length: number;
-  [index: number]: Notice;
-  push(...notices: Notice[]): number;
-  splice(start: number, count?: number): Notice[];
-  slice(): Notice[];
-}
-
 // Fluxer's banner building blocks, lifted out of its nagbar module by the container patch.
 interface NagbarParts {
   Nagbar: ComponentType<any> | null;
@@ -33,7 +25,7 @@ interface NagbarItem {
   influxBanner?: ReactNode;
 }
 
-let notices: NoticeList | undefined;
+let notices: Notice[] | undefined;
 // Whether the nagbar patch found all of Fluxer's banner parts. Without them, notices go to toasts.
 export let nagbarFound = false;
 
@@ -43,7 +35,7 @@ function savedNotices(): Notice[] {
 }
 
 // A MobX array, when Fluxer's MobX can be found, so the banner shows and hides as notices change.
-function getNotices(): NoticeList {
+function getNotices(): Notice[] {
   if (notices) return notices;
   const observable = find(
     (value) =>

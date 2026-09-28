@@ -26,6 +26,30 @@ const CHANNEL_LABELS = {
   browser: "Browser extension",
 };
 
+const AUTO_UPDATE_DESCRIPTIONS = {
+  desktop:
+    "Download and install new Influx versions when Fluxer starts. They load the next time Fluxer restarts.",
+  "desktop-development":
+    "Not available for development builds. Update with git pull && bun run build.",
+  browser:
+    "Not available in the browser extension. Browsers only let extensions update through their store.",
+};
+
+function statusText(state: UpdateState): string | null {
+  switch (state.kind) {
+    case "upToDate":
+      return "You're on the latest version.";
+    case "available":
+      return `Influx ${state.version} is available.`;
+    case "installing":
+      return `Installing Influx ${state.version}…`;
+    case "error":
+      return state.message;
+    default:
+      return null;
+  }
+}
+
 export function UpdatesSection() {
   const [state, setState] = React.useState<UpdateState>(
     pendingRestart ? { kind: "installed", version: pendingRestart } : { kind: "idle" },
@@ -57,24 +81,6 @@ export function UpdatesSection() {
         : { kind: "error", message: result.error },
     );
   };
-
-  const autoUpdateDescription =
-    updateChannel === "desktop"
-      ? "Download and install new Influx versions when Fluxer starts. They load the next time Fluxer restarts."
-      : updateChannel === "desktop-development"
-        ? "Not available for development builds. Update with git pull && bun run build."
-        : "Not available in the browser extension. Browsers only let extensions update through their store.";
-
-  const status =
-    state.kind === "upToDate"
-      ? "You're on the latest version."
-      : state.kind === "available"
-        ? `Influx ${state.version} is available.`
-        : state.kind === "installing"
-          ? `Installing Influx ${state.version}…`
-          : state.kind === "error"
-            ? state.message
-            : null;
 
   const actions =
     state.kind === "installed" ? null : (
@@ -111,7 +117,8 @@ export function UpdatesSection() {
       title="Updates"
       description={
         <>
-          Influx {INFLUX_VERSION} ({CHANNEL_LABELS[updateChannel]}). <output>{status}</output>
+          Influx {INFLUX_VERSION} ({CHANNEL_LABELS[updateChannel]}).{" "}
+          <output>{statusText(state)}</output>
         </>
       }
       actions={actions}
@@ -119,7 +126,7 @@ export function UpdatesSection() {
       <div className={nativeClasses("AdvancedSettingsTab.module__controlStackCompact___")}>
         <Switch
           label="Automatically update"
-          description={autoUpdateDescription}
+          description={AUTO_UPDATE_DESCRIPTIONS[updateChannel]}
           value={canInstallUpdates && autoUpdate}
           disabled={!canInstallUpdates}
           onChange={(value: boolean) => {

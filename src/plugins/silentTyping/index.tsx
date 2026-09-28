@@ -11,20 +11,8 @@ const settings = definePluginSettings({
   },
 });
 
-const listeners = new Set<() => void>();
-
-function subscribe(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-
-function setActive(active: boolean): void {
-  settings.store.active = active;
-  for (const listener of listeners) listener();
-}
-
 function ChatBarButton() {
-  const active = React.useSyncExternalStore(subscribe, () => settings.store.active);
+  const [active, setActive] = React.useState(settings.store.active);
   const TextareaButton = Components.TextareaButton();
   const KeyboardIcon = findIcon("KeyboardIcon");
   if (!TextareaButton || !KeyboardIcon) return null;
@@ -34,7 +22,10 @@ function ChatBarButton() {
       iconProps={active ? { weight: "fill" } : undefined}
       label={active ? "Silent typing: on" : "Silent typing: off"}
       isSelected={active}
-      onClick={() => setActive(!active)}
+      onClick={() => {
+        settings.store.active = !active;
+        setActive(!active);
+      }}
     />
   );
 }

@@ -156,21 +156,12 @@ function LinkEmbed({ link }: { link: MessageLink }) {
   );
 }
 
-const UNAVAILABLE_TITLE = "Message unavailable";
-const UNAVAILABLE_DESCRIPTION = "It may have been deleted, or you can't see it.";
-
 // Laid out like Fluxer's own card for an unavailable theme or invite.
 function UnavailableCard({ link }: { link: MessageLink }) {
   const EmbedCard = Components.EmbedCard();
   const Button = Components.Button();
   const Icon = findIcon("WarningCircleIcon");
-  if (!EmbedCard || !Button) {
-    return (
-      <span className={nativeClasses("EmbedCard.module__helpText___")}>
-        {UNAVAILABLE_TITLE}. {UNAVAILABLE_DESCRIPTION}
-      </span>
-    );
-  }
+  if (!EmbedCard || !Button) return null;
   return (
     <EmbedCard
       splashURL={null}
@@ -186,12 +177,12 @@ function UnavailableCard({ link }: { link: MessageLink }) {
             "EmbedCard.module__titleDanger___",
           )}
         >
-          {UNAVAILABLE_TITLE}
+          Message unavailable
         </h3>
       }
       subtitle={
         <span className={nativeClasses("EmbedCard.module__helpText___")}>
-          {UNAVAILABLE_DESCRIPTION}
+          It may have been deleted, or you can't see it.
         </span>
       }
       footer={

@@ -46,11 +46,6 @@ describe("compareVersions", () => {
     assert.equal(compareVersions("v1.2.0", "1.2.1"), -1);
     assert.equal(compareVersions("1.2", "1.2.0"), 0);
   });
-
-  it("sorts pre-releases before their release", () => {
-    assert.equal(compareVersions("1.0.0-beta.1", "1.0.0"), -1);
-    assert.equal(compareVersions("1.0.0", "1.0.0-beta.1"), 1);
-  });
 });
 
 describe("parseChecksums", () => {

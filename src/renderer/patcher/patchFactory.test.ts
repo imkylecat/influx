@@ -16,14 +16,14 @@ beforeEach(() => resetPatching());
 
 describe("canonicalizeMatch", () => {
   it("expands \\i to an identifier pattern", () => {
-    const pattern = canonicalizeMatch(/postTyping\(\i\)/) as RegExp;
+    const pattern = canonicalizeMatch(/postTyping\(\i\)/);
     assert.ok(pattern.test("postTyping(e)"));
     assert.ok(pattern.test("postTyping($a1)"));
     assert.ok(!pattern.test("postTyping(e.channelId)"));
   });
 
   it("leaves an escaped backslash followed by i alone", () => {
-    assert.equal((canonicalizeMatch(/a\\i/) as RegExp).source, "a\\\\i");
+    assert.equal(canonicalizeMatch(/a\\i/).source, "a\\\\i");
   });
 });
 

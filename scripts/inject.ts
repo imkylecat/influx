@@ -131,9 +131,7 @@ async function main(): Promise<void> {
     );
   }
   const resourcesDirectory = fluxerResourcesDirectory();
-  const fluxerAsar = path.join(resourcesDirectory, "app.asar");
-  const movedAsar = path.join(resourcesDirectory, "_app.asar");
-  if (!existsSync(fluxerAsar) && !existsSync(movedAsar)) {
+  if (!hasFluxer(resourcesDirectory)) {
     throw new Error(
       `No app.asar in ${resourcesDirectory}. Pass --path to your Fluxer install (or --canary).`,
     );
@@ -173,7 +171,7 @@ async function main(): Promise<void> {
   const stagedShim = path.join(resourcesDirectory, ".influx-shim.asar");
   await buildShim(mainScript, stagedShim);
   moveFluxerAside(resourcesDirectory);
-  renameSync(stagedShim, fluxerAsar);
+  renameSync(stagedShim, path.join(resourcesDirectory, "app.asar"));
   console.log(`Installed ${installed} into ${resourcesDirectory}. Restart Fluxer.`);
 }
 

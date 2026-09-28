@@ -1,8 +1,6 @@
 export type ModuleId = string | number;
 
 export interface WebpackModule {
-  id?: ModuleId;
-  loaded?: boolean;
   exports: any;
 }
 

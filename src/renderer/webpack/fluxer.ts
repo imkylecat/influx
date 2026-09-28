@@ -5,9 +5,6 @@ export interface FluxerUser {
   username: string;
   discriminator?: string;
   tag?: string;
-  globalName: string | null;
-  displayName: string;
-  avatar: string | null;
   bot?: boolean;
   flags: number;
 }

@@ -1,17 +1,28 @@
+import { deleteData, getData, setData } from "@api/DataStore";
 import definePlugin from "@api/Plugins";
-import { definePluginSettings } from "@api/Settings";
+import { definePluginSettings, onSettingsChange } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
 import { idListIncludes } from "@utils/idList";
 import { Logger } from "@utils/Logger";
 import { Components, findIcon, nativeClasses, React, Stores } from "@webpack/common";
-import type { FluxerChannelMessages, FluxerMessage, FluxerMessagesStore } from "@webpack/fluxer";
+import type {
+  FluxerChannelMessages,
+  FluxerMessage,
+  FluxerMessagesStore,
+  MessageWire,
+} from "@webpack/fluxer";
 import type { ComponentType } from "react";
+
+import { type LoadedWindow, mergeDeleted, type PastEdit, publicUser, readSavedLogs } from "./saved";
 
 // Fluxer only defines flag bits up to 1 << 13, so this one is free for marking deleted messages.
 // Changing flags also makes Message.equals() see a difference, which rerenders the row.
 const DELETED_FLAG = 1 << 30;
 const MAXIMUM_EDITED_MESSAGES = 2000;
+const MAXIMUM_SAVED_DELETED_MESSAGES = 1000;
+const SAVE_DELAY_MILLISECONDS = 1_000;
+const DATA_KEY = "MessageLogger";
 const STYLE_ID = "influx-message-logger";
 const logger = new Logger("MessageLogger");
 
@@ -42,6 +53,12 @@ const settings = definePluginSettings({
   logEdits: {
     type: "boolean",
     description: "Show earlier versions of edited messages above the current text.",
+    default: true,
+  },
+  saveLogs: {
+    type: "boolean",
+    description:
+      "Keep deleted messages and edit history after Fluxer restarts. They're saved on this device until you turn this off.",
     default: true,
   },
   ignoreSelf: {
@@ -75,14 +92,93 @@ interface ActionGroup {
   items: { id?: string }[];
 }
 
-interface PastEdit {
-  content: string;
-  timestamp: Date;
-}
-
 // Each message's list is replaced rather than mutated, so rows can tell when theirs changed.
 const editHistory = new Map<string, readonly PastEdit[]>();
 const editListeners = new Set<() => void>();
+// Deleted messages as Fluxer's server would send them, kept only while logs are saved.
+const savedDeleted = new Map<string, MessageWire>();
+
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
+let wasSaving = false;
+
+function writeLogs() {
+  if (saveTimer === undefined) return;
+  clearTimeout(saveTimer);
+  saveTimer = undefined;
+  void setData(DATA_KEY, { deleted: [...savedDeleted.values()], edits: [...editHistory] });
+}
+
+function scheduleSave() {
+  if (settings.store.saveLogs) saveTimer ??= setTimeout(writeLogs, SAVE_DELAY_MILLISECONDS);
+}
+
+async function loadLogs() {
+  const saved = readSavedLogs(await getData(DATA_KEY));
+  if (!settings.store.saveLogs) return;
+  // Anything logged while loading is newer than what was saved.
+  const logged = { deleted: [...savedDeleted.values()], edits: [...editHistory] };
+  savedDeleted.clear();
+  editHistory.clear();
+  for (const wire of [...saved.deleted, ...logged.deleted]) addSavedDeleted(wire);
+  for (const [id, edits] of [...saved.edits, ...logged.edits]) setEdits(id, edits);
+}
+
+function onSavingChange() {
+  const saving = settings.store.saveLogs;
+  if (saving === wasSaving) return;
+  wasSaving = saving;
+  if (saving) {
+    scheduleSave();
+    return;
+  }
+  clearTimeout(saveTimer);
+  saveTimer = undefined;
+  savedDeleted.clear();
+  void deleteData(DATA_KEY);
+}
+
+function addSavedDeleted(wire: MessageWire) {
+  savedDeleted.delete(wire.id);
+  savedDeleted.set(wire.id, wire);
+  if (savedDeleted.size > MAXIMUM_SAVED_DELETED_MESSAGES) {
+    savedDeleted.delete(savedDeleted.keys().next().value!);
+  }
+}
+
+function withUsers(
+  wire: MessageWire,
+  change: <U extends { id: string }>(user: U) => U,
+): MessageWire {
+  return {
+    ...wire,
+    author: wire.webhook_id ? wire.author : change(wire.author),
+    mentions: wire.mentions?.map(change),
+    referenced_message: wire.referenced_message && withUsers(wire.referenced_message, change),
+  };
+}
+
+function saveDeleted(message: FluxerMessage) {
+  if (!settings.store.saveLogs) return;
+  try {
+    // Through JSON, since Fluxer's records hold live objects that can't be stored.
+    const wire: MessageWire = JSON.parse(JSON.stringify(message.toJSON()));
+    // Left out so it follows who you have blocked when the message is restored.
+    delete wire.blocked;
+    addSavedDeleted({ ...withUsers(wire, publicUser), flags: message.flags | DELETED_FLAG });
+    scheduleSave();
+  } catch (error) {
+    logger.error("Failed to save a deleted message", error);
+  }
+}
+
+// Saved messages would otherwise bring back the names and avatars people had back then.
+function withCurrentUsers(wire: MessageWire): MessageWire {
+  const users = Stores.Users();
+  return withUsers(wire, (user) => {
+    const current = users?.getUser(user.id)?.toJSON();
+    return current ? publicUser({ ...user, ...current }) : user;
+  });
+}
 
 function setEdits(id: string, edits: readonly PastEdit[]) {
   // Re-inserting keeps the map ordered from least to most recently edited.
@@ -92,6 +188,7 @@ function setEdits(id: string, edits: readonly PastEdit[]) {
     editHistory.delete(editHistory.keys().next().value!);
   }
   for (const listener of editListeners) listener();
+  scheduleSave();
 }
 
 function subscribeToEdits(listener: () => void) {
@@ -116,6 +213,7 @@ function isIgnored(message: FluxerMessage): boolean {
 }
 
 function removeDeletedMessage(message: FluxerMessage) {
+  if (savedDeleted.delete(message.id)) scheduleSave();
   const store = Stores.Messages();
   const messages = store?.getCachedMessages(message.channelId);
   if (!store || !messages?.get(message.id)) return;
@@ -161,6 +259,8 @@ function PastEdits({
   );
 }
 
+let stopWatchingSettings: (() => void) | undefined;
+
 export default definePlugin({
   name: "MessageLogger",
   description: "Keeps deleted messages visible and shows the edit history of messages.",
@@ -200,6 +300,15 @@ export default definePlugin({
           replace: "$&$self.undoEdit($1.messageId,$1.originalContent);",
         },
       ],
+    },
+    {
+      // Saved deleted messages rejoin each page of messages Fluxer loads.
+      find: /handleMessageDeleteBulk\(\i\)\{let \i=\i\.\i\.get\(/,
+      replacement: {
+        match:
+          /(\i\.\i\.getOrCreate\((\i)\.channelId\))\.applyLoadedWindow\(\{windowMessages:\2\.messages,/,
+        replace: "$1.applyLoadedWindow({windowMessages:$self.withDeleted($2,$1),",
+      },
     },
     {
       find: '"data-flx-edited":',
@@ -283,6 +392,7 @@ export default definePlugin({
           next = next.update(id, (current) =>
             current.withUpdates({ flags: current.flags | DELETED_FLAG }),
           );
+          saveDeleted(message);
         }
       }
       if (kept === 0) return false;
@@ -309,6 +419,22 @@ export default definePlugin({
       ...(editHistory.get(message.id) ?? []),
       { content: message.content, timestamp: message.editedTimestamp ?? message.timestamp },
     ]);
+  },
+
+  withDeleted(window: LoadedWindow, current: FluxerChannelMessages): MessageWire[] {
+    if (!settings.store.logDeletes || !settings.store.saveLogs) return window.messages;
+    try {
+      const saved = [...savedDeleted.values()].filter(
+        (wire) => wire.channel_id === window.channelId,
+      );
+      return mergeDeleted(window, saved.map(withCurrentUsers), {
+        oldest: current.first()?.id,
+        newest: current.last()?.id,
+      });
+    } catch (error) {
+      logger.error("Failed to restore deleted messages", error);
+      return window.messages;
+    }
   },
 
   undoEdit(id: string, restoredContent: string) {
@@ -364,9 +490,17 @@ export default definePlugin({
 
   start() {
     enableStyle(STYLE_ID, STYLES);
+    window.addEventListener("pagehide", writeLogs);
+    wasSaving = settings.store.saveLogs;
+    stopWatchingSettings = onSettingsChange(onSavingChange);
+    if (wasSaving) void loadLogs();
+    else void deleteData(DATA_KEY);
   },
 
   stop() {
     disableStyle(STYLE_ID);
+    window.removeEventListener("pagehide", writeLogs);
+    stopWatchingSettings?.();
+    writeLogs();
   },
 });

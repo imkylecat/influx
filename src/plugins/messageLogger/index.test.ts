@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, mock } from "bun:test";
+import { beforeEach, describe, it, jest, mock } from "bun:test";
 import assert from "node:assert/strict";
 
 import { getPluginData } from "@api/Settings";
@@ -20,6 +20,13 @@ interface FakeMessage {
   editedTimestamp: Date | null;
   author: { id: string };
   withUpdates(updates: Partial<FakeMessage>): FakeMessage;
+  toJSON(): object;
+}
+
+interface FakeWire {
+  id: string;
+  content: string;
+  flags?: number;
 }
 
 function message(id: string, content: string, flags = 0): FakeMessage {
@@ -36,6 +43,21 @@ function message(id: string, content: string, flags = 0): FakeMessage {
     withUpdates(updates) {
       return { ...this, ...updates };
     },
+    toJSON() {
+      return {
+        id: this.id,
+        channel_id: this.channelId,
+        content: this.content,
+        flags: this.flags,
+        blocked: false,
+        author: { id: "author", username: "author", email: "author@example.com" },
+        referenced_message: {
+          id: "0",
+          channel_id: this.channelId,
+          author: { id: "me", username: "me", email: "me@example.com" },
+        },
+      };
+    },
   };
 }
 
@@ -46,6 +68,21 @@ class FakeChannelMessages {
   }
   get(id: string) {
     return this.messages.get(id);
+  }
+  first() {
+    return [...this.messages.values()][0];
+  }
+  last() {
+    return [...this.messages.values()].at(-1);
+  }
+  applyLoadedWindow({ windowMessages }: { windowMessages: FakeWire[] }) {
+    return new FakeChannelMessages(
+      new Map(
+        windowMessages
+          .toReversed()
+          .map((wire) => [wire.id, message(wire.id, wire.content, wire.flags)]),
+      ),
+    );
   }
   update(id: string, updater: (m: FakeMessage) => FakeMessage) {
     const next = new Map(this.messages);
@@ -70,7 +107,8 @@ const storeModule = compile(
     "handleMessageDeleteBulk(e){let t=s.W.get(e.channelId);if(!t)return!1;let n=t.removeIds(e.ids);if(n===t)return!1;return this.commitMessages(n),this.notifyChange(),!0}" +
     'handleMessageUpdate(e){let t=e.message.id,n=e.message.channel_id,i=s.W.get(n);if(!(null==i?void 0:i.has(t)))return!1;let a=i.update(t,t=>"EDITING"===t.state&&void 0===e.message.state?t.withUpdates(Object.assign({},e.message,{state:"SENT"})):t.withUpdates(e.message));return this.commitMessages(a),this.notifyChange(),!0}' +
     'handleOptimisticEdit(e){var t,n;let{channelId:i,messageId:a,content:r}=e,o=s.W.get(i);if(!o)return null;let l=o.get(a);if(!l)return null;let u={originalContent:l.content},c=o.update(a,e=>e.withUpdates({content:r,state:"EDITING"}));return this.commitMessages(c),this.notifyChange(),u}' +
-    'handleEditRollback(e){let{channelId:t,messageId:n,originalContent:i}=e,r=s.W.get(t);if(!(null==r?void 0:r.has(n)))return;let o=r.update(n,e=>e.withUpdates({content:i,state:"SENT"}));this.commitMessages(o),this.notifyChange()}}' +
+    'handleEditRollback(e){let{channelId:t,messageId:n,originalContent:i}=e,r=s.W.get(t);if(!(null==r?void 0:r.has(n)))return;let o=r.update(n,e=>e.withUpdates({content:i,state:"SENT"}));this.commitMessages(o),this.notifyChange()}' +
+    "handleLoadMessagesSuccess(e){let t=s.W.getOrCreate(e.channelId).applyLoadedWindow({windowMessages:e.messages,isBefore:e.isBefore,isAfter:e.isAfter,jump:e.jump,hasMoreBefore:e.hasMoreBefore,hasMoreAfter:e.hasMoreAfter,cached:e.cached});return this.commitMessages(t),this.notifyChange(),!1}}" +
     "e.exports={store:new M,channels:s}}",
 );
 
@@ -80,6 +118,7 @@ describe("MessageLogger", () => {
     delete data.ignoreUsers;
     delete data.ignoreChannels;
     delete data.ignoreServers;
+    data.saveLogs = false;
   });
 
   // Renders a message's past edits with a stand-in React, returning null when there are none.
@@ -111,6 +150,9 @@ describe("MessageLogger", () => {
       get() {
         return this.current;
       },
+      getOrCreate() {
+        return this.current;
+      },
     };
     return { store, channels: channels.W };
   }
@@ -138,6 +180,57 @@ describe("MessageLogger", () => {
     );
     store.handleMessageDelete({ channelId: "c", id: "1" });
     assert.equal(channels.current.get("1"), undefined);
+  });
+
+  it("saves deleted messages and restores them when Fluxer loads the channel again", () => {
+    const writes: any[] = [];
+    void mock.module("@api/DataStore", () => ({
+      getData: async () => undefined,
+      deleteData: async () => {},
+      setData: async (_key: string, value: unknown) => void writes.push(value),
+    }));
+    jest.useFakeTimers();
+    try {
+      const data = getPluginData(messageLogger.name);
+      data.saveLogs = true;
+      const { store, channels } = setup();
+      store.handleMessageDelete({ channelId: "c", id: "1" });
+      jest.advanceTimersByTime(1000);
+      assert.equal(writes.length, 1);
+      assert.deepEqual(writes[0].deleted, [
+        {
+          id: "1",
+          channel_id: "c",
+          content: "hello",
+          flags: 1 << 30,
+          author: { id: "author", username: "author" },
+          mentions: undefined,
+          referenced_message: {
+            id: "0",
+            channel_id: "c",
+            author: { id: "me", username: "me" },
+            mentions: undefined,
+            referenced_message: undefined,
+          },
+        },
+      ]);
+
+      const loaded = [{ id: "2", content: "world" }];
+      store.handleLoadMessagesSuccess({ channelId: "c", messages: loaded });
+      assert.deepEqual([...channels.current.messages.keys()], ["1", "2"]);
+      assert.equal(messageLogger.isDeleted(channels.current.get("1")), true);
+      assert.equal(channels.current.get("1").content, "hello");
+      assert.equal(loaded.length, 1, "Fluxer's own list is left alone");
+
+      store.handleLoadMessagesSuccess({ channelId: "other", messages: loaded });
+      assert.deepEqual([...channels.current.messages.keys()], ["2"], "other channels are skipped");
+
+      data.saveLogs = false;
+      store.handleLoadMessagesSuccess({ channelId: "c", messages: loaded });
+      assert.deepEqual([...channels.current.messages.keys()], ["2"]);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("tags deleted rows", () => {

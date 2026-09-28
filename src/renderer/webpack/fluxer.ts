@@ -7,6 +7,7 @@ export interface FluxerUser {
   tag?: string;
   bot?: boolean;
   flags: number;
+  toJSON(): MessageWire["author"];
 }
 
 export interface FluxerChannel {
@@ -35,11 +36,15 @@ export interface FluxerMessage {
   blocked?: boolean;
   referencedMessage?: FluxerMessage | null;
   withUpdates(updates: Partial<FluxerMessage>): FluxerMessage;
+  toJSON(): MessageWire;
 }
 
 // One channel's loaded messages. Every change returns a new list, so rows can tell when theirs changed.
 export interface FluxerChannelMessages {
   get(id: string): FluxerMessage | undefined;
+  // The oldest and newest messages on screen.
+  first(): FluxerMessage | undefined;
+  last(): FluxerMessage | undefined;
   update(id: string, updater: (message: FluxerMessage) => FluxerMessage): FluxerChannelMessages;
   removeIds(ids: string[]): FluxerChannelMessages;
 }
@@ -56,11 +61,15 @@ export interface MessageWire {
   id: string;
   channel_id: string;
   guild_id?: string;
+  webhook_id?: string | null;
   content?: string;
+  flags?: number;
+  blocked?: boolean;
   mention_everyone?: boolean;
   mentions?: Array<{ id: string }>;
   author: { id: string; username: string; global_name?: string | null; bot?: boolean };
   member?: { nick?: string | null };
+  referenced_message?: MessageWire | null;
 }
 
 export interface RelationshipWire {

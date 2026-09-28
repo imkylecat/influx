@@ -11,7 +11,13 @@ import {
   findComponentByName,
   waitFor,
 } from "./finders";
-import type { FluxerChannel, FluxerGuild, FluxerMessage, FluxerMessagesStore } from "./fluxer";
+import type {
+  FluxerChannel,
+  FluxerGuild,
+  FluxerMessage,
+  FluxerMessagesStore,
+  FluxerUser,
+} from "./fluxer";
 import { moduleChanges } from "./patchWebpack";
 
 const logger = new Logger("Common");
@@ -110,7 +116,7 @@ export const Modals = lazy<{
 }>(() => findByProperties("push", "pop", "modal", "pushWithKey"));
 
 export const Stores = {
-  Users: lazy<{ currentUserId: string | null }>(() =>
+  Users: lazy<{ currentUserId: string | null; getUser(id: string): FluxerUser | undefined }>(() =>
     findByProperties("getUser", "getUserByTag", "getCurrentUser"),
   ),
   Channels: lazy<{ getChannel(id: string): FluxerChannel | undefined }>(() =>

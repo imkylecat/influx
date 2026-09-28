@@ -92,14 +92,15 @@ export function saveSettings(): void {
   saveTimer ??= setTimeout(writeSettings, SAVE_DELAY_MILLISECONDS);
 }
 
-function subscribeToChanges(listener: () => void): () => void {
+// Returns a function that removes the listener again.
+export function onSettingsChange(listener: () => void): () => void {
   changeListeners.add(listener);
   return () => changeListeners.delete(listener);
 }
 
 // Rerenders the component that calls it whenever a setting changes.
 export function useSettings(): void {
-  React.useSyncExternalStore(subscribeToChanges, () => changes);
+  React.useSyncExternalStore(onSettingsChange, () => changes);
 }
 
 export function getPluginData(plugin: string): PluginSettingsData {

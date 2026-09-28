@@ -153,7 +153,7 @@ export const Stores = {
 const classCache = new Map<string, string>();
 
 // Finds a CSS module class by its readable prefix, for example "Message.module__messageTimestamp___".
-export function findClassName(prefix: string): string | undefined {
+function findClassName(prefix: string): string | undefined {
   let className = classCache.get(prefix);
   if (className) return className;
   const matches = (value: unknown): value is string =>

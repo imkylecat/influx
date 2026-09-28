@@ -114,11 +114,8 @@ function displayNameOf(component: any): string | undefined {
   return undefined;
 }
 
-// Finds a component by display name among the exports of modules whose source contains code.
-export function findComponentByDisplayName(
-  code: string,
-  displayName: string,
-): ComponentType<any> | undefined {
+// The components each module whose source contains code exports, one list per module.
+function* componentsByModule(code: string): Generator<any[]> {
   for (const id of search(code)) {
     let exports: any;
     try {
@@ -127,9 +124,16 @@ export function findComponentByDisplayName(
       logger.error(`Requiring module ${id} for component lookup threw`, error);
       continue;
     }
-    const match = [...exportCandidates({ exports })].find(
-      (candidate) => isComponent(candidate) && displayNameOf(candidate) === displayName,
-    );
+    yield [...exportCandidates({ exports })].filter(isComponent);
+  }
+}
+
+export function findComponentByDisplayName(
+  code: string,
+  displayName: string,
+): ComponentType<any> | undefined {
+  for (const components of componentsByModule(code)) {
+    const match = components.find((component) => displayNameOf(component) === displayName);
     if (match) return match;
   }
   return undefined;
@@ -139,15 +143,7 @@ export function findComponentByCode(
   code: string,
   displayName?: string,
 ): ComponentType<any> | undefined {
-  for (const id of search(code)) {
-    let exports: any;
-    try {
-      exports = webpackRequire!(id);
-    } catch (error) {
-      logger.error(`Requiring module ${id} for component lookup threw`, error);
-      continue;
-    }
-    const components = [...exportCandidates({ exports })].filter(isComponent);
+  for (const components of componentsByModule(code)) {
     const byName =
       displayName && components.find((component) => component.displayName === displayName);
     if (byName) return byName;

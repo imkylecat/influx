@@ -2,7 +2,7 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { Logger } from "@utils/Logger";
-import { findClassName, NicknameLookup, React, Stores } from "@webpack/common";
+import { nativeClasses, NicknameLookup, React, Stores } from "@webpack/common";
 const logger = new Logger("ShowMeYourName");
 
 const settings = definePluginSettings({
@@ -72,7 +72,7 @@ export default definePlugin({
       }
       const text = label(author);
       return (
-        <span className={findClassName("Message.module__messageTimestamp___")}>
+        <span className={nativeClasses("Message.module__messageTimestamp___")}>
           ({Stores.StreamerMode()?.shouldTruncateUsernames ? truncate(text) : text})
         </span>
       );

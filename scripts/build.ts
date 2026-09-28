@@ -99,12 +99,8 @@ async function buildAll(): Promise<void> {
   await cp(path.join(dist, "desktop/renderer.js"), path.join(dist, "extension/renderer.js"));
 
   if (!release && existsSync(developmentInstallDirectory)) {
-    for (const result of results) {
-      for (const output of result.outputs) {
-        if (path.dirname(output.path) === path.join(dist, "desktop")) {
-          await cp(output.path, path.join(developmentInstallDirectory, path.basename(output.path)));
-        }
-      }
+    for (const file of Object.keys(DESKTOP_ASSETS)) {
+      await cp(path.join(dist, "desktop", file), path.join(developmentInstallDirectory, file));
     }
   }
   if (release) await stageRelease();

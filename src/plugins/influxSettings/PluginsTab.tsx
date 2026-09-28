@@ -5,7 +5,7 @@ import {
   plugins,
   setPluginEnabled,
 } from "@api/Plugins";
-import type { OptionDefinition } from "@api/Settings";
+import { type OptionDefinition, useSettings } from "@api/Settings";
 import {
   Components,
   findIcon,
@@ -30,11 +30,12 @@ function OptionField({
   name: string;
   definition: OptionDefinition;
 }) {
+  useSettings();
   const store = plugin.settings!.store as Record<string, any>;
-  const [value, setValue] = React.useState(store[name]);
+  // What's typed in a number field, which isn't always a number yet.
+  const [numberText, setNumberText] = React.useState(() => String(store[name] ?? ""));
   const update = (next: unknown) => {
     store[name] = next;
-    setValue(next);
   };
 
   switch (definition.type) {
@@ -45,7 +46,7 @@ function OptionField({
         <Switch
           label={humanize(name)}
           description={definition.description}
-          value={Boolean(value)}
+          value={Boolean(store[name])}
           onChange={update}
         />
       );
@@ -57,7 +58,7 @@ function OptionField({
         <Combobox
           label={humanize(name)}
           description={definition.description}
-          value={String(value)}
+          value={String(store[name])}
           options={definition.options.map((option) =>
             typeof option === "string" ? { label: option, value: option } : option,
           )}
@@ -74,13 +75,13 @@ function OptionField({
           label={humanize(name)}
           footer={definition.description}
           type={definition.type === "number" ? "number" : "text"}
-          value={String(value ?? "")}
+          value={definition.type === "number" ? numberText : String(store[name] ?? "")}
           onChange={(event: { currentTarget: HTMLInputElement }) => {
             const raw = event.currentTarget.value;
             if (definition.type === "string") return update(raw);
             const parsed = Number(raw);
-            setValue(raw);
-            if (raw.trim() !== "" && Number.isFinite(parsed)) store[name] = parsed;
+            setNumberText(raw);
+            if (raw.trim() !== "" && Number.isFinite(parsed)) update(parsed);
           }}
         />
       );
@@ -159,15 +160,7 @@ function openPluginSettings(plugin: PluginDefinition): void {
   modals?.push(modals.modal(() => <PluginSettingsModal plugin={plugin} />));
 }
 
-function PluginRow({
-  plugin,
-  needsReload,
-  onToggle,
-}: {
-  plugin: PluginDefinition;
-  needsReload: boolean;
-  onToggle: () => void;
-}) {
+function PluginRow({ plugin, needsReload }: { plugin: PluginDefinition; needsReload: boolean }) {
   const enabled = isPluginEnabled(plugin);
   const Switch = Components.Switch();
   const Button = Components.Button();
@@ -220,10 +213,7 @@ function PluginRow({
           ariaLabel={`${enabled ? "Disable" : "Enable"} ${plugin.name}`}
           value={enabled}
           disabled={plugin.required}
-          onChange={(value: boolean) => {
-            setPluginEnabled(plugin.name, value);
-            onToggle();
-          }}
+          onChange={(value: boolean) => setPluginEnabled(plugin.name, value)}
         />
       </div>
     </div>
@@ -242,13 +232,7 @@ function matchesQuery(plugin: PluginDefinition, query: string): boolean {
 
 export function PluginsTab() {
   const [query, setQuery] = React.useState("");
-  const [filter, setFilterState] = React.useState<PluginFilter>(
-    () =>
-      (FILTERS.some((option) => option.value === settings.store.pluginFilter)
-        ? settings.store.pluginFilter
-        : "all") as PluginFilter,
-  );
-  const [, rerender] = React.useReducer((count: number) => count + 1, 0);
+  useSettings();
 
   const SettingsTabContainer = Components.SettingsTabContainer();
   const SettingsTabContent = Components.SettingsTabContent();
@@ -271,13 +255,10 @@ export function PluginsTab() {
     return <MissingComponents />;
   }
 
-  const setFilter = (value: PluginFilter) => {
-    settings.store.pluginFilter = value;
-    setFilterState(value);
-  };
-
   const all = Object.values(plugins).sort((first, second) => first.name.localeCompare(second.name));
-  const activeFilter = FILTERS.find((option) => option.value === filter) ?? FILTERS[0];
+  const activeFilter =
+    FILTERS.find((option) => option.value === settings.store.pluginFilter) ?? FILTERS[0];
+  const filter = activeFilter.value;
   const shown = all.filter((plugin) => activeFilter.test(plugin) && matchesQuery(plugin, query));
   const enabledCount = all.filter(isPluginEnabled).length;
   const needsReload = getPluginsNeedingReload();
@@ -321,7 +302,9 @@ export function PluginsTab() {
                   value: option.value,
                   label: `${option.label} (${all.filter(option.test).length})`,
                 }))}
-                onChange={setFilter}
+                onChange={(value: PluginFilter) => {
+                  settings.store.pluginFilter = value;
+                }}
               />
             </div>
             {shown.length > 0 && (
@@ -331,7 +314,6 @@ export function PluginsTab() {
                     key={plugin.name}
                     plugin={plugin}
                     needsReload={needsReload.includes(plugin.name)}
-                    onToggle={rerender}
                   />
                 ))}
               </div>

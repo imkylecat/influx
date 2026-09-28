@@ -1,3 +1,4 @@
+import { useSettings } from "@api/Settings";
 import {
   canInstallUpdates,
   checkForUpdates,
@@ -54,7 +55,7 @@ export function UpdatesSection() {
   const [state, setState] = React.useState<UpdateState>(
     pendingRestart ? { kind: "installed", version: pendingRestart } : { kind: "idle" },
   );
-  const [autoUpdate, setAutoUpdate] = React.useState(settings.store.autoUpdate);
+  useSettings();
   const SettingsTabSection = Components.SettingsTabSection();
   const Switch = Components.Switch();
   const Button = Components.Button();
@@ -127,11 +128,10 @@ export function UpdatesSection() {
         <Switch
           label="Automatically update"
           description={AUTO_UPDATE_DESCRIPTIONS[updateChannel]}
-          value={canInstallUpdates && autoUpdate}
+          value={canInstallUpdates && settings.store.autoUpdate}
           disabled={!canInstallUpdates}
           onChange={(value: boolean) => {
             settings.store.autoUpdate = value;
-            setAutoUpdate(value);
           }}
         />
         {state.kind === "installed" && (

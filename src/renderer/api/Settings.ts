@@ -1,4 +1,5 @@
 import { Logger } from "../utils/Logger";
+import { React } from "../webpack/common";
 
 const logger = new Logger("Settings");
 const STORAGE_KEY = "InfluxSettings";
@@ -64,6 +65,8 @@ function load(): SettingsData {
 export const settings: SettingsData = load();
 
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
+let changes = 0;
+const changeListeners = new Set<() => void>();
 
 function writeSettings(): void {
   if (saveTimer === undefined) return;
@@ -78,13 +81,27 @@ function writeSettings(): void {
 
 if (storage) window.addEventListener("pagehide", writeSettings);
 
-// Writes to storage once changes stop coming.
+// Tells components right away, and writes to storage once changes stop coming.
 export function saveSettings(): void {
+  changes++;
+  for (const listener of changeListeners) listener();
   if (!storage) {
     logger.error("No localStorage available; settings will not persist");
     return;
   }
   saveTimer ??= setTimeout(writeSettings, SAVE_DELAY_MILLISECONDS);
+}
+
+function subscribeToChanges(listener: () => void): () => void {
+  changeListeners.add(listener);
+  return () => {
+    changeListeners.delete(listener);
+  };
+}
+
+// Rerenders the component that calls it whenever a setting changes.
+export function useSettings(): void {
+  React.useSyncExternalStore(subscribeToChanges, () => changes);
 }
 
 export function getPluginData(plugin: string): PluginSettingsData {

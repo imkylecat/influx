@@ -1,5 +1,5 @@
 import definePlugin from "@api/Plugins";
-import { definePluginSettings } from "@api/Settings";
+import { definePluginSettings, useSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { Components, findIcon, React } from "@webpack/common";
 
@@ -12,7 +12,8 @@ const settings = definePluginSettings({
 });
 
 function ChatBarButton() {
-  const [active, setActive] = React.useState(settings.store.active);
+  useSettings();
+  const { active } = settings.store;
   const TextareaButton = Components.TextareaButton();
   const KeyboardIcon = findIcon("KeyboardIcon");
   if (!TextareaButton || !KeyboardIcon) return null;
@@ -24,7 +25,6 @@ function ChatBarButton() {
       isSelected={active}
       onClick={() => {
         settings.store.active = !active;
-        setActive(!active);
       }}
     />
   );

@@ -68,7 +68,6 @@ const renderer: BuildConfig = {
 
 const builds: BuildConfig[] = [
   { ...renderer, outdir: path.join(dist, "desktop"), naming: "renderer.js" },
-  { ...renderer, outdir: path.join(dist, "extension"), naming: "renderer.js" },
   {
     ...common,
     entrypoints: ["main", "preload"].map((name) => path.join(root, `src/desktop/${name}.ts`)),
@@ -98,6 +97,7 @@ async function buildAll(): Promise<void> {
     for (const log of result.logs) console.error(log);
   }
   if (results.some((result) => !result.success)) throw new Error("Build failed");
+  await cp(path.join(dist, "desktop/renderer.js"), path.join(dist, "extension/renderer.js"));
 
   if (!release && existsSync(developmentInstallDirectory)) {
     for (const result of results) {

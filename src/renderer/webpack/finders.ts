@@ -70,15 +70,6 @@ export function find(filter: Filter): any {
   return undefined;
 }
 
-export function findAll(filter: Filter): any[] {
-  const matches: any[] = [];
-  for (const module of moduleCache.values()) {
-    const match = firstMatch(module, filter);
-    if (match !== undefined) matches.push(match);
-  }
-  return matches;
-}
-
 export const findByProperties = (...properties: string[]) =>
   find(filters.byProperties(...properties));
 export const findByCode = (...code: Array<string | RegExp>) => find(filters.byCode(...code));

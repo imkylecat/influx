@@ -64,6 +64,5 @@ export async function installUpdate(): Promise<UpdateInstallResult> {
 }
 
 export function restartToUpdate(): void {
-  if (native) void native.updater.restart();
-  else location.reload();
+  void native?.updater.restart();
 }

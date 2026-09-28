@@ -58,27 +58,23 @@ export function getPluginsNeedingReload(): string[] {
     .map((plugin) => plugin.name);
 }
 
-function startPlugin(plugin: PluginDefinition): boolean {
-  if (started.has(plugin.name)) return true;
+function startPlugin(plugin: PluginDefinition): void {
+  if (started.has(plugin.name)) return;
   try {
     plugin.start?.();
     started.add(plugin.name);
-    return true;
   } catch (error) {
     logger.error(`Failed to start ${plugin.name}`, error);
-    return false;
   }
 }
 
-function stopPlugin(plugin: PluginDefinition): boolean {
-  if (!started.has(plugin.name)) return true;
+function stopPlugin(plugin: PluginDefinition): void {
+  if (!started.has(plugin.name)) return;
   try {
     plugin.stop?.();
     started.delete(plugin.name);
-    return true;
   } catch (error) {
     logger.error(`Failed to stop ${plugin.name}`, error);
-    return false;
   }
 }
 
@@ -88,7 +84,7 @@ export function startAllPlugins(): void {
   }
 }
 
-export function setPluginEnabled(name: string, enabled: boolean): boolean {
+export function setPluginEnabled(name: string, enabled: boolean): void {
   const plugin = plugins[name];
   if (!plugin) throw new Error(`Unknown plugin ${name}`);
   if (plugin.required && !enabled) throw new Error(`${name} is required and cannot be disabled`);
@@ -96,13 +92,7 @@ export function setPluginEnabled(name: string, enabled: boolean): boolean {
   getPluginData(name).enabled = enabled;
   saveSettings();
 
-  if (plugin.patches?.length) {
-    logger.info(
-      `${name} ${enabled ? "enabled" : "disabled"}. Reload Fluxer (Ctrl/Cmd+R) to apply its patches.`,
-    );
-    return true;
-  }
+  if (plugin.patches?.length) return;
   if (enabled) startPlugin(plugin);
   else stopPlugin(plugin);
-  return false;
 }

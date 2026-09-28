@@ -18,7 +18,6 @@ interface SettingsTab {
   category: string;
   label: string;
   icon: unknown;
-  iconWeight?: string;
 }
 
 const TABS = [

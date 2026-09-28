@@ -3,7 +3,6 @@ import { React } from "@webpack/common";
 import { find } from "@webpack/finders";
 import type { ComponentType, ReactNode } from "react";
 
-const PLUGIN = "RelationshipNotifier";
 const MAXIMUM_NOTICES = 50;
 const BANNER_TONE = "brand";
 
@@ -21,7 +20,7 @@ interface NoticeList {
 }
 
 // Fluxer's banner building blocks, lifted out of its nagbar module by the container patch.
-export interface NagbarParts {
+interface NagbarParts {
   Nagbar: ComponentType<any> | null;
   Content: ComponentType<any> | null;
   Button: ComponentType<any> | null;
@@ -39,7 +38,7 @@ let notices: NoticeList | undefined;
 export let nagbarFound = false;
 
 function savedNotices(): Notice[] {
-  const saved = getPluginData(PLUGIN).notices;
+  const saved = getPluginData("RelationshipNotifier").notices;
   return Array.isArray(saved) ? saved.filter((notice) => typeof notice?.message === "string") : [];
 }
 
@@ -59,7 +58,7 @@ function getNotices(): NoticeList {
 }
 
 function persist(): void {
-  getPluginData(PLUGIN).notices = getNotices().slice();
+  getPluginData("RelationshipNotifier").notices = getNotices().slice();
   saveSettings();
 }
 

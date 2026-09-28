@@ -185,7 +185,7 @@ export const NicknameLookup = lazy<
   (user: { username: string }, guildId?: string, channelId?: string) => string
 >(() => findByCode(".displayName||", ".globalName||", ".username||", ".nickname)", ".nicks"));
 
-export type ShowNotification = (options: {
+type ShowNotification = (options: {
   title: string;
   body: string;
   url?: string;
@@ -204,7 +204,7 @@ export function openExternal(url: string): void {
   else window.open(url, "_blank", "noopener");
 }
 
-export type ToastType = "success" | "error" | "info";
+type ToastType = "success" | "error" | "info";
 
 export function showToast(
   type: ToastType,

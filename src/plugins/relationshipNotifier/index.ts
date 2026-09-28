@@ -19,7 +19,6 @@ import {
   snapshotFromReady,
 } from "./snapshot";
 
-const PLUGIN = "RelationshipNotifier";
 const SELF_ACTION_EXPIRY_MILLISECONDS = 60_000;
 const SAVE_DELAY_MILLISECONDS = 1_000;
 
@@ -79,7 +78,7 @@ let snapshot: Snapshot | null = null;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 
 function savedSnapshots(): Record<string, Snapshot> {
-  const data = getPluginData(PLUGIN);
+  const data = getPluginData("RelationshipNotifier");
   if (data.snapshots == null || typeof data.snapshots !== "object") data.snapshots = {};
   return data.snapshots as Record<string, Snapshot>;
 }
@@ -193,7 +192,7 @@ const LISTENERS: Record<string, (data: any) => void> = {
 };
 
 export default definePlugin({
-  name: PLUGIN,
+  name: "RelationshipNotifier",
   description:
     "Notifies you when a friend removes you, a friend request is canceled, or you're removed from a server, including while Fluxer was closed.",
   authors: [Contributor.Kairu],

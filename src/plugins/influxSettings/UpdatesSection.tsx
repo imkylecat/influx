@@ -16,7 +16,7 @@ type UpdateState =
   | { kind: "checking" }
   | { kind: "upToDate" }
   | { kind: "available"; version: string; url: string }
-  | { kind: "installing"; version: string; url: string }
+  | { kind: "installing"; version: string }
   | { kind: "installed"; version: string }
   | { kind: "error"; message: string };
 
@@ -48,8 +48,8 @@ export function UpdatesSection() {
     else setState({ kind: "upToDate" });
   };
 
-  const install = async (version: string, url: string) => {
-    setState({ kind: "installing", version, url });
+  const install = async (version: string) => {
+    setState({ kind: "installing", version });
     const result = await installUpdate();
     setState(
       result.ok
@@ -88,21 +88,21 @@ export function UpdatesSection() {
         >
           Check for updates
         </Button>
-        {(state.kind === "available" || state.kind === "installing") &&
-          (canInstallUpdates ? (
-            <Button
-              small
-              fitContent
-              submitting={state.kind === "installing"}
-              onClick={() => install(state.version, state.url)}
-            >
-              Update to {state.version}
-            </Button>
-          ) : (
-            <Button small fitContent onClick={() => openExternal(state.url)}>
-              Get {state.version}
-            </Button>
-          ))}
+        {state.kind === "available" && !canInstallUpdates && (
+          <Button small fitContent onClick={() => openExternal(state.url)}>
+            Get {state.version}
+          </Button>
+        )}
+        {(state.kind === "available" || state.kind === "installing") && canInstallUpdates && (
+          <Button
+            small
+            fitContent
+            submitting={state.kind === "installing"}
+            onClick={() => install(state.version)}
+          >
+            Update to {state.version}
+          </Button>
+        )}
       </>
     );
 

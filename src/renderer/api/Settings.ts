@@ -11,7 +11,7 @@ const storage: Storage | null = (() => {
   }
 })();
 
-export interface PluginSettingsData {
+interface PluginSettingsData {
   enabled?: boolean;
   [option: string]: unknown;
 }
@@ -83,7 +83,7 @@ interface OptionBase {
   hidden?: boolean;
 }
 
-export type SelectOption = string | { label: string; value: string };
+type SelectOption = string | { label: string; value: string };
 
 export type OptionDefinition =
   | (OptionBase & { type: "boolean"; default: boolean })

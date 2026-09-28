@@ -58,11 +58,57 @@ describe("LocalNotes", () => {
     });
     const pending = pendingFor(localNotes);
     const renderItems = runPatched(pending, factory);
-    assert.equal(pending.length, 0);
+    assert.equal(pending.length, 1, "only the profile patch is left");
     const user = { id: "10" };
     const close = () => {};
     const items = renderItems(user, close);
     assert.equal(items[0].type, "copy");
     assert.deepEqual(items[1], { user, onClose: close });
+  });
+
+  it("shows a second note editor on profiles that saves locally", () => {
+    // Shape of Fluxer's compiled UserNoteEditor and the ProfileContent that renders it.
+    const factory = compile(
+      "function(module){const saved=[],i={jsx:(type,props)=>({type,props}),jsxs:(type,props)=>({type,props})},$={x6:'Trans'},r={_:e=>e.message},ea={h:'textarea'},eo={y:(e,t)=>saved.push([e,t])},H={$:(...e)=>e.join(' ')},D={},s=!1,m={current:{note:''}},l=()=>{};" +
+        'let el={id:"KiJn9B",message:"Note"},eu={id:"hx3d1y",message:"Click to add a note"},' +
+        'ec=(({userId:e,initialNote:t,autoFocus:n,noteRef:a})=>{let u=t;return(0,i.jsxs)("div",{className:D.ZV,"data-flx":"user.user-profile-modal.user-note-editor.div",children:[(0,i.jsx)("span",{className:D.xu,"data-flx":"user.user-profile-modal.user-note-editor.span",children:(0,i.jsx)($.x6,{id:"KiJn9B",message:"Note"})}),(0,i.jsx)(ea.h,{ref:a,"aria-label":r._(el),className:(0,H.$)(D.tb,D._j,s?D.jd:D.EN),maxLength:256,maxRows:8,minRows:2,onBlur:()=>{u!==m.current.note&&eo.y(e,u),l(!1)},placeholder:s?void 0:r._(eu),value:u,"data-flx":"user.user-profile-modal.user-note-editor.textarea-autosize.set-note"})]})});' +
+        'let ep=({user:t,userNote:n,autoFocusNote:a,noteRef:r})=>[(0,i.jsx)(ec,{userId:t.id,initialNote:n,autoFocus:a,noteRef:r,"data-flx":"user.user-profile-modal.profile-content.user-note-editor"})];' +
+        "module.exports={ProfileContent:ep,saved}}",
+    );
+    resetPatching({
+      ...localNotes,
+      renderProfileNote: (userId: string, Editor: unknown) => ({ userId, Editor }),
+    });
+    const { ProfileContent, saved } = runPatched(pendingFor(localNotes), factory);
+    const [native, local] = ProfileContent({ user: { id: "10" }, userNote: "Server note" });
+    assert.equal(local.userId, "10");
+    assert.equal(local.Editor, native.type);
+
+    const [label, field] = native.type({ userId: "10", initialNote: "Server note" }).props.children;
+    assert.equal(label.props.children.type, "Trans");
+    assert.equal(field.props.maxLength, 256);
+    assert.equal(field.props.placeholder, "Click to add a note");
+    field.props.onBlur();
+    assert.deepEqual(saved, [["10", "Server note"]]);
+
+    const notes: string[] = [];
+    const influxNote = {
+      label: "Local note",
+      placeholder: "Click to add a local note",
+      maximumLength: MAXIMUM_NOTE_LENGTH,
+      save: (note: string) => notes.push(note),
+    };
+    const [localLabel, localField] = local.Editor({
+      userId: "10",
+      initialNote: "Only here",
+      influxNote,
+    }).props.children;
+    assert.equal(localLabel.props.children, "Local note");
+    assert.equal(localField.props["aria-label"], "Local note");
+    assert.equal(localField.props.maxLength, MAXIMUM_NOTE_LENGTH);
+    assert.equal(localField.props.placeholder, "Click to add a local note");
+    localField.props.onBlur();
+    assert.deepEqual(notes, ["Only here"]);
+    assert.equal(saved.length, 1, "the local note is never sent to Fluxer");
   });
 });

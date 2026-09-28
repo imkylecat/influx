@@ -1,9 +1,18 @@
 import definePlugin from "@api/Plugins";
-import { getPluginData, saveSettings } from "@api/Settings";
+import { definePluginSettings, getPluginData, saveSettings, useSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { Components, findIcon, Modals, React, showToast, Stores } from "@webpack/common";
+import type { ComponentType } from "react";
 
 export const MAXIMUM_NOTE_LENGTH = 4000;
+
+const settings = definePluginSettings({
+  showOnProfiles: {
+    type: "boolean",
+    description: "Show the local note on user profiles, under Fluxer's own note.",
+    default: true,
+  },
+});
 
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -32,6 +41,30 @@ export function writeNote(accountId: string, userId: string, note: string): void
   saveSettings();
 }
 
+function saveNote(accountId: string, userId: string, note: string): void {
+  if (Stores.Users()?.currentUserId === accountId) writeNote(accountId, userId, note);
+  else showToast("error", "Your account changed. Reopen the local note to edit it.");
+}
+
+// Fluxer's own profile note editor, which the profile patch teaches to save somewhere else.
+function ProfileNote({ userId, Editor }: { userId: string; Editor: ComponentType<any> }) {
+  useSettings();
+  const accountId = Stores.Users()?.currentUserId;
+  if (!settings.store.showOnProfiles || !accountId) return null;
+  return (
+    <Editor
+      userId={userId}
+      initialNote={readNote(accountId, userId)}
+      influxNote={{
+        label: "Local note",
+        placeholder: "Click to add a local note",
+        maximumLength: MAXIMUM_NOTE_LENGTH,
+        save: (note: string) => saveNote(accountId, userId, note),
+      }}
+    />
+  );
+}
+
 function NoteModal({ accountId, userId }: { accountId: string; userId: string }) {
   const [note, setNote] = React.useState(() => readNote(accountId, userId));
   const ModalRoot = Components.ModalRoot();
@@ -56,8 +89,7 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
   }
   const close = () => Modals()?.pop();
   const save = (value: string) => {
-    if (Stores.Users()?.currentUserId === accountId) writeNote(accountId, userId, value);
-    else showToast("error", "Your account changed. Reopen the local note to edit it.");
+    saveNote(accountId, userId, value);
     close();
   };
   return (
@@ -100,9 +132,44 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
 
 export default definePlugin({
   name: "LocalNotes",
-  description: "Adds private notes to user menus, saved only on this device for your account.",
+  description:
+    "Adds private notes to user menus and profiles, saved only on this device for your account.",
   authors: [Contributor.Kairu],
+  settings,
   patches: [
+    {
+      // Fluxer's note editor takes an influxNote prop, and the profile shows a second one with it.
+      find: '"user.user-profile-modal.user-note-editor.div"',
+      replacement: [
+        {
+          match: /\(\{userId:\i,initialNote:\i,autoFocus:\i,noteRef:\i(?=\}\)=>)/,
+          replace: "$&,influxNote:influxNote",
+        },
+        {
+          match:
+            /("data-flx":"user\.user-profile-modal\.user-note-editor\.span",children:)(\(0,\i\.jsx\)\(\i\.\i,\{[^{}]*\}\))/,
+          replace: "$1influxNote?influxNote.label:$2",
+        },
+        {
+          match:
+            /("aria-label":)(\i\._\(\i\))(,className:[^{}]{0,120}?,maxLength:)(\d+)(?=,maxRows:)/,
+          replace: "$1(influxNote?influxNote.label:$2)$3influxNote?influxNote.maximumLength:$4",
+        },
+        {
+          match: /(onBlur:\(\)=>\{\i!==\i\.current\.note&&)(\i\.\i\(\i,(\i)\))/,
+          replace: "$1(influxNote?influxNote.save($3):$2)",
+        },
+        {
+          match: /(placeholder:\i\?void 0:)(\i\._\(\i\))(?=,value:)/,
+          replace: "$1(influxNote?influxNote.placeholder:$2)",
+        },
+        {
+          match:
+            /\(0,\i\.jsx\)\((\i),\{userId:(\i\.id),initialNote:\i,autoFocus:\i,noteRef:\i,"data-flx":"user\.user-profile-modal\.profile-content\.user-note-editor"\}\)/,
+          replace: "$&,$self.renderProfileNote($2,$1)",
+        },
+      ],
+    },
     {
       find: '"ui.action-menu.user-context-menu.render-advanced-menu-group.copy-user-id-menu-item"',
       replacement: {
@@ -112,6 +179,16 @@ export default definePlugin({
       },
     },
   ],
+
+  renderProfileNote(userId: string, Editor: ComponentType<any>) {
+    const ErrorBoundary = Components.ErrorBoundary();
+    if (!ErrorBoundary) return null;
+    return (
+      <ErrorBoundary fallback={null}>
+        <ProfileNote userId={userId} Editor={Editor} />
+      </ErrorBoundary>
+    );
+  },
 
   renderMenuItem(user: { id: string }, onClose: () => void) {
     const MenuItem = Components.MenuItem();

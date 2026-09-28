@@ -7,6 +7,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- ForceFlags adds "Force flags" to user menus and "Force features" to server menus. Click a flag or
+  feature to force it on or off, and click it again to undo. Changes apply without reloading Fluxer.
+
 ## [0.3.0] - 2026-09-27
 
 ### Added

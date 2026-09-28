@@ -11,7 +11,6 @@ export interface PluginDefinition {
   authors: Contributor[];
   patches?: PatchDefinition[];
   settings?: PluginSettings<any>;
-  enabledByDefault?: boolean;
   required?: boolean;
   start?(): void;
   stop?(): void;
@@ -28,9 +27,7 @@ const started = new Set<string>();
 const enabledAtStartup = new Map<string, boolean>();
 
 export function isPluginEnabled(plugin: PluginDefinition): boolean {
-  return (
-    plugin.required || (getPluginData(plugin.name).enabled ?? plugin.enabledByDefault ?? false)
-  );
+  return plugin.required || (getPluginData(plugin.name).enabled ?? false);
 }
 
 export function registerPlugins(list: PluginDefinition[]): void {

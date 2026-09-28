@@ -2,6 +2,7 @@ import { onGatewayEvents } from "@api/Gateway";
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
+import { idListIncludes } from "@utils/idList";
 import { Logger } from "@utils/Logger";
 import { showNotification, showToast, Stores } from "@webpack/common";
 import type { FluxerMessage, MessageWire } from "@webpack/fluxer";
@@ -41,6 +42,21 @@ const settings = definePluginSettings({
     type: "boolean",
     description: "Ignore messages from bots.",
     default: true,
+  },
+  ignoreUsers: {
+    type: "string",
+    description: "Ignore messages from these user IDs, separated by commas or spaces.",
+    default: "",
+  },
+  ignoreChannels: {
+    type: "string",
+    description: "Ignore messages in these channel IDs, separated by commas or spaces.",
+    default: "",
+  },
+  ignoreServers: {
+    type: "string",
+    description: "Ignore messages in these server IDs, separated by commas or spaces.",
+    default: "",
   },
 });
 
@@ -82,9 +98,22 @@ export function matchesKeywords(content: string | undefined): boolean {
   });
 }
 
-function isFromIgnored(author: { id: string; bot?: boolean }): boolean {
+function isIgnored(
+  author: { id: string; bot?: boolean },
+  channelId: string,
+  guildId: string | null | undefined,
+): boolean {
   if (author.id === Stores.Users()?.currentUserId) return true;
-  return settings.store.ignoreBots && Boolean(author.bot);
+  const { ignoreBots, ignoreUsers, ignoreChannels, ignoreServers } = settings.store;
+  if (ignoreBots && author.bot) return true;
+  if (idListIncludes(ignoreUsers, author.id) || idListIncludes(ignoreChannels, channelId)) {
+    return true;
+  }
+  if (!ignoreServers) return false;
+  return idListIncludes(
+    ignoreServers,
+    guildId ?? Stores.Channels()?.getChannel(channelId)?.guildId,
+  );
 }
 
 // Fluxer already notifies for mentions, so don't send a second one.
@@ -115,7 +144,8 @@ function notify(message: MessageWire): void {
 
 function onMessageCreate(message: MessageWire): void {
   // Fluxer already notifies for every DM and group DM message by default.
-  if (!settings.store.notify || !message.guild_id || isFromIgnored(message.author)) return;
+  if (!settings.store.notify || !message.guild_id) return;
+  if (isIgnored(message.author, message.channel_id, message.guild_id)) return;
   if (mentionsMe(message) || isViewing(message) || !matchesKeywords(message.content)) return;
   notify(message);
 }
@@ -142,7 +172,9 @@ export default definePlugin({
 
   isHighlighted(message: FluxerMessage): boolean {
     return (
-      settings.store.highlight && !isFromIgnored(message.author) && matchesKeywords(message.content)
+      settings.store.highlight &&
+      !isIgnored(message.author, message.channelId, message.guildId) &&
+      matchesKeywords(message.content)
     );
   },
 

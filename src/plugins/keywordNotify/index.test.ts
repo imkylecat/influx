@@ -12,6 +12,9 @@ describe("KeywordNotify", () => {
     store.keywords = "cat, deploy failed, /colou?r/";
     store.wholeWords = true;
     store.caseSensitive = false;
+    store.ignoreUsers = "";
+    store.ignoreChannels = "";
+    store.ignoreServers = "";
   });
 
   it("matches whole words, phrases, and regular expressions", () => {
@@ -30,12 +33,24 @@ describe("KeywordNotify", () => {
         'e.exports=(C,b)=>[!C&&b.isMentioned()&&eM.L8,"channel.message.article.alt-click"]}',
     );
     const classes = runPatched(pendingFor(keywordNotify), rowModule);
-    const row = (content: string) => ({
+    const row = (content: string, author = "2") => ({
       content,
-      author: { id: "2" },
+      author: { id: author },
+      channelId: "10",
+      guildId: "20",
       isMentioned: () => false,
     });
     assert.equal(classes(false, row("a cat appears"))[0], "mentioned");
     assert.equal(classes(false, row("a dog appears"))[0], false);
+
+    store.ignoreUsers = "3, 4";
+    assert.equal(classes(false, row("a cat appears"))[0], "mentioned");
+    assert.equal(classes(false, row("a cat appears", "4"))[0], false);
+    store.ignoreUsers = "";
+    store.ignoreChannels = "10";
+    assert.equal(classes(false, row("a cat appears"))[0], false);
+    store.ignoreChannels = "100";
+    store.ignoreServers = "20 21";
+    assert.equal(classes(false, row("a cat appears"))[0], false);
   });
 });

@@ -191,7 +191,7 @@ function PluginRow({ plugin, needsReload }: { plugin: PluginDefinition; needsRel
               <button
                 type="button"
                 className={nativeClasses("CallMessage.module__callLink___")}
-                onClick={() => void openUserProfile(author.id)}
+                onClick={() => openUserProfile(author.id)}
               >
                 {author.name}
               </button>

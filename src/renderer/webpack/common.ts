@@ -145,10 +145,7 @@ const findClassName = lazyByKey<string>((prefix) => {
 });
 
 export const nativeClasses = (...prefixes: string[]): string =>
-  prefixes
-    .map(findClassName)
-    .filter((name): name is string => Boolean(name))
-    .join(" ");
+  prefixes.map(findClassName).filter(Boolean).join(" ");
 
 export const RestClient = lazy<{
   get<T = unknown>(path: string): Promise<{ ok: boolean; status: number; body: T }>;
@@ -212,13 +209,10 @@ const linkedUserProfileOpener = lazy<(userId: string) => Promise<boolean>>(() =>
   findByCode("Skipping linked profile open before fetch"),
 );
 
-export async function openUserProfile(userId: string): Promise<boolean> {
+export function openUserProfile(userId: string): void {
   const openLinkedUserProfile = linkedUserProfileOpener();
-  if (!openLinkedUserProfile) {
-    logger.error("Couldn't find Fluxer's openLinkedUserProfile");
-    return false;
-  }
-  return openLinkedUserProfile(userId);
+  if (openLinkedUserProfile) void openLinkedUserProfile(userId);
+  else logger.error("Couldn't find Fluxer's openLinkedUserProfile");
 }
 
 const inviteAcceptModalOpener = lazy<(code: string) => void>(() =>

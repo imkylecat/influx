@@ -1,3 +1,4 @@
+import { type GatewayHandler, hookGatewayEvents } from "@api/Gateway";
 import definePlugin from "@api/Plugins";
 import { definePluginSettings, getPluginData, saveSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
@@ -60,8 +61,6 @@ const settings = definePluginSettings({
     default: false,
   },
 });
-
-type GatewayHandler = (data: any, context: unknown) => void;
 
 // Ids of friends and servers you removed yourself, so those removals don't notify.
 const selfActions = new Map<string, ReturnType<typeof setTimeout>>();
@@ -263,19 +262,7 @@ export default definePlugin({
     return id;
   },
 
-  // Runs Influx's listener before Fluxer's own handler for each event it cares about.
   wrapGatewayHandlers(registry: Map<string, GatewayHandler>): void {
-    for (const [event, listener] of Object.entries(LISTENERS)) {
-      const original = registry.get(event);
-      if (!original) continue;
-      registry.set(event, (data, context) => {
-        try {
-          listener(data);
-        } catch (error) {
-          console.error(`[Influx] RelationshipNotifier failed on ${event}`, error);
-        }
-        original(data, context);
-      });
-    }
+    hookGatewayEvents(registry, LISTENERS, this.name);
   },
 });

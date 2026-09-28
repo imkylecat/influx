@@ -1,3 +1,4 @@
+import { type GatewayHandler, hookGatewayEvents } from "@api/Gateway";
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
@@ -56,8 +57,6 @@ interface RenderedMessage {
   content?: string;
   author?: { id: string; bot?: boolean };
 }
-
-type GatewayHandler = (data: any, context: unknown) => void;
 
 let compiled: { source: string; patterns: RegExp[] } | undefined;
 
@@ -179,15 +178,6 @@ export default definePlugin({
   },
 
   wrapGatewayHandlers(registry: Map<string, GatewayHandler>): void {
-    const original = registry.get("MESSAGE_CREATE");
-    if (!original) return;
-    registry.set("MESSAGE_CREATE", (data, context) => {
-      try {
-        onMessageCreate(data);
-      } catch (error) {
-        console.error("[Influx] KeywordNotify failed on MESSAGE_CREATE", error);
-      }
-      original(data, context);
-    });
+    hookGatewayEvents(registry, { MESSAGE_CREATE: onMessageCreate }, this.name);
   },
 });

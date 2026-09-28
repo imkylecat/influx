@@ -90,6 +90,8 @@ export const Components = {
   ModalHeader: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalHeader")),
   ModalContent: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalContent")),
   ModalContentLayout: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalContentLayout")),
+  // Muted helper text, also used for the footer under an Input or Textarea.
+  ModalDescription: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalDescription")),
   ModalFooter: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalFooter")),
   // The full message row, as rendered in pins, confirm modals, and unread-channel previews.
   Message: lazy(() => findComponentByCode("channel.message.message-view-context-provider")),

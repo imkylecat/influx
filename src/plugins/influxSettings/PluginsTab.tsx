@@ -67,11 +67,12 @@ function OptionField({
     case "number":
     case "string": {
       const Input = Components.Input();
-      if (!Input) return null;
+      const ModalDescription = Components.ModalDescription();
+      if (!Input || !ModalDescription) return null;
       return (
         <Input
           label={humanize(name)}
-          footer={definition.description}
+          footer={<ModalDescription>{definition.description}</ModalDescription>}
           type={definition.type === "number" ? "number" : "text"}
           value={definition.type === "number" ? numberText : String(store[name] ?? "")}
           onChange={(event: { currentTarget: HTMLInputElement }) => {
@@ -133,7 +134,10 @@ function PluginSettingsModal({ plugin }: { plugin: PluginDefinition }) {
   const ModalHeader = Components.ModalHeader();
   const ModalContent = Components.ModalContent();
   const ModalContentLayout = Components.ModalContentLayout();
-  if (!ModalRoot || !ModalHeader || !ModalContent || !ModalContentLayout) return null;
+  const ModalDescription = Components.ModalDescription();
+  if (!ModalRoot || !ModalHeader || !ModalContent || !ModalContentLayout || !ModalDescription) {
+    return null;
+  }
   const close = () => Modals()?.pop();
   return (
     <ModalRoot size="medium" onClose={close}>
@@ -141,15 +145,13 @@ function PluginSettingsModal({ plugin }: { plugin: PluginDefinition }) {
       <ModalContent>
         <ModalContentLayout>
           {!isPluginEnabled(plugin) && (
-            <p className={row("settingDescription")}>
+            <ModalDescription>
               {plugin.name} is off. These settings apply when you turn it on.
-            </p>
+            </ModalDescription>
           )}
-          <div className={row("controlStackCompact")}>
-            {visibleOptions(plugin).map(([name, definition]) => (
-              <OptionField key={name} plugin={plugin} name={name} definition={definition} />
-            ))}
-          </div>
+          {visibleOptions(plugin).map(([name, definition]) => (
+            <OptionField key={name} plugin={plugin} name={name} definition={definition} />
+          ))}
         </ModalContentLayout>
       </ModalContent>
     </ModalRoot>

@@ -38,6 +38,7 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
   const ModalHeader = Components.ModalHeader();
   const ModalContent = Components.ModalContent();
   const ModalContentLayout = Components.ModalContentLayout();
+  const ModalDescription = Components.ModalDescription();
   const ModalFooter = Components.ModalFooter();
   const Textarea = Components.Textarea();
   const Button = Components.Button();
@@ -46,6 +47,7 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
     !ModalHeader ||
     !ModalContent ||
     !ModalContentLayout ||
+    !ModalDescription ||
     !ModalFooter ||
     !Textarea ||
     !Button
@@ -65,7 +67,11 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
         <ModalContentLayout>
           <Textarea
             label="Note"
-            footer="Saved only in this browser or app for your account. Clearing local data removes it."
+            footer={
+              <ModalDescription>
+                Saved only in this browser or app for your account. Clearing local data removes it.
+              </ModalDescription>
+            }
             placeholder="Write a private note about this user…"
             value={note}
             onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>

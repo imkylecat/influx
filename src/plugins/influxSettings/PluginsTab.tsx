@@ -214,7 +214,7 @@ function PluginRow({ plugin, needsReload }: { plugin: PluginDefinition; needsRel
           ariaLabel={`${enabled ? "Disable" : "Enable"} ${plugin.name}`}
           value={enabled}
           disabled={plugin.required}
-          onChange={(value: boolean) => setPluginEnabled(plugin.name, value)}
+          onChange={(value: boolean) => setPluginEnabled(plugin, value)}
         />
       </div>
     </div>

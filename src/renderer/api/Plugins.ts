@@ -81,12 +81,8 @@ export function startAllPlugins(): void {
   }
 }
 
-export function setPluginEnabled(name: string, enabled: boolean): void {
-  const plugin = plugins[name];
-  if (!plugin) throw new Error(`Unknown plugin ${name}`);
-  if (plugin.required && !enabled) throw new Error(`${name} is required and cannot be disabled`);
-
-  getPluginData(name).enabled = enabled;
+export function setPluginEnabled(plugin: PluginDefinition, enabled: boolean): void {
+  getPluginData(plugin.name).enabled = enabled;
   saveSettings();
 
   if (plugin.patches?.length) return;

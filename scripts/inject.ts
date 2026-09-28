@@ -47,8 +47,9 @@ const mode = options.includes("--uninstall")
 
 const sudoUser = process.platform === "linux" ? process.env.SUDO_USER : undefined;
 const homeDirectory = sudoUser ? `/home/${sudoUser}` : os.homedir();
-const influxInstallDirectory = path.join(influxDataDirectory(homeDirectory), "dist");
-const influxDevelopmentDirectory = path.join(influxDataDirectory(homeDirectory), "development");
+const influxDirectory = influxDataDirectory(homeDirectory);
+const influxInstallDirectory = path.join(influxDirectory, "dist");
+const influxDevelopmentDirectory = path.join(influxDirectory, "development");
 
 function fluxerResourcesDirectory(): string {
   if (pathOption) return resolveResourcesPath(pathOption);
@@ -140,13 +141,13 @@ async function main(): Promise<void> {
     uninstall(resourcesDirectory);
     console.log(`Removed Influx from ${resourcesDirectory}. Restart Fluxer.`);
     console.log(
-      `Release files remain in ${path.dirname(influxInstallDirectory)}; delete that folder to remove them too.`,
+      `Release files remain in ${influxDirectory}; delete that folder to remove them too.`,
     );
     return;
   }
 
   // Under sudo, folders mkdirSync creates (even ~/.config itself) would stay owned by root.
-  const createdDirectory = mkdirSync(influxDataDirectory(homeDirectory), { recursive: true });
+  const createdDirectory = mkdirSync(influxDirectory, { recursive: true });
   if (createdDirectory) giveToSudoUser(createdDirectory);
 
   let mainScript: string;
@@ -158,14 +159,13 @@ async function main(): Promise<void> {
     mkdirSync(influxDevelopmentDirectory, { recursive: true });
     for (const file of Object.keys(DESKTOP_ASSETS))
       copyFileSync(path.join(buildDirectory, file), path.join(influxDevelopmentDirectory, file));
-    giveToSudoUser(influxDataDirectory(homeDirectory));
     mainScript = path.join(influxDevelopmentDirectory, "main.js");
     installed = `development build (bun run build keeps ${influxDevelopmentDirectory} up to date)`;
   } else {
     installed = await installRelease(influxInstallDirectory);
-    giveToSudoUser(path.dirname(influxInstallDirectory));
     mainScript = path.join(influxInstallDirectory, "main.js");
   }
+  giveToSudoUser(influxDirectory);
 
   const stagedShim = path.join(resourcesDirectory, ".influx-shim.asar");
   await buildShim(mainScript, stagedShim);

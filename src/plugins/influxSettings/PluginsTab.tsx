@@ -223,11 +223,8 @@ function PluginRow({ plugin, needsReload }: { plugin: PluginDefinition; needsRel
 
 function matchesQuery(plugin: PluginDefinition, query: string): boolean {
   const normalizedQuery = query.trim().toLowerCase();
-  return (
-    !normalizedQuery ||
-    [plugin.name, plugin.description, ...plugin.authors.map((author) => author.name)].some((text) =>
-      text.toLowerCase().includes(normalizedQuery),
-    )
+  return [plugin.name, plugin.description, ...plugin.authors.map((author) => author.name)].some(
+    (text) => text.toLowerCase().includes(normalizedQuery),
   );
 }
 

@@ -103,10 +103,7 @@ export default definePlugin({
     const key = `influx-send-confirmation:${channelId}:${nonce}`;
     if (pending.has(key)) return false;
     const confirmed = await new Promise<boolean>((resolve) => {
-      let settled = false;
       const finish = (value: boolean) => {
-        if (settled) return;
-        settled = true;
         pending.delete(key);
         resolve(value);
       };

@@ -100,7 +100,7 @@ describe("MessageLogger", () => {
   function setup() {
     const pending = pendingFor(messageLogger);
     const { store, channels } = runPatched(pending, storeModule);
-    assert.equal(pending.length, 6, "only the patches for other modules are left");
+    assert.equal(pending.length, 7, "only the patches for other modules are left");
     channels.W = {
       current: new FakeChannelMessages(
         new Map([
@@ -140,18 +140,25 @@ describe("MessageLogger", () => {
     assert.equal(channels.current.get("1"), undefined);
   });
 
-  it("tags deleted rows and adds Fluxer's failed-message class", () => {
+  it("tags deleted rows", () => {
     const rowModule = compile(
       "function(e,t,n){" +
         'e.exports=(b,ty)=>({"data-flx-edited":null!=b.editedTimestamp?"true":void 0,"data-flx-compact":void 0,className:ty,ref:null})}',
     );
     const props = runPatched(pendingFor(messageLogger), rowModule);
-    const live = props(message("1", "hi"), "row");
-    assert.equal(live.className, "row");
-    assert.equal(live["data-influx-deleted"], undefined);
-    const deleted = props(message("1", "hi", 1 << 30), "row");
-    assert.equal(deleted["data-influx-deleted"], "true");
-    assert.ok(deleted.className.startsWith("row"));
+    assert.equal(props(message("1", "hi"), "row")["data-influx-deleted"], undefined);
+    assert.equal(props(message("1", "hi", 1 << 30), "row")["data-influx-deleted"], "true");
+  });
+
+  it("gives deleted messages Fluxer's failed-message text class", () => {
+    const textModule = compile(
+      "function(e,t,n){" +
+        'let U={cm:{FAILED:"FAILED"}},eM={b$:"failed"},nx={SENT:"sent"};' +
+        'e.exports=(r,F)=>{let T=r.state===U.cm.FAILED?F?eM.b$:void 0:nx[r.state];return{className:T,"data-flx":"channel.user-message.message-text--2"}}}',
+    );
+    const textProps = runPatched(pendingFor(messageLogger), textModule);
+    assert.equal(textProps(message("1", "hi"), true).className, "sent");
+    assert.equal(textProps(message("1", "hi", 1 << 30), true).className, "failed");
   });
 
   it("doesn't log ignored users, channels, or servers", () => {

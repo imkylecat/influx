@@ -202,13 +202,18 @@ export default definePlugin({
       ],
     },
     {
-      // The message row: tag deleted messages and give them Fluxer's failed-message red text.
       find: '"data-flx-edited":',
       replacement: {
-        match:
-          /("data-flx-edited":null!=(\i)\.editedTimestamp\?"true":void 0,)(.{0,1500}?className:)(\i),/,
-        replace:
-          '$1"data-influx-deleted":$self.isDeleted($2)?"true":void 0,$3$self.rowClass($4,$2),',
+        match: /"data-flx-edited":null!=(\i)\.editedTimestamp\?"true":void 0,/,
+        replace: '$&"data-influx-deleted":$self.isDeleted($1)?"true":void 0,',
+      },
+    },
+    {
+      // Deleted messages get the red text of a message that failed to send.
+      find: '"channel.user-message.message-text--2"',
+      replacement: {
+        match: /(\i)\.state===\i\.\i\.FAILED\?\i\?(\i\.\i):void 0:\i\[\1\.state\]/,
+        replace: "$self.isDeleted($1)?$2:$&",
       },
     },
     {
@@ -313,11 +318,6 @@ export default definePlugin({
 
   isDeleted(message: FluxerMessage | undefined): boolean {
     return message != null && (message.flags & DELETED_FLAG) !== 0;
-  },
-
-  rowClass(className: string | undefined, message: FluxerMessage | undefined): string | undefined {
-    if (!this.isDeleted(message)) return className;
-    return [className, nativeClasses("Message.module__messageFailed___")].filter(Boolean).join(" ");
   },
 
   PastEdits,

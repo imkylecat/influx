@@ -209,28 +209,20 @@ export default definePlugin({
   },
 
   userFlags(id: string | undefined, flags: number) {
-    try {
-      const overrides = overridesFor(settings.store.userFlags, id);
-      if (!overrides) return flags;
-      let result = flags ?? 0;
-      for (const name of overrides.add) result |= flagBit(name);
-      for (const name of overrides.remove) result &= ~flagBit(name);
-      return result;
-    } catch {
-      return flags;
-    }
+    const overrides = overridesFor(settings.store.userFlags, id);
+    if (!overrides) return flags;
+    let result = flags ?? 0;
+    for (const name of overrides.add) result |= flagBit(name);
+    for (const name of overrides.remove) result &= ~flagBit(name);
+    return result;
   },
 
   serverFeatures(id: string | undefined, features: Set<string>) {
-    try {
-      const overrides = overridesFor(settings.store.serverFeatures, id);
-      if (!overrides) return features;
-      for (const name of overrides.add) features.add(name);
-      for (const name of overrides.remove) features.delete(name);
-      return features;
-    } catch {
-      return features;
-    }
+    const overrides = overridesFor(settings.store.serverFeatures, id);
+    if (!overrides) return features;
+    for (const name of overrides.add) features.add(name);
+    for (const name of overrides.remove) features.delete(name);
+    return features;
   },
 
   renderUserMenu(user: FluxerUser) {

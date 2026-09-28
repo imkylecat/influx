@@ -69,16 +69,11 @@ export default definePlugin({
   ],
 
   anonymize(files: File[]): File[] {
-    try {
-      return files.map((file, index) => {
-        const name = anonymizeName(file.name, baseName(index));
-        return name === file.name
-          ? file
-          : new File([file], name, { type: file.type, lastModified: file.lastModified });
-      });
-    } catch (error) {
-      console.error("[Influx] AnonymizeFileNames failed, uploading with original names", error);
-      return files;
-    }
+    return files.map((file, index) => {
+      const name = anonymizeName(file.name, baseName(index));
+      return name === file.name
+        ? file
+        : new File([file], name, { type: file.type, lastModified: file.lastModified });
+    });
   },
 });

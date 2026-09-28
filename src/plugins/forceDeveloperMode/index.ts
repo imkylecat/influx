@@ -39,12 +39,8 @@ export default definePlugin({
   ],
 
   isForcedStaff(user: { id?: string } | undefined) {
-    try {
-      return (
-        settings.store.forceStaff && user?.id != null && user.id === Stores.Users()?.currentUserId
-      );
-    } catch {
-      return false;
-    }
+    return (
+      settings.store.forceStaff && user?.id != null && user.id === Stores.Users()?.currentUserId
+    );
   },
 });

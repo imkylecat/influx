@@ -139,15 +139,10 @@ function Banner({ parts }: { parts: NagbarParts }) {
 }
 
 export function withBanner<T extends NagbarItem>(items: T[], parts: NagbarParts): T[] {
-  try {
-    if (!nagbarFound || !hasNotices()) return items;
-    const banner = { type: "influx_relationship_notifier" } as unknown as T;
-    banner.influxBanner = <Banner key="influx-relationship-notifier" parts={parts} />;
-    return [banner, ...items];
-  } catch (error) {
-    console.error("[Influx] RelationshipNotifier failed to add its banner", error);
-    return items;
-  }
+  if (!nagbarFound || !hasNotices()) return items;
+  const banner = { type: "influx_relationship_notifier" } as unknown as T;
+  banner.influxBanner = <Banner key="influx-relationship-notifier" parts={parts} />;
+  return [banner, ...items];
 }
 
 const IDENTIFIER = String.raw`[\w$]+`;

@@ -165,16 +165,10 @@ export default definePlugin({
     },
   ],
 
-  isHighlighted(message: RenderedMessage): boolean {
-    try {
-      return (
-        settings.store.highlight &&
-        !isFromIgnored(message.author) &&
-        matchesKeywords(message.content)
-      );
-    } catch {
-      return false;
-    }
+  isHighlighted(message: FluxerMessage): boolean {
+    return (
+      settings.store.highlight && !isFromIgnored(message.author) && matchesKeywords(message.content)
+    );
   },
 
   wrapGatewayHandlers(registry: Map<string, GatewayHandler>): void {

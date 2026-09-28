@@ -79,18 +79,14 @@ export default definePlugin({
   tabComponents: Object.fromEntries(TABS.map((tab) => [tab.type, tab.component])),
 
   addTabs(tabs: SettingsTab[]): SettingsTab[] {
-    try {
-      const ours = TABS.map(({ type, label, icon }) => ({
-        type,
-        label,
-        category: CATEGORY,
-        icon: iconOrFallback(icon),
-      }));
-      const developerIndex = tabs.findIndex((tab) => tab.category === "developer");
-      tabs.splice(developerIndex === -1 ? tabs.length : developerIndex, 0, ...ours);
-    } catch (error) {
-      console.error("[Influx] Failed to add settings tabs", error);
-    }
+    const ours = TABS.map(({ type, label, icon }) => ({
+      type,
+      label,
+      category: CATEGORY,
+      icon: iconOrFallback(icon),
+    }));
+    const developerIndex = tabs.findIndex((tab) => tab.category === "developer");
+    tabs.splice(developerIndex === -1 ? tabs.length : developerIndex, 0, ...ours);
     return tabs;
   },
 

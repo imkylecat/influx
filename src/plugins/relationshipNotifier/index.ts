@@ -241,23 +241,17 @@ export default definePlugin({
   ],
 
   hasBanner(): boolean {
-    try {
-      return settings.store.banner && nagbarFound && hasNotices();
-    } catch {
-      return false;
-    }
+    return settings.store.banner && nagbarFound && hasNotices();
   },
 
   withBanner,
 
   markSelfAction(id: string): string {
-    try {
-      consumeSelfAction(id);
-      selfActions.set(
-        id,
-        setTimeout(() => selfActions.delete(id), SELF_ACTION_EXPIRY_MILLISECONDS),
-      );
-    } catch {}
+    consumeSelfAction(id);
+    selfActions.set(
+      id,
+      setTimeout(() => selfActions.delete(id), SELF_ACTION_EXPIRY_MILLISECONDS),
+    );
     return id;
   },
 

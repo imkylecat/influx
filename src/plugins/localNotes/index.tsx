@@ -54,12 +54,8 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
   }
   const close = () => Modals()?.pop();
   const save = (value: string) => {
-    if (Stores.Users()?.currentUserId !== accountId) {
-      showToast("error", "Your account changed. Reopen the local note to edit it.");
-      close();
-      return;
-    }
-    writeNote(accountId, userId, value);
+    if (Stores.Users()?.currentUserId === accountId) writeNote(accountId, userId, value);
+    else showToast("error", "Your account changed. Reopen the local note to edit it.");
     close();
   };
   return (

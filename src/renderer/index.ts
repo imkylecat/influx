@@ -39,7 +39,7 @@ function evalAllowed(): boolean {
   }
 }
 
-function init(): void {
+function initialize(): void {
   if (window.Influx) {
     logger.warn("Already loaded, skipping second injection");
     return;
@@ -72,4 +72,4 @@ function init(): void {
   );
 }
 
-init();
+initialize();

@@ -8,8 +8,8 @@ const logger = new Logger("Finders");
 
 export type Filter = (value: any) => boolean;
 
-const PROBE_PROP = "__influxProbe__";
-const answersEverything = (value: any): boolean => value[PROBE_PROP] !== undefined;
+const PROBE_PROPERTY = "__influxProbe__";
+const answersEverything = (value: any): boolean => value[PROBE_PROPERTY] !== undefined;
 
 function sourceMatches(source: string, code: ReadonlyArray<string | RegExp>): boolean {
   return code.every((part) =>

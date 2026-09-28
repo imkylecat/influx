@@ -163,13 +163,13 @@ const BUTTON = new RegExp(
 );
 
 // Builds the object literal that hands Fluxer's nagbar parts to withBanner at render time.
-export function nagbarPartsSource(moduleCode: string, isMobileExpr: string): string {
+export function nagbarPartsSource(moduleCode: string, isMobileExpression: string): string {
   const nagbar = NAGBAR.exec(moduleCode);
   const content = CONTENT.exec(moduleCode);
   const button = BUTTON.exec(moduleCode);
   nagbarFound = Boolean(nagbar && content && button);
   return (
     `{Nagbar:${nagbar?.[1] ?? "null"},tones:${nagbar?.[2] ?? "null"},` +
-    `Content:${content?.[1] ?? "null"},Button:${button?.[1] ?? "null"},isMobile:!!(${isMobileExpr})}`
+    `Content:${content?.[1] ?? "null"},Button:${button?.[1] ?? "null"},isMobile:!!(${isMobileExpression})}`
   );
 }

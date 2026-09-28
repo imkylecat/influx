@@ -1,7 +1,7 @@
 import definePlugin from "@api/Plugins";
 import { getPluginData, saveSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
-import { Components, Modals, React, showToast, Stores } from "@webpack/common";
+import { Components, findIcon, Modals, React, showToast, Stores } from "@webpack/common";
 
 export const MAXIMUM_NOTE_LENGTH = 4000;
 
@@ -115,9 +115,11 @@ export default definePlugin({
 
   renderMenuItem(user: { id: string }, onClose: () => void) {
     const MenuItem = Components.MenuItem();
+    const NoteIcon = findIcon("NotePencilIcon");
     if (!MenuItem || !Stores.Users()?.currentUserId) return null;
     return (
       <MenuItem
+        icon={NoteIcon && <NoteIcon size="1rem" weight="fill" />}
         onClick={() => {
           const accountId = Stores.Users()?.currentUserId;
           const modals = Modals();

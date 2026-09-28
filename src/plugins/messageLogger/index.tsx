@@ -4,7 +4,7 @@ import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
 import { idListIncludes } from "@utils/idList";
 import { Logger } from "@utils/Logger";
-import { Components, nativeClasses, React, Stores } from "@webpack/common";
+import { Components, findIcon, nativeClasses, React, Stores } from "@webpack/common";
 import type { FluxerChannelMessages, FluxerMessage, FluxerMessagesStore } from "@webpack/fluxer";
 import type { ComponentType } from "react";
 
@@ -333,15 +333,28 @@ export default definePlugin({
   renderMenuItems(message: FluxerMessage) {
     const MenuGroup = Components.MenuGroup();
     const MenuItem = Components.MenuItem();
+    const HistoryIcon = findIcon("ClockCounterClockwiseIcon");
+    const TrashIcon = findIcon("TrashIcon");
     if (!MenuGroup || !MenuItem) return null;
     const deleted = this.isDeleted(message);
     const edited = settings.store.logEdits && editHistory.has(message.id);
     if (!deleted && !edited) return null;
     return (
       <MenuGroup>
-        {edited && <MenuItem onClick={() => setEdits(message.id, [])}>Clear edit history</MenuItem>}
+        {edited && (
+          <MenuItem
+            icon={HistoryIcon && <HistoryIcon size="1rem" weight="fill" />}
+            onClick={() => setEdits(message.id, [])}
+          >
+            Clear edit history
+          </MenuItem>
+        )}
         {deleted && (
-          <MenuItem danger onClick={() => removeDeletedMessage(message)}>
+          <MenuItem
+            danger
+            icon={TrashIcon && <TrashIcon size="1rem" weight="fill" />}
+            onClick={() => removeDeletedMessage(message)}
+          >
             Remove deleted message
           </MenuItem>
         )}

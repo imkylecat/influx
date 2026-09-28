@@ -21,7 +21,7 @@ interface IconBadge {
 export default definePlugin({
   name: "ContributorBadges",
   description:
-    "Shows an Influx Contributor badge on the profiles of everyone in the contributor registry.",
+    "Shows an Influx Contributor badge on the profiles of everyone who has contributed to Influx.",
   authors: [Contributor.Kairu],
   required: true,
 

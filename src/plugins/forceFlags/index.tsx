@@ -7,7 +7,7 @@ const settings = definePluginSettings({
   userFlags: {
     type: "string",
     description:
-      "User ID, then flags to add (+) or remove (-); separate users with ;. For example: 123456789: +STAFF -SPAMMER; 987654321: +PARTNER. Flags: STAFF, PARTNER, BUG_HUNTER, FRIENDLY_BOT, FRIENDLY_BOT_MANUAL_APPROVAL, SPAMMER, or a number. Reload Fluxer to apply.",
+      "User ID, then flags to add (+) or remove (-); separate users with ;. For example: 123456789: +STAFF -SPAMMER; 987654321: +PARTNER. Flags: STAFF, PARTNER, BUG_HUNTER, FRIENDLY_BOT, FRIENDLY_BOT_MANUAL_APPROVAL, SPAMMER, or a number.",
     default: "",
   },
   serverFeatures: {

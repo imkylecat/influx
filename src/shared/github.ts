@@ -36,7 +36,7 @@ export async function fetchLatestRelease(fetchImplementation: Fetch = fetch): Pr
   };
 }
 
-export type ReleaseCheck =
+type ReleaseCheck =
   | { ok: true; release: Release; available: boolean }
   | { ok: false; error: string };
 

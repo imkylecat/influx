@@ -93,17 +93,4 @@ describe("patchFactory", () => {
     assert.equal(errors.length, 1);
     assert.match(String(errors[0][0]), /Bad failed/);
   });
-
-  it("keeps `all` patches pending for other modules", () => {
-    const pending: Patch[] = [
-      {
-        plugin: "X",
-        all: true,
-        find: "postTyping",
-        replacement: { match: "this.sent=[]", replace: "this.sent=[1]" },
-      },
-    ];
-    patchFactory(1, typingModule, pending, logger);
-    assert.equal(pending.length, 1);
-  });
 });

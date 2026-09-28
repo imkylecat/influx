@@ -52,7 +52,7 @@ export function patchFactory(
     const patch = pending[index];
     if (!matchesFind(code, patch.find)) continue;
     if (patch.predicate && !patch.predicate()) continue;
-    if (!patch.all) pending.splice(index--, 1);
+    pending.splice(index--, 1);
 
     let candidate = code;
     let failure: string | undefined;

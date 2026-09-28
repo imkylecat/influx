@@ -26,7 +26,6 @@ export interface PatchReplacement {
 export interface PatchDefinition {
   find: string | RegExp;
   replacement: PatchReplacement | PatchReplacement[];
-  all?: boolean;
   predicate?(): boolean;
 }
 

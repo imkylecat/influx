@@ -19,6 +19,12 @@ const settings = definePluginSettings({
     description: "Require confirmation in these channel IDs, separated by commas or spaces.",
     default: "",
   },
+  confirmServers: {
+    type: "string",
+    description:
+      "Require confirmation in every channel of these server IDs, separated by commas or spaces.",
+    default: "",
+  },
   confirmAll: {
     type: "boolean",
     description: "Require confirmation for every message, including direct messages.",
@@ -30,9 +36,11 @@ export function sendPolicy(channelId: string): "block" | "confirm" | "allow" {
   if (settings.store.blockHoneypotChannels && HONEYPOT_CHANNEL_IDS.includes(channelId)) {
     return "block";
   }
-  return settings.store.confirmAll || idListIncludes(settings.store.confirmChannels, channelId)
-    ? "confirm"
-    : "allow";
+  const { confirmAll, confirmChannels, confirmServers } = settings.store;
+  if (confirmAll || idListIncludes(confirmChannels, channelId)) return "confirm";
+  if (!confirmServers) return "allow";
+  const serverId = Stores.Channels()?.getChannel(channelId)?.guildId;
+  return idListIncludes(confirmServers, serverId) ? "confirm" : "allow";
 }
 
 const pending = new Map<string, () => void>();
@@ -63,7 +71,8 @@ function Confirmation({
 
 export default definePlugin({
   name: "SendConfirmation",
-  description: "Confirms sends in selected channels and blocks known honeypot channels.",
+  description:
+    "Confirms sends in selected channels and servers, and blocks known honeypot channels.",
   authors: [Contributor.Kairu],
   settings,
   patches: [

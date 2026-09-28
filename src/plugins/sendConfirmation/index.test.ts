@@ -2,6 +2,7 @@ import { beforeEach, describe, it } from "bun:test";
 import assert from "node:assert/strict";
 
 import { getPluginData } from "@api/Settings";
+import { Stores } from "@webpack/common";
 
 import sendConfirmation, { HONEYPOT_CHANNEL_IDS, sendPolicy } from ".";
 import { compile, pendingFor, resetPatching, runPatched } from "../../renderer/patcher/testing";
@@ -10,6 +11,7 @@ beforeEach(() => {
   const data = getPluginData(sendConfirmation.name);
   delete data.blockHoneypotChannels;
   delete data.confirmChannels;
+  delete data.confirmServers;
   delete data.confirmAll;
 });
 
@@ -32,6 +34,20 @@ describe("SendConfirmation", () => {
     assert.equal(sendPolicy(HONEYPOT_CHANNEL_IDS[0]), "allow");
     data.confirmAll = true;
     assert.equal(sendPolicy("999"), "confirm");
+  });
+
+  it("confirms every channel of a chosen server", () => {
+    const findChannels = Stores.Channels;
+    const servers: Record<string, string> = { "123": "50", "456": "51" };
+    Stores.Channels = () => ({ getChannel: (id) => ({ guildId: servers[id] }) });
+    try {
+      getPluginData(sendConfirmation.name).confirmServers = "50, 52";
+      assert.equal(sendPolicy("123"), "confirm");
+      assert.equal(sendPolicy("456"), "allow");
+      assert.equal(sendPolicy("789"), "allow", "a direct message has no server");
+    } finally {
+      Stores.Channels = findChannels;
+    }
   });
 
   it("refuses protected sends when the native confirmation UI is unavailable", async () => {

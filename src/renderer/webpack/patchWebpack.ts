@@ -70,7 +70,7 @@ export function installWebpackHook(pendingPatches: Patch[]): void {
         configurable: true,
         enumerable: true,
       });
-      if (webpackRequire || !looksLikeWebpackRequire(this, modules)) return;
+      if (!looksLikeWebpackRequire(this, modules)) return;
 
       delete (Function.prototype as any).m;
       webpackRequire = this;

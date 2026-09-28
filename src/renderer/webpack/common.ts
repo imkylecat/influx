@@ -22,113 +22,62 @@ type AnyComponent = ComponentType<any>;
 // Fluxer's modal building blocks all live in one module.
 const MODAL_MODULE = "app.modal.content-layout.content-layout";
 
-const componentCache = new Map<string, AnyComponent>();
-
-function lazyComponent(
-  key: string,
-  lookup: () => AnyComponent | undefined,
-): () => AnyComponent | undefined {
-  return () => {
-    let component = componentCache.get(key);
-    if (!component) {
-      component = lookup();
-      if (component) componentCache.set(key, component);
-    }
-    return component;
-  };
+function lazy<T>(lookup: () => T | undefined): () => T | undefined {
+  let value: T | undefined;
+  return () => (value ??= lookup());
 }
 
 export const Components = {
-  ConfirmModal: lazyComponent("ConfirmModal", () =>
-    findComponentByCode("app.confirm-modal.modal-root"),
-  ),
-  Switch: lazyComponent("Switch", () => findComponentByCode("-switch-label")),
-  Input: lazyComponent("Input", () =>
-    findComponentByCode("ui.form.input.field-set.fieldset", "Input"),
-  ),
-  Textarea: lazyComponent("Textarea", () =>
-    findComponentByDisplayName("ui.form.input.textarea.field-set", "Textarea"),
-  ),
-  MenuItem: lazyComponent("MenuItem", () =>
+  ConfirmModal: lazy(() => findComponentByCode("app.confirm-modal.modal-root")),
+  Switch: lazy(() => findComponentByCode("-switch-label")),
+  Input: lazy(() => findComponentByCode("ui.form.input.field-set.fieldset", "Input")),
+  Textarea: lazy(() => findComponentByDisplayName("ui.form.input.textarea.field-set", "Textarea")),
+  MenuItem: lazy(() =>
     findComponentByDisplayName("ui.action-menu.menu-item.menu-item-primitive.select", "MenuItem"),
   ),
   // A context menu section, with a separator after it when anything follows.
-  MenuGroup: lazyComponent("MenuGroup", () =>
-    findComponentByCode("ui.action-menu.menu-group.menu-group-primitive"),
-  ),
-  Button: lazyComponent("Button", () =>
-    findComponentByCode("ui.button.button.focus-ring", "Button"),
-  ),
+  MenuGroup: lazy(() => findComponentByCode("ui.action-menu.menu-group.menu-group-primitive")),
+  Button: lazy(() => findComponentByCode("ui.button.button.focus-ring", "Button")),
   // The icon buttons in the chat bar, beside the GIF, sticker, and emoji pickers.
-  TextareaButton: lazyComponent("TextareaButton", () =>
+  TextareaButton: lazy(() =>
     findComponentByCode("channel.textarea.textarea-button.focus-ring", "TextareaButton"),
   ),
-  Combobox: lazyComponent("Combobox", () => findComponentByCode("ui.form.combobox.label")),
-  WarningAlert: lazyComponent("WarningAlert", () =>
-    findComponentByCode("ui.warning-alert.warning-alert.alert"),
-  ),
-  SettingsTabContainer: lazyComponent("SettingsTabContainer", () =>
+  Combobox: lazy(() => findComponentByCode("ui.form.combobox.label")),
+  WarningAlert: lazy(() => findComponentByCode("ui.warning-alert.warning-alert.alert")),
+  SettingsTabContainer: lazy(() =>
     findComponentByCode("app.settings-tab-layout.settings-tab-container.container"),
   ),
-  SettingsTabContent: lazyComponent("SettingsTabContent", () =>
+  SettingsTabContent: lazy(() =>
     findComponentByCode("app.settings-tab-layout.settings-tab-content.content"),
   ),
-  SettingsTabSection: lazyComponent("SettingsTabSection", () =>
+  SettingsTabSection: lazy(() =>
     findComponentByCode("app.settings-tab-layout.settings-tab-section.subsection"),
   ),
-  StatusSlate: lazyComponent("StatusSlate", () =>
-    findComponentByCode("app.status-slate.container"),
-  ),
-  Accordion: lazyComponent("Accordion", () =>
-    findComponentByCode("ui.accordion.accordion.accordion"),
-  ),
-  Tooltip: lazyComponent("Tooltip", () =>
-    findComponentByCode("ui.tooltip.tooltip.trigger-wrapper"),
-  ),
-  Spinner: lazyComponent("Spinner", () => findComponentByCode('"ui.spinner.spinner"')),
-  ExternalLink: lazyComponent("ExternalLink", () =>
-    findComponentByCode("app.external-link.external-link.click"),
-  ),
+  StatusSlate: lazy(() => findComponentByCode("app.status-slate.container")),
+  Accordion: lazy(() => findComponentByCode("ui.accordion.accordion.accordion")),
+  Tooltip: lazy(() => findComponentByCode("ui.tooltip.tooltip.trigger-wrapper")),
+  Spinner: lazy(() => findComponentByCode('"ui.spinner.spinner"')),
+  ExternalLink: lazy(() => findComponentByCode("app.external-link.external-link.click")),
   // The card behind invite and theme embeds: an icon, title, subtitle, and a footer below a divider.
-  EmbedCard: lazyComponent("EmbedCard", () =>
-    findComponentByCode("messaging.embeds.embed-card.embed-card.wrapper"),
-  ),
-  ModalRoot: lazyComponent("ModalRoot", () =>
-    findComponentByDisplayName(MODAL_MODULE, "ModalRoot"),
-  ),
-  ModalHeader: lazyComponent("ModalHeader", () =>
-    findComponentByDisplayName(MODAL_MODULE, "ModalHeader"),
-  ),
-  ModalContent: lazyComponent("ModalContent", () =>
-    findComponentByDisplayName(MODAL_MODULE, "ModalContent"),
-  ),
-  ModalContentLayout: lazyComponent("ModalContentLayout", () =>
-    findComponentByDisplayName(MODAL_MODULE, "ModalContentLayout"),
-  ),
-  ModalFooter: lazyComponent("ModalFooter", () =>
-    findComponentByDisplayName(MODAL_MODULE, "ModalFooter"),
-  ),
+  EmbedCard: lazy(() => findComponentByCode("messaging.embeds.embed-card.embed-card.wrapper")),
+  ModalRoot: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalRoot")),
+  ModalHeader: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalHeader")),
+  ModalContent: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalContent")),
+  ModalContentLayout: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalContentLayout")),
+  ModalFooter: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalFooter")),
   // The full message row, as rendered in pins, confirm modals, and unread-channel previews.
-  Message: lazyComponent("Message", () =>
-    findComponentByCode("channel.message.message-view-context-provider"),
-  ),
+  Message: lazy(() => findComponentByCode("channel.message.message-view-context-provider")),
 };
 
-export const findIcon = (name: string): AnyComponent | undefined =>
-  lazyComponent(`icon:${name}`, () => findComponentByName(name))();
+const icons = new Map<string, AnyComponent>();
 
-const lookupCache = new Map<string, any>();
-
-function lazyModule<T = any>(...props: string[]): () => T | undefined {
-  const key = props.join(",");
-  return () => {
-    let module = lookupCache.get(key);
-    if (!module) {
-      module = findByProperties(...props);
-      if (module) lookupCache.set(key, module);
-    }
-    return module;
-  };
+export function findIcon(name: string): AnyComponent | undefined {
+  let icon = icons.get(name);
+  if (!icon) {
+    icon = findComponentByName(name);
+    if (icon) icons.set(name, icon);
+  }
+  return icon;
 }
 
 export interface FluxerUser {
@@ -152,43 +101,38 @@ export interface FluxerGuild {
   name: string;
 }
 
-export const Modals = lazyModule<{
+export const Modals = lazy<{
   push(modal: unknown): void;
   pop(): void;
   pushWithKey(modal: unknown, key: string): void;
   popWithKey(key: string): void;
   modal(render: () => JSX.Element): unknown;
-}>("push", "pop", "modal", "pushWithKey");
+}>(() => findByProperties("push", "pop", "modal", "pushWithKey"));
 
 export const Stores = {
-  Users: lazyModule<{
+  Users: lazy<{
     currentUserId: string | null;
     getUser(id: string): FluxerUser | undefined;
-  }>("getUser", "getUserByTag", "getCurrentUser"),
-  Channels: lazyModule<{ getChannel(id: string): FluxerChannel | undefined }>(
-    "getChannel",
-    "getGuildChannels",
-    "getPrivateChannels",
+  }>(() => findByProperties("getUser", "getUserByTag", "getCurrentUser")),
+  Channels: lazy<{ getChannel(id: string): FluxerChannel | undefined }>(() =>
+    findByProperties("getChannel", "getGuildChannels", "getPrivateChannels"),
   ),
-  Guilds: lazyModule<{ getGuild(id: string): FluxerGuild | undefined }>(
-    "getGuild",
-    "getGuildRoles",
-    "getOwnedGuilds",
+  Guilds: lazy<{ getGuild(id: string): FluxerGuild | undefined }>(() =>
+    findByProperties("getGuild", "getGuildRoles", "getOwnedGuilds"),
   ),
-  Messages: lazyModule<{
+  Messages: lazy<{
     getMessage(channelId: string, messageId: string): any;
     // A channel's loaded messages, without creating an empty list for unloaded channels.
     getCachedMessages(channelId: string): any;
     commitMessages(messages: any): void;
     notifyChange(): void;
-  }>("getMessage", "handleMessageDelete", "handleMessageDeleteBulk"),
-  Navigation: lazyModule<{
+  }>(() => findByProperties("getMessage", "handleMessageDelete", "handleMessageDeleteBulk")),
+  Navigation: lazy<{
     navigateToGuild(guildId: string, channelId?: string, messageId?: string, mode?: string): void;
     navigateToDM(channelId?: string, messageId?: string, mode?: string): void;
-  }>("navigateToGuild", "navigateToDM", "navigateToFavorites"),
-  StreamerMode: lazyModule<{ shouldTruncateUsernames: boolean }>(
-    "shouldTruncateUsernames",
-    "shouldHidePersonalInformation",
+  }>(() => findByProperties("navigateToGuild", "navigateToDM", "navigateToFavorites")),
+  StreamerMode: lazy<{ shouldTruncateUsernames: boolean }>(() =>
+    findByProperties("shouldTruncateUsernames", "shouldHidePersonalInformation"),
   ),
 };
 
@@ -216,15 +160,14 @@ export const nativeClasses = (...prefixes: string[]): string =>
     .filter((name): name is string => Boolean(name))
     .join(" ");
 
-export const RestClient = lazyModule<{
+export const RestClient = lazy<{
   get<T = unknown>(path: string): Promise<{ ok: boolean; status: number; body: T }>;
-}>("installAuth", "carriesAuthorization", "get");
+}>(() => findByProperties("installAuth", "carriesAuthorization", "get"));
 
 // Fluxer's Message model class; its constructor takes a message as the API sends it.
-export const MessageRecord = (() => {
-  let record: (new (wire: unknown, options?: object) => any) | undefined;
-  return () => (record ??= findByCode("this.editedTimestamp=e.edited_timestamp"));
-})();
+export const MessageRecord = lazy<new (wire: unknown, options?: object) => any>(() =>
+  findByCode("this.editedTimestamp=e.edited_timestamp"),
+);
 
 export type ShowNotification = (options: {
   title: string;
@@ -235,13 +178,9 @@ export type ShowNotification = (options: {
 
 // Fluxer's own notifications: native on desktop, the service worker or Notification API in browsers.
 // They respect Fluxer's notification settings and play its sound.
-export const NativeNotification = (() => {
-  let show: ShowNotification | undefined;
-  return (): ShowNotification | undefined =>
-    (show ??= findByCode(
-      "Electron native notification show failed; refusing browser/Web Push fallback",
-    ));
-})();
+export const NativeNotification = lazy<ShowNotification>(() =>
+  findByCode("Electron native notification show failed; refusing browser/Web Push fallback"),
+);
 
 export function openExternal(url: string): void {
   const open = findByCode("Failed to open external URL via Electron");

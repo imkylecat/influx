@@ -1,3 +1,5 @@
+import type { ComponentType } from "react";
+
 import { Logger } from "../utils/Logger";
 import { getOriginalFactory, moduleCache, onModuleLoaded, webpackRequire } from "./patchWebpack";
 import type { ModuleId, WebpackModule } from "./types";
@@ -122,7 +124,10 @@ function displayNameOf(component: any): string | undefined {
 }
 
 // Finds a component by display name among the exports of modules whose source contains code.
-export function findComponentByDisplayName(code: string, displayName: string): any {
+export function findComponentByDisplayName(
+  code: string,
+  displayName: string,
+): ComponentType<any> | undefined {
   for (const id of search(code)) {
     let exports: any;
     try {
@@ -139,7 +144,10 @@ export function findComponentByDisplayName(code: string, displayName: string): a
   return undefined;
 }
 
-export function findComponentByCode(code: string, displayName?: string): any {
+export function findComponentByCode(
+  code: string,
+  displayName?: string,
+): ComponentType<any> | undefined {
   for (const id of search(code)) {
     let exports: any;
     try {

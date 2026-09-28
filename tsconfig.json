@@ -9,7 +9,6 @@
     "noEmit": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
     "jsx": "react",
     "paths": {
       "@api/*": ["./src/renderer/api/*"],

@@ -35,8 +35,8 @@ export default definePlugin({
     },
   ],
 
-  addBadges(badges: IconBadge[], user: { id?: string }): IconBadge[] {
-    if (user?.id && contributorIds.has(user.id)) {
+  addBadges(badges: IconBadge[], user: { id: string }): IconBadge[] {
+    if (contributorIds.has(user.id)) {
       badges.push({
         type: "icon",
         key: "influx_contributor",

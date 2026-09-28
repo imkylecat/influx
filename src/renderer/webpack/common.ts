@@ -237,12 +237,8 @@ const inviteAcceptModalOpener = lazy<(code: string) => void>(() =>
   findByCode("invite.invite-commands.open-accept-modal"),
 );
 
-export function openInvite(url: string): void {
-  const code = new URL(url).pathname.split("/").filter(Boolean).pop();
-  const openAcceptModal = code && inviteAcceptModalOpener();
-  if (openAcceptModal) {
-    openAcceptModal(code);
-  } else {
-    window.open(url, "_blank", "noopener");
-  }
+export function openInvite(code: string): void {
+  const openAcceptModal = inviteAcceptModalOpener();
+  if (openAcceptModal) openAcceptModal(code);
+  else window.open(`https://fluxer.gg/${code}`, "_blank", "noopener");
 }

@@ -1,10 +1,8 @@
-import { INFLUX_SERVER_INVITE } from "@utils/constants";
+import { INFLUX_SERVER_INVITE_CODE } from "@utils/constants";
 import { Components, openInvite, React } from "@webpack/common";
 
 import { InviteEmbed, MissingComponents } from "./components";
 import { UpdatesSection } from "./UpdatesSection";
-
-const INVITE_CODE = new URL(INFLUX_SERVER_INVITE).pathname.split("/").filter(Boolean).pop()!;
 
 export function InfluxTab() {
   const SettingsTabContainer = Components.SettingsTabContainer();
@@ -24,13 +22,13 @@ export function InfluxTab() {
           description="Join the Influx server on Fluxer to get help, suggest plugins, and follow development."
           actions={
             !InviteEmbed && (
-              <Button small fitContent onClick={() => openInvite(INFLUX_SERVER_INVITE)}>
+              <Button small fitContent onClick={() => openInvite(INFLUX_SERVER_INVITE_CODE)}>
                 Join the Influx server
               </Button>
             )
           }
         >
-          {InviteEmbed && <InviteEmbed code={INVITE_CODE} />}
+          {InviteEmbed && <InviteEmbed code={INFLUX_SERVER_INVITE_CODE} />}
         </SettingsTabSection>
       </SettingsTabContent>
     </SettingsTabContainer>

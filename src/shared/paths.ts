@@ -10,5 +10,3 @@ export function influxDataDirectory(homeDirectory: string = os.homedir()): strin
         : (process.env.XDG_CONFIG_HOME ?? path.join(homeDirectory, ".config"));
   return path.join(base, "Influx");
 }
-
-export const DESKTOP_FILES = ["main.js", "preload.js", "renderer.js"] as const;

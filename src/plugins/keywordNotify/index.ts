@@ -59,8 +59,6 @@ interface RenderedMessage {
 
 type GatewayHandler = (data: any, context: unknown) => void;
 
-const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
 let compiled: { source: string; patterns: RegExp[] } | undefined;
 
 // Rebuilt only when the keyword settings change.
@@ -79,7 +77,7 @@ function patterns(): RegExp[] {
       if (regex) {
         list.push(new RegExp(regex[1], regex[2] || flags));
       } else {
-        const text = escapeRegExp(keyword);
+        const text = RegExp.escape(keyword);
         list.push(
           new RegExp(wholeWords ? `(?<![\\p{L}\\p{N}_])${text}(?![\\p{L}\\p{N}_])` : text, flags),
         );

@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 
 import { createPackage, extractFile } from "@electron/asar";
 
-import { DESKTOP_FILES, influxDataDirectory } from "../src/shared/paths";
+import { influxDataDirectory } from "../src/shared/paths";
 import {
   DESKTOP_ASSETS,
   downloadDesktopRelease,
@@ -165,7 +165,7 @@ async function main(): Promise<void> {
     if (!existsSync(path.join(buildDirectory, "main.js")))
       throw new Error("dist/desktop/main.js not found. Run `bun run build` first.");
     mkdirSync(influxDevelopmentDirectory, { recursive: true });
-    for (const file of DESKTOP_FILES)
+    for (const file of Object.keys(DESKTOP_ASSETS))
       copyFileSync(path.join(buildDirectory, file), path.join(influxDevelopmentDirectory, file));
     giveToSudoUser(influxDataDirectory(homeDirectory));
     mainScript = path.join(influxDevelopmentDirectory, "main.js");

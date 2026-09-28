@@ -1,10 +1,8 @@
 // Reads CHANGELOG.md, which follows https://keepachangelog.com.
 
-const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
 /** The body of a version's section, without its "## [x.y.z] - date" heading. */
 export function changelogSection(changelog: string, version: string): string | null {
-  const heading = new RegExp(`^## \\[${escapeRegExp(version)}\\][^\\n]*\\n`, "m").exec(changelog);
+  const heading = new RegExp(`^## \\[${RegExp.escape(version)}\\][^\\n]*\\n`, "m").exec(changelog);
   if (!heading) return null;
   const rest = changelog.slice(heading.index + heading[0].length);
   // The section ends at the next version heading or the link references at the bottom.

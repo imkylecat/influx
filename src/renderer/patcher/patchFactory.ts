@@ -2,11 +2,18 @@ import type { ModuleFactory, ModuleId, Patch, PatchReplacement } from "../webpac
 
 const IDENTIFIER = String.raw`(?:[A-Za-z_$][\w$]*)`;
 
+const canonicalized = new WeakMap<RegExp, RegExp>();
+
 export function canonicalizeMatch<T extends string | RegExp>(match: T): T;
 export function canonicalizeMatch(match: string | RegExp): string | RegExp {
   if (typeof match === "string") return match;
-  const source = match.source.replace(/(?<!\\)\\i/g, IDENTIFIER);
-  return new RegExp(source, match.flags);
+  let canonical = canonicalized.get(match);
+  if (!canonical) {
+    canonical = new RegExp(match.source.replace(/(?<!\\)\\i/g, IDENTIFIER), match.flags);
+    canonicalized.set(match, canonical);
+  }
+  canonical.lastIndex = 0;
+  return canonical;
 }
 
 function canonicalizeReplace(
@@ -43,8 +50,8 @@ export function patchFactory(
   pending: Patch[],
   logger: PatchLogger,
 ): ModuleFactory {
-  const original = Function.prototype.toString.call(factory);
-  let code = original;
+  if (pending.length === 0) return factory;
+  let code = Function.prototype.toString.call(factory);
   let compiled: ModuleFactory | undefined;
   const appliedBy: string[] = [];
 

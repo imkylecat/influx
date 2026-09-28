@@ -2,8 +2,7 @@ import { onGatewayEvents } from "@api/Gateway";
 import definePlugin from "@api/Plugins";
 import { definePluginSettings, getPluginData, saveSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
-import { Logger } from "@utils/Logger";
-import { NativeNotification, showToast, Stores } from "@webpack/common";
+import { showNotification, showToast, Stores } from "@webpack/common";
 import type { GuildWire, ReadyPayload, RelationshipWire } from "@webpack/fluxer";
 
 import { addNotice, hasNotices, nagbarFound, nagbarPartsSource, withBanner } from "./banner";
@@ -18,7 +17,6 @@ import {
   snapshotFromReady,
 } from "./snapshot";
 
-const logger = new Logger("RelationshipNotifier");
 const SELF_ACTION_EXPIRY_MILLISECONDS = 60_000;
 
 const settings = definePluginSettings({
@@ -100,10 +98,7 @@ function notify(message: string): void {
   if (settings.store.popup || !settings.store.banner || !nagbarFound) {
     showToast("info", message, { timeout: 10_000 });
   }
-  if (!settings.store.desktopNotifications) return;
-  void NativeNotification()?.({ title: "Influx", body: message }).catch((error) =>
-    logger.error("Couldn't show a notification", error),
-  );
+  if (settings.store.desktopNotifications) showNotification({ title: "Influx", body: message });
 }
 
 function report(removal: Removal, whileAway: boolean): void {

@@ -161,17 +161,23 @@ export const NicknameLookup = lazy<
   (user: { username: string }, guildId?: string, channelId?: string) => string
 >(() => findByCode(".displayName||", ".globalName||", ".username||", ".nickname)", ".nicks"));
 
-type ShowNotification = (options: {
+interface NotificationContent {
   title: string;
   body: string;
   url?: string;
-}) => Promise<unknown>;
+}
 
-// Fluxer's own notifications: native on desktop, the service worker or Notification API in browsers.
-// They respect Fluxer's notification settings and play its sound.
-export const NativeNotification = lazy<ShowNotification>(() =>
+const NativeNotification = lazy<(content: NotificationContent) => Promise<unknown>>(() =>
   findByCode("Electron native notification show failed; refusing browser/Web Push fallback"),
 );
+
+// Fluxer's own notifications: native on desktop, the service worker or Notification API in browsers.
+// They respect Fluxer's notification settings and play its sound. Returns whether they were found.
+export function showNotification(content: NotificationContent): boolean {
+  const show = NativeNotification();
+  void show?.(content).catch((error) => logger.error("Couldn't show a notification", error));
+  return show !== undefined;
+}
 
 const externalOpener = lazy<(url: string) => unknown>(() =>
   findByCode("Failed to open external URL via Electron"),

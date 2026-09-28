@@ -3,7 +3,7 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { Logger } from "@utils/Logger";
-import { NativeNotification, showToast, Stores } from "@webpack/common";
+import { showNotification, showToast, Stores } from "@webpack/common";
 import type { FluxerMessage, MessageWire } from "@webpack/fluxer";
 
 const MAXIMUM_BODY_LENGTH = 200;
@@ -108,12 +108,7 @@ function notify(message: MessageWire): void {
     content.length > MAXIMUM_BODY_LENGTH ? `${content.slice(0, MAXIMUM_BODY_LENGTH)}…` : content;
   const url = `/channels/${message.guild_id ?? "@me"}/${message.channel_id}/${message.id}`;
 
-  const showNotification = NativeNotification();
-  if (showNotification) {
-    void showNotification({ title: `${name}${where}`, body, url }).catch((error) =>
-      logger.error("Couldn't show a notification", error),
-    );
-  } else {
+  if (!showNotification({ title: `${name}${where}`, body, url })) {
     showToast("info", `${name}${where}: ${body}`, { timeout: 10_000 });
   }
 }

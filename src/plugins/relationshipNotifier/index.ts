@@ -265,4 +265,10 @@ export default definePlugin({
   wrapGatewayHandlers(registry: Map<string, GatewayHandler>): void {
     hookGatewayEvents(registry, LISTENERS, this.name);
   },
+
+  stop() {
+    clearTimeout(saveTimer);
+    for (const timer of selfActions.values()) clearTimeout(timer);
+    selfActions.clear();
+  },
 });

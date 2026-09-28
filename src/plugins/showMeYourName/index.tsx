@@ -1,7 +1,9 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
+import { Logger } from "@utils/Logger";
 import { findClassName, NicknameLookup, React, Stores } from "@webpack/common";
+const logger = new Logger("ShowMeYourName");
 
 const settings = definePluginSettings({
   format: {
@@ -75,7 +77,7 @@ export default definePlugin({
         </span>
       );
     } catch (error) {
-      console.error("[Influx] ShowMeYourName failed to render", error);
+      logger.error("Failed to render", error);
       return null;
     }
   },

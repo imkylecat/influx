@@ -1,9 +1,11 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
+import { Logger } from "@utils/Logger";
 import { Components, Modals, React, showToast, Stores } from "@webpack/common";
 
 export const HONEYPOT_CHANNEL_IDS: readonly string[] = ["1513407003270057984"];
+const logger = new Logger("SendConfirmation");
 
 const settings = definePluginSettings({
   blockHoneypotChannels: {
@@ -120,7 +122,7 @@ export default definePlugin({
         );
       } catch (error) {
         finish(false);
-        console.error("[Influx] Couldn't open send confirmation", error);
+        logger.error("Couldn't open send confirmation", error);
         showToast("error", "Couldn't open send confirmation. Your message was not sent.");
       }
     });

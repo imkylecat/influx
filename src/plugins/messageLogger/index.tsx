@@ -2,6 +2,7 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
+import { Logger } from "@utils/Logger";
 import { Components, nativeClasses, React, Stores } from "@webpack/common";
 import type { ComponentType } from "react";
 
@@ -10,6 +11,7 @@ import type { ComponentType } from "react";
 const DELETED_FLAG = 1 << 30;
 const MAXIMUM_EDITED_MESSAGES = 2000;
 const STYLE_ID = "influx-message-logger";
+const logger = new Logger("MessageLogger");
 
 // Fluxer's message menu actions that still work once a message is gone from the server.
 const DELETED_MESSAGE_ACTIONS = new Set([
@@ -304,7 +306,7 @@ export default definePlugin({
       store.notifyChange();
       return true;
     } catch (error) {
-      console.error("[Influx] MessageLogger failed to keep a deleted message", error);
+      logger.error("Failed to keep a deleted message", error);
       return false;
     }
   },

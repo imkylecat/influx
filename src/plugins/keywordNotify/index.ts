@@ -2,9 +2,11 @@ import { type GatewayHandler, hookGatewayEvents } from "@api/Gateway";
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
+import { Logger } from "@utils/Logger";
 import { NativeNotification, showToast, Stores } from "@webpack/common";
 
 const MAXIMUM_BODY_LENGTH = 200;
+const logger = new Logger("KeywordNotify");
 
 const settings = definePluginSettings({
   keywords: {
@@ -81,7 +83,7 @@ function patterns(): RegExp[] {
         );
       }
     } catch {
-      console.warn(`[Influx] KeywordNotify ignored an invalid pattern: ${keyword}`);
+      logger.warn(`Ignored an invalid pattern: ${keyword}`);
     }
   }
   compiled = { source, patterns: list };
@@ -126,7 +128,7 @@ function notify(message: WireMessage): void {
   const showNotification = NativeNotification();
   if (showNotification) {
     void showNotification({ title: `${name}${where}`, body, url }).catch((error) =>
-      console.error("[Influx] KeywordNotify couldn't show a notification", error),
+      logger.error("Couldn't show a notification", error),
     );
   } else {
     showToast("info", `${name}${where}: ${body}`, { timeout: 10_000 });

@@ -2,6 +2,7 @@ import { type GatewayHandler, hookGatewayEvents } from "@api/Gateway";
 import definePlugin from "@api/Plugins";
 import { definePluginSettings, getPluginData, saveSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
+import { Logger } from "@utils/Logger";
 import { NativeNotification, showToast, Stores } from "@webpack/common";
 
 import { addNotice, hasNotices, nagbarFound, nagbarPartsSource, withBanner } from "./banner";
@@ -19,6 +20,7 @@ import {
   snapshotFromReady,
 } from "./snapshot";
 
+const logger = new Logger("RelationshipNotifier");
 const SELF_ACTION_EXPIRY_MILLISECONDS = 60_000;
 const SAVE_DELAY_MILLISECONDS = 1_000;
 
@@ -108,7 +110,6 @@ function notify(message: string): void {
   const showNotification = NativeNotification();
   if (showNotification) {
     void showNotification({ title: "Influx", body: message }).catch((error) =>
-      console.error("[Influx] RelationshipNotifier couldn't show a notification", error),
     );
     return;
   }
@@ -120,6 +121,7 @@ function notify(message: string): void {
       if (permission === "granted") new Notification("Influx", { body: message });
     });
   }
+    logger.error("Couldn't show a notification", error),
 }
 
 function report(removal: Removal, whileAway: boolean): void {

@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 
+import { Logger } from "../utils/Logger";
 import {
   filters,
   find,
@@ -10,6 +11,7 @@ import {
   findComponentByName,
   waitFor,
 } from "./finders";
+const logger = new Logger("Common");
 
 export let React: typeof import("react");
 
@@ -213,7 +215,7 @@ export function showToast(
 ): void {
   const toasts = findByProperties("createToast", "getCurrentToast");
   if (!toasts) {
-    console.warn(`[Influx] Couldn't find Fluxer's toasts: ${message}`);
+    logger.warn(`Couldn't find Fluxer's toasts: ${message}`);
     return;
   }
   toasts.createToast({
@@ -227,7 +229,7 @@ export function showToast(
 export async function openUserProfile(userId: string): Promise<boolean> {
   const openLinkedUserProfile = findByCode("Skipping linked profile open before fetch");
   if (!openLinkedUserProfile) {
-    console.error("[Influx] Couldn't find Fluxer's openLinkedUserProfile");
+    logger.error("Couldn't find Fluxer's openLinkedUserProfile");
     return false;
   }
   return openLinkedUserProfile(userId);

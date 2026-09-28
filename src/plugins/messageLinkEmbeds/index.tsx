@@ -2,6 +2,7 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
+import { Logger } from "@utils/Logger";
 import {
   Components,
   findIcon,
@@ -14,6 +15,7 @@ import {
 import type { Context } from "react";
 
 const STYLE_ID = "influx-message-link-embeds";
+const logger = new Logger("MessageLinkEmbeds");
 // Matches Fluxer's own jump links, for example https://web.fluxer.app/channels/@me/<channel>/<message>.
 const MESSAGE_LINK = /https?:\/\/([\w.-]+)\/channels\/(@me|\d+)\/(\d+)\/(\d+)/g;
 
@@ -238,9 +240,7 @@ export default definePlugin({
     return (
       <ErrorBoundary
         fallback={null}
-        onError={(error: unknown) =>
-          console.error("[Influx] MessageLinkEmbeds failed to render", error)
-        }
+        onError={(error: unknown) => logger.error("Failed to render", error)}
       >
         <LinkEmbeds links={links} />
       </ErrorBoundary>

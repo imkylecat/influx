@@ -22,8 +22,6 @@ waitFor(filters.byProperties("useState", "createElement", "Fragment"), (module) 
   React = module;
 });
 
-type AnyComponent = ComponentType<any>;
-
 // Fluxer's modal building blocks all live in one module.
 const MODAL_MODULE = "app.modal.content-layout.content-layout";
 
@@ -101,7 +99,7 @@ export const Components = {
   ErrorBoundary: lazy(() => findComponentByCode("An error was thrown.")),
 };
 
-export const findIcon = lazyByKey<AnyComponent>(findComponentByName);
+export const findIcon = lazyByKey<ComponentType<any>>(findComponentByName);
 
 export const Modals = lazy<{
   push(modal: unknown): void;
@@ -188,14 +186,12 @@ export function openExternal(url: string): void {
   else window.open(url, "_blank", "noopener");
 }
 
-type ToastType = "success" | "error" | "info";
-
 const Toasts = lazy<{ createToast(toast: object): void }>(() =>
   findByProperties("createToast", "getCurrentToast"),
 );
 
 export function showToast(
-  type: ToastType,
+  type: "success" | "error" | "info",
   message: string,
   options: { timeout?: number; onClick?: () => void } = {},
 ): void {

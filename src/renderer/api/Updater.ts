@@ -1,6 +1,5 @@
 import type { InfluxNative, UpdateCheckResult, UpdateInstallResult } from "../../desktop/types";
-import { fetchLatestRelease, NoReleaseError } from "../../shared/github";
-import { compareVersions } from "../../shared/version";
+import { checkLatestRelease } from "../../shared/github";
 import { Logger } from "../utils/Logger";
 
 const logger = new Logger("Updater");
@@ -24,22 +23,15 @@ export const canInstallUpdates = updateChannel === "desktop";
 export let pendingRestart: string | null = null;
 
 async function checkFromBrowser(): Promise<UpdateCheckResult> {
-  try {
-    const release = await fetchLatestRelease();
-    return {
-      ok: true,
-      latest: release.version,
-      available: compareVersions(release.version, INFLUX_VERSION) > 0,
-      pendingRestart: null,
-      url: release.url,
-    };
-  } catch (error) {
-    const message =
-      error instanceof NoReleaseError
-        ? error.message
-        : `Couldn't check for updates: ${String(error)}`;
-    return { ok: false, error: message };
-  }
+  const check = await checkLatestRelease(INFLUX_VERSION);
+  if (!check.ok) return check;
+  return {
+    ok: true,
+    latest: check.release.version,
+    available: check.available,
+    pendingRestart: null,
+    url: check.release.url,
+  };
 }
 
 export async function checkForUpdates(): Promise<UpdateCheckResult> {

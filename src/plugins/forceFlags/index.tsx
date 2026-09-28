@@ -1,5 +1,5 @@
 import definePlugin from "@api/Plugins";
-import { definePluginSettings } from "@api/Settings";
+import { definePluginSettings, useSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { Components, React, Stores } from "@webpack/common";
 import type { FluxerGuild, FluxerUser } from "@webpack/fluxer";
@@ -128,7 +128,7 @@ function overridesFor(text: string, id: string | undefined) {
 const flagBit = (name: string) => USER_FLAGS[name] ?? (/^\d+$/.test(name) ? Number(name) : 0);
 
 function UserFlagItems({ user }: { user: FluxerUser }) {
-  const [, rerender] = React.useReducer((count: number) => count + 1, 0);
+  useSettings();
   const MenuItemCheckbox = Components.MenuItemCheckbox();
   if (!MenuItemCheckbox) return null;
   return Object.entries(USER_FLAGS).map(([name, bit]) => (
@@ -137,7 +137,6 @@ function UserFlagItems({ user }: { user: FluxerUser }) {
       checked={(user.flags & bit) !== 0}
       onCheckedChange={(checked: boolean) => {
         settings.store.userFlags = toggleOverride(settings.store.userFlags, user.id, name, checked);
-        rerender();
       }}
     >
       {name}

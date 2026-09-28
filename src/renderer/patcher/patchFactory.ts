@@ -2,8 +2,6 @@ import type { ModuleFactory, ModuleId, Patch, PatchReplacement } from "../webpac
 
 const IDENTIFIER = String.raw`(?:[A-Za-z_$][\w$]*)`;
 
-const pluginReference = (plugin: string): string => `Influx.plugins[${JSON.stringify(plugin)}]`;
-
 export function canonicalizeMatch<T extends string | RegExp>(match: T): T;
 export function canonicalizeMatch(match: string | RegExp): string | RegExp {
   if (typeof match === "string") return match;
@@ -15,7 +13,7 @@ function canonicalizeReplace(
   replace: PatchReplacement["replace"],
   plugin: string,
 ): PatchReplacement["replace"] {
-  const self = pluginReference(plugin);
+  const self = `Influx.plugins[${JSON.stringify(plugin)}]`;
   if (typeof replace === "function") {
     return (...match) => replace(...(match as [string, ...unknown[]])).replaceAll("$self", self);
   }

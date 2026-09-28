@@ -77,8 +77,16 @@ export interface GuildWire {
   properties?: { name?: string };
 }
 
+export interface ChannelWire {
+  id: string;
+  type: number;
+  name?: string | null;
+  recipients?: Array<{ id: string; username?: string; global_name?: string | null }>;
+}
+
 export interface ReadyPayload {
   user?: { id: string };
   relationships?: RelationshipWire[];
   guilds?: GuildWire[];
+  private_channels?: ChannelWire[];
 }

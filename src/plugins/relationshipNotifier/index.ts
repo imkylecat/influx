@@ -3,13 +3,15 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings, getPluginData, saveSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { showNotification, showToast, Stores } from "@webpack/common";
-import type { GuildWire, ReadyPayload, RelationshipWire } from "@webpack/fluxer";
+import type { ChannelWire, GuildWire, ReadyPayload, RelationshipWire } from "@webpack/fluxer";
 
 import { addNotice, hasNotices, nagbarFound, nagbarPartsSource, withBanner } from "./banner";
 import {
   describeRemoval,
   diffSnapshots,
+  groupName,
   guildName,
+  isGroupChat,
   relationshipName,
   relationshipRemoval,
   type Removal,
@@ -35,6 +37,11 @@ const settings = definePluginSettings({
     description: "Notify when you're kicked or banned from a server, or it's deleted.",
     default: true,
   },
+  groups: {
+    type: "boolean",
+    description: "Notify when you're removed from a group chat.",
+    default: true,
+  },
   whileAway: {
     type: "boolean",
     description:
@@ -58,7 +65,7 @@ const settings = definePluginSettings({
   },
 });
 
-// Ids of friends and servers you removed yourself, so those removals don't notify.
+// Ids of friends, servers, and group chats you removed or left yourself, so those don't notify.
 const selfActions = new Map<string, ReturnType<typeof setTimeout>>();
 
 function consumeSelfAction(id: string): boolean {
@@ -89,6 +96,7 @@ function saveSnapshot(): void {
 function isWanted(removal: Removal): boolean {
   if (removal.kind === "friend") return settings.store.friends;
   if (removal.kind === "guild") return settings.store.servers;
+  if (removal.kind === "group") return settings.store.groups;
   return settings.store.friendRequests;
 }
 
@@ -160,6 +168,23 @@ function onGuildDelete(data: { id: string; unavailable?: boolean }): void {
   report({ kind: "guild", id: data.id, name }, false);
 }
 
+function onGroupChange(data: ChannelWire): void {
+  if (!snapshot || !isGroupChat(data)) return;
+  (snapshot.groups ??= {})[data.id] = groupName(data, accountId);
+  saveSnapshot();
+}
+
+function onGroupDelete(data: ChannelWire): void {
+  if (!isGroupChat(data)) return;
+  const name = groupName(data, accountId) ?? snapshot?.groups?.[data.id] ?? null;
+  if (snapshot?.groups && data.id in snapshot.groups) {
+    delete snapshot.groups[data.id];
+    saveSnapshot();
+  }
+  if (consumeSelfAction(data.id)) return;
+  report({ kind: "group", id: data.id, name }, false);
+}
+
 const LISTENERS: Record<string, (data: any) => void> = {
   READY: onReady,
   RELATIONSHIP_ADD: onRelationshipChange,
@@ -168,12 +193,15 @@ const LISTENERS: Record<string, (data: any) => void> = {
   GUILD_CREATE: onGuildChange,
   GUILD_UPDATE: onGuildChange,
   GUILD_DELETE: onGuildDelete,
+  CHANNEL_CREATE: onGroupChange,
+  CHANNEL_UPDATE: onGroupChange,
+  CHANNEL_DELETE: onGroupDelete,
 };
 
 export default definePlugin({
   name: "RelationshipNotifier",
   description:
-    "Notifies you when a friend removes you, a friend request is canceled, or you're removed from a server, including while Fluxer was closed.",
+    "Notifies you when a friend removes you, a friend request is canceled, or you're removed from a server or group chat, including while Fluxer was closed.",
   authors: [Contributor.Kairu],
   settings,
 
@@ -191,6 +219,20 @@ export default definePlugin({
         { match: /(\.USER_GUILDS\()(\i)\)/, replace: "$1$self.markSelfAction($2))" },
         { match: /(\.GUILD_DELETE\()(\i)\)/, replace: "$1$self.markSelfAction($2))" },
       ],
+    },
+    {
+      find: "Failed to update nickname for user ",
+      replacement: {
+        match: /(yield \i\.\i\.delete\(\i\.\i\.CHANNEL\()(\i)\)/,
+        replace: "$1$self.markSelfAction($2))",
+      },
+    },
+    {
+      find: "Failed to remove recipient:",
+      replacement: {
+        match: /(let \i=\i\.\i\.CHANNEL_RECIPIENT\((\i),\i\);)("add"===\i)/,
+        replace: "$1$3||$self.markSelfAction($2);$3",
+      },
     },
     {
       find: '"app.app-layout.nagbar-container.container"',

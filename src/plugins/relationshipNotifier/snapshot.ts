@@ -1,19 +1,25 @@
-import type { GuildWire, ReadyPayload, RelationshipWire } from "@webpack/fluxer";
+import type { ChannelWire, GuildWire, ReadyPayload, RelationshipWire } from "@webpack/fluxer";
+
+const GROUP_CHAT_TYPE = 3;
+// Fluxer names an unnamed group after its members, up to this many.
+const MAXIMUM_NAMED_MEMBERS = 4;
 
 interface KnownRelationship {
   type: number;
   name: string;
 }
 
-// What Influx last saw of your friends, friend requests, and servers, keyed by id.
+// What Influx last saw of your friends, friend requests, servers, and group chats, keyed by id.
 export interface Snapshot {
   relationships: Record<string, KnownRelationship>;
   guilds: Record<string, string | null>;
+  // Missing from snapshots saved before Influx tracked group chats.
+  groups?: Record<string, string | null>;
 }
 
 export type Removal =
   | { kind: "friend" | "incomingRequest" | "outgoingRequest"; id: string; name: string }
-  | { kind: "guild"; id: string; name: string | null };
+  | { kind: "guild" | "group"; id: string; name: string | null };
 
 export function relationshipName(wire: RelationshipWire, fallback?: string): string {
   const username = wire.user?.username;
@@ -25,6 +31,19 @@ export function relationshipName(wire: RelationshipWire, fallback?: string): str
 
 export function guildName(wire: GuildWire): string | null {
   return wire.properties?.name ?? wire.name ?? null;
+}
+
+export const isGroupChat = (wire: ChannelWire): boolean => wire.type === GROUP_CHAT_TYPE;
+
+export function groupName(wire: ChannelWire, accountId: string | null | undefined): string | null {
+  const name = wire.name?.trim();
+  if (name) return name;
+  const members = (wire.recipients ?? [])
+    .filter((user) => user.id !== accountId)
+    .map((user) => user.global_name || user.username)
+    .filter(Boolean);
+  if (!members.length || members.length > MAXIMUM_NAMED_MEMBERS) return null;
+  return `the group chat with ${members.join(", ")}`;
 }
 
 export function snapshotFromReady(ready: ReadyPayload, previous?: Snapshot): Snapshot {
@@ -40,7 +59,12 @@ export function snapshotFromReady(ready: ReadyPayload, previous?: Snapshot): Sna
     // Servers that are briefly unavailable still arrive as stubs, just without a name.
     guilds[wire.id] = guildName(wire) ?? previous?.guilds[wire.id] ?? null;
   }
-  return { relationships, guilds };
+  if (!ready.private_channels) return { relationships, guilds };
+  const groups: Record<string, string | null> = {};
+  for (const wire of ready.private_channels) {
+    if (isGroupChat(wire)) groups[wire.id] = groupName(wire, ready.user?.id);
+  }
+  return { relationships, guilds, groups };
 }
 
 // Keyed by Fluxer's relationship type. Type 2, a blocked user, isn't reported.
@@ -66,6 +90,10 @@ export function diffSnapshots(previous: Snapshot, next: Snapshot): Removal[] {
   for (const [id, name] of Object.entries(previous.guilds)) {
     if (!(id in next.guilds)) removals.push({ kind: "guild", id, name });
   }
+  if (!next.groups) return removals;
+  for (const [id, name] of Object.entries(previous.groups ?? {})) {
+    if (!(id in next.groups)) removals.push({ kind: "group", id, name });
+  }
   return removals;
 }
 
@@ -79,8 +107,11 @@ export function describeRemoval(removal: Removal, whileAway: boolean): string {
     case "outgoingRequest":
       return `${removal.name} declined your friend request${suffix}.`;
     case "guild":
+    case "group": {
+      const name = removal.name ?? (removal.kind === "guild" ? "a server" : "a group chat");
       return whileAway
-        ? `You were removed from ${removal.name ?? "a server"} while you were away.`
-        : `You're no longer in ${removal.name ?? "a server"}.`;
+        ? `You were removed from ${name} while you were away.`
+        : `You're no longer in ${name}.`;
+    }
   }
 }

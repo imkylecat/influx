@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 
 import { Logger } from "../utils/Logger";
-import { getOriginalFactory, moduleCache, onModuleLoaded, webpackRequire } from "./patchWebpack";
+import { moduleCache, onModuleLoaded, webpackRequire } from "./patchWebpack";
 import type { ModuleId, WebpackModule } from "./types";
 
 const logger = new Logger("Finders");
@@ -170,7 +170,7 @@ export function search(...code: Array<string | RegExp>): ModuleId[] {
     .filter(([id, factory]) => {
       let source = factorySources.get(id);
       if (source === undefined) {
-        source = Function.prototype.toString.call(getOriginalFactory(factory));
+        source = factory.toString();
         factorySources.set(id, source);
       }
       return sourceMatches(source, code);

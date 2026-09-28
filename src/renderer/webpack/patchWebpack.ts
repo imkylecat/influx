@@ -4,8 +4,6 @@ import type { ModuleFactory, ModuleId, Patch, WebpackModule, WebpackRequire } fr
 
 const logger = new Logger("Webpack");
 
-const ORIGINAL_FACTORY = Symbol("influx.originalFactory");
-
 export let webpackRequire: WebpackRequire | undefined;
 
 export const moduleCache = new Map<ModuleId, WebpackModule>();
@@ -19,10 +17,6 @@ const moduleListeners = new Set<ModuleListener>();
 export function onModuleLoaded(listener: ModuleListener): () => void {
   moduleListeners.add(listener);
   return () => moduleListeners.delete(listener);
-}
-
-export function getOriginalFactory(factory: ModuleFactory): ModuleFactory {
-  return (factory as any)[ORIGINAL_FACTORY] ?? factory;
 }
 
 function looksLikeWebpackRequire(value: unknown, modules: unknown): value is WebpackRequire {
@@ -57,7 +51,7 @@ export function installWebpackHook(pendingPatches: Patch[]): void {
         }
       }
     };
-    Object.defineProperty(wrapper, ORIGINAL_FACTORY, { value: original });
+    // Module searches read the original source through this.
     wrapper.toString = () => Function.prototype.toString.call(original);
     moduleChanges++;
     return wrapper;

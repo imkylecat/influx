@@ -61,7 +61,6 @@ type GatewayHandler = (data: any, context: unknown) => void;
 
 let compiled: { source: string; patterns: RegExp[] } | undefined;
 
-// Rebuilt only when the keyword settings change.
 function patterns(): RegExp[] {
   const { keywords, wholeWords, caseSensitive } = settings.store;
   const source = `${keywords}\0${wholeWords}\0${caseSensitive}`;

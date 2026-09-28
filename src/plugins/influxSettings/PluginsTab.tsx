@@ -202,7 +202,6 @@ function PluginRow({
       </div>
       <div className={`influx-plugin-actions ${row("settingAction")}`}>
         {visibleOptions(plugin).length > 0 && (
-          // Like the Configure buttons on Fluxer's Advanced settings tab.
           <Button
             variant="secondary"
             compact

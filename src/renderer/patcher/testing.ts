@@ -1,7 +1,5 @@
 import type { ModuleFactory, Patch } from "../webpack/types";
 
-// Helpers for the .test.ts files beside the patcher and plugins.
-
 export const errors: unknown[][] = [];
 export const logger = { error: (...values: unknown[]) => errors.push(values) };
 

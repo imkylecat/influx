@@ -100,7 +100,6 @@ export default definePlugin({
   name: "LocalNotes",
   description: "Adds private notes to user menus, saved only on this device for your account.",
   authors: [Contributor.Kairu],
-  // This startup patch needs a reload to add or remove the menu entry.
   patches: [
     {
       find: '"ui.action-menu.user-context-menu.render-advanced-menu-group.copy-user-id-menu-item"',

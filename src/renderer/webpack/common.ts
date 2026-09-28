@@ -54,7 +54,6 @@ export const Components = {
     findComponentByCode("app.settings-tab-layout.settings-tab-section.subsection"),
   ),
   StatusSlate: lazy(() => findComponentByCode("app.status-slate.container")),
-  Accordion: lazy(() => findComponentByCode("ui.accordion.accordion.accordion")),
   Tooltip: lazy(() => findComponentByCode("ui.tooltip.tooltip.trigger-wrapper")),
   Spinner: lazy(() => findComponentByCode('"ui.spinner.spinner"')),
   ExternalLink: lazy(() => findComponentByCode("app.external-link.external-link.click")),
@@ -155,7 +154,6 @@ export function findClassName(prefix: string): string | undefined {
   return className;
 }
 
-// Joins Fluxer CSS module classes found by prefix, skipping any that can't be found.
 export const nativeClasses = (...prefixes: string[]): string =>
   prefixes
     .map(findClassName)

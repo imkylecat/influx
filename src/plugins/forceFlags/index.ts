@@ -17,7 +17,6 @@ const settings = definePluginSettings({
   },
 });
 
-// Fluxer's public user flags.
 const USER_FLAGS: Record<string, number> = {
   STAFF: 1 << 0,
   PARTNER: 1 << 2,
@@ -27,7 +26,7 @@ const USER_FLAGS: Record<string, number> = {
   SPAMMER: 1 << 6,
 };
 
-export interface Overrides {
+interface Overrides {
   add: string[];
   remove: string[];
 }

@@ -1,7 +1,7 @@
 import { findIcon, nativeClasses, React } from "@webpack/common";
 import type { ComponentType } from "react";
 
-export const PluginIconFallback = ({ className }: { className?: string }) => (
+const PluginIconFallback = ({ className }: { className?: string }) => (
   <svg
     className={className}
     width="1em"

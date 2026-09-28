@@ -7,7 +7,7 @@ const PLUGIN = "RelationshipNotifier";
 const MAXIMUM_NOTICES = 50;
 const BANNER_TONE = "brand";
 
-export interface Notice {
+interface Notice {
   message: string;
   at: number;
 }
@@ -76,7 +76,7 @@ function dismissLatest(): void {
   persist();
 }
 
-export function dismissAll(): void {
+function dismissAll(): void {
   const list = getNotices();
   list.splice(0, list.length);
   persist();

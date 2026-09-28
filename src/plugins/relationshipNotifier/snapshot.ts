@@ -1,11 +1,11 @@
-export const RelationshipType = {
+const RelationshipType = {
   FRIEND: 1,
   BLOCKED: 2,
   INCOMING_REQUEST: 3,
   OUTGOING_REQUEST: 4,
 } as const;
 
-export interface KnownRelationship {
+interface KnownRelationship {
   type: number;
   name: string;
 }

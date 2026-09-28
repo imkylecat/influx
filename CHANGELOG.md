@@ -90,7 +90,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Influx now uses Fluxer's own components instead of custom ones, so it looks and behaves like the
   rest of Fluxer:
-  - MessageLinkEmbeds previews linked messages with Fluxer's message preview (avatar, name colour,
+  - MessageLinkEmbeds previews linked messages with Fluxer's message preview (avatar, name color,
     attachments and embeds). Click the author's name to jump to the message.
   - The Plugins tab uses Fluxer's empty state and expandable sections for plugin settings.
   - Update and community buttons sit in the settings section header, and links open through Fluxer.
@@ -116,7 +116,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - AnonymiseFileNames plugin: renames files you upload so their original names aren't shared.
 - MessageLinkEmbeds plugin: previews the message behind Fluxer message links.
 - MessageLogger plugin: keeps deleted messages visible and shows the edit history of messages.
-- RelationshipNotifier plugin: notifies you when a friend removes you, a friend request is cancelled
+- RelationshipNotifier plugin: notifies you when a friend removes you, a friend request is canceled
   or you're removed from a server, including while Fluxer was closed.
 - The Plugins tab can search plugins, filter them (the filter is remembered), and change each
   plugin's settings. It marks required plugins and offers a reload when a change needs one.

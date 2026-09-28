@@ -31,7 +31,7 @@ interface Author {
 
 type GetNickname = (user: Author, guildId?: string, channelId?: string) => string;
 let nicknameLookup: GetNickname | null | undefined;
-// NicknameUtils.getNickname: the name Fluxer shows in the header (server nickname, friend nickname, etc).
+// NicknameUtils.getNickname: the name Fluxer shows in the header, such as a server or friend nickname.
 const getNickname = () =>
   (nicknameLookup ??=
     findByCode(".displayName||", ".globalName||", ".username||", ".nickname)", ".nicks") ?? null);

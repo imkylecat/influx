@@ -29,7 +29,7 @@ const TABS = [
 export default definePlugin({
   name: "InfluxSettings",
   description:
-    "Adds the Influx category to Fluxer settings (plugins, updates, community) and the Influx version to build info.",
+    "Adds the Influx category to Fluxer settings (plugins, updates, community) and the Influx version to the build details.",
   authors: [Contributor.Kairu],
   required: true,
   settings,

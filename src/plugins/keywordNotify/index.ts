@@ -9,7 +9,7 @@ const settings = definePluginSettings({
   keywords: {
     type: "string",
     description:
-      "Words or phrases to watch for, separated by commas. Wrap one in slashes to use a regular expression, e.g. /colou?r/.",
+      "Words or phrases to watch for, separated by commas. Wrap one in slashes to use a regular expression, for example /colou?r/.",
     default: "",
   },
   wholeWords: {

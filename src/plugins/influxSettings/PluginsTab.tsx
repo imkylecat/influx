@@ -296,7 +296,7 @@ export function PluginsTab() {
         )}
         <SettingsTabSection
           title="Installed plugins"
-          description={`Influx v${window.Influx.version}. ${enabledCount} of ${all.length} plugins enabled.`}
+          description={`Influx ${INFLUX_VERSION}. ${enabledCount} of ${all.length} plugins enabled.`}
         >
           <div className={row("section")}>
             <div className={nativeClasses("GuildAuditLogTab.module__filterRow___")}>

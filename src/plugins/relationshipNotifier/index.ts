@@ -30,7 +30,7 @@ const settings = definePluginSettings({
   },
   friendRequests: {
     type: "boolean",
-    description: "Notify when a friend request to or from you is cancelled or declined.",
+    description: "Notify when a friend request to or from you is canceled or declined.",
     default: true,
   },
   servers: {
@@ -196,7 +196,7 @@ const LISTENERS: Record<string, (data: any) => void> = {
 export default definePlugin({
   name: PLUGIN,
   description:
-    "Notifies you when a friend removes you, a friend request is cancelled, or you're removed from a server, including while Fluxer was closed.",
+    "Notifies you when a friend removes you, a friend request is canceled, or you're removed from a server, including while Fluxer was closed.",
   authors: [Contributor.Kairu],
   settings,
 

@@ -14,7 +14,7 @@ import {
 import type { Context } from "react";
 
 const STYLE_ID = "influx-message-link-embeds";
-// Matches Fluxer's own jump links, e.g. https://web.fluxer.app/channels/@me/<channel>/<message>.
+// Matches Fluxer's own jump links, for example https://web.fluxer.app/channels/@me/<channel>/<message>.
 const MESSAGE_LINK = /https?:\/\/([\w.-]+)\/channels\/(@me|\d+)\/(\d+)\/(\d+)/g;
 
 // Fluxer's forwarded-message frame supplies the bar and spacing; this only caps the size.

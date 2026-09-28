@@ -101,7 +101,7 @@ export function describeRemoval(removal: Removal, whileAway: boolean): string {
     case "friend":
       return `${removal.name} removed you as a friend${suffix}.`;
     case "incomingRequest":
-      return `${removal.name} cancelled their friend request${suffix}.`;
+      return `${removal.name} canceled their friend request${suffix}.`;
     case "outgoingRequest":
       return `${removal.name} declined your friend request${suffix}.`;
     case "guild":

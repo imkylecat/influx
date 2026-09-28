@@ -67,7 +67,7 @@ const flagBit = (name: string) => USER_FLAGS[name] ?? (/^\d+$/.test(name) ? Numb
 export default definePlugin({
   name: "ForceFlags",
   description:
-    "Forces flags on or off for chosen users, and features on or off for chosen servers. Only changes what your client shows; Fluxer's server still uses the real values.",
+    "Forces flags on or off for chosen users, and features on or off for chosen servers. Only changes what you see; Fluxer's server still uses the real values.",
   authors: [Contributor.Kairu],
   settings,
 

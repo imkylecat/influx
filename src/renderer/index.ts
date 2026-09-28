@@ -64,7 +64,9 @@ function init(): void {
           `Never saw Fluxer's webpack runtime (${webpack.CHUNK_GLOBAL}). Was Influx injected too late?`,
         );
       Plugins.startAllPlugins();
-      logger.info(`v${INFLUX_VERSION} loaded with ${Object.keys(Plugins.plugins).length} plugins`);
+      logger.info(
+        `Loaded version ${INFLUX_VERSION} with ${Object.keys(Plugins.plugins).length} plugins`,
+      );
     },
     { once: true },
   );

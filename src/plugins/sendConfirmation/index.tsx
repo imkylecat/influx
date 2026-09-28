@@ -51,7 +51,7 @@ function Confirmation({
   return (
     <ConfirmModal
       title="Send message?"
-      description={`Send this message to ${destination}? Cancelling leaves it unsent.`}
+      description={`Send this message to ${destination}? Canceling leaves it unsent.`}
       primaryText="Send"
       secondaryText="Cancel"
       onPrimary={() => finish(true)}

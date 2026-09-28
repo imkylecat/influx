@@ -8,9 +8,8 @@ export const settings = definePluginSettings({
     hidden: true,
   },
   pluginFilter: {
-    type: "select",
+    type: "string",
     description: "Which plugins the Plugins tab shows.",
-    options: ["all", "enabled", "disabled", "configurable"],
     default: "all",
     hidden: true,
   },

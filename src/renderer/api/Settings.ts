@@ -113,7 +113,10 @@ interface OptionBase {
   hidden?: boolean;
 }
 
-type SelectOption = string | { label: string; value: string };
+interface SelectOption {
+  label: string;
+  value: string;
+}
 
 export type OptionDefinition =
   | (OptionBase & { type: "boolean"; default: boolean })

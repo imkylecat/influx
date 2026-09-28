@@ -59,9 +59,7 @@ function OptionField({
           label={humanize(name)}
           description={definition.description}
           value={String(store[name])}
-          options={definition.options.map((option) =>
-            typeof option === "string" ? { label: option, value: option } : option,
-          )}
+          options={definition.options}
           onChange={update}
         />
       );
@@ -89,29 +87,32 @@ function OptionField({
   }
 }
 
-type PluginFilter = "all" | "enabled" | "disabled" | "configurable";
-
 const FILTERS: Array<{
-  value: PluginFilter;
+  value: string;
   label: string;
+  empty: string;
   test: (plugin: PluginDefinition) => boolean;
 }> = [
-  { value: "all", label: "Show all", test: () => true },
-  { value: "enabled", label: "Show enabled", test: (plugin) => isPluginEnabled(plugin) },
-  { value: "disabled", label: "Show disabled", test: (plugin) => !isPluginEnabled(plugin) },
+  { value: "all", label: "Show all", empty: "No plugins are installed.", test: () => true },
+  {
+    value: "enabled",
+    label: "Show enabled",
+    empty: "No plugins are enabled.",
+    test: isPluginEnabled,
+  },
+  {
+    value: "disabled",
+    label: "Show disabled",
+    empty: "Every plugin is enabled.",
+    test: (plugin) => !isPluginEnabled(plugin),
+  },
   {
     value: "configurable",
     label: "Show with settings",
+    empty: "No plugins have settings.",
     test: (plugin) => visibleOptions(plugin).length > 0,
   },
 ];
-
-const EMPTY_MESSAGES: Record<PluginFilter, string> = {
-  all: "No plugins are installed.",
-  enabled: "No plugins are enabled.",
-  disabled: "Every plugin is enabled.",
-  configurable: "No plugins have settings.",
-};
 
 function visibleOptions(plugin: PluginDefinition): Array<[string, OptionDefinition]> {
   return Object.entries(
@@ -258,7 +259,6 @@ export function PluginsTab() {
   const all = Object.values(plugins).sort((first, second) => first.name.localeCompare(second.name));
   const activeFilter =
     FILTERS.find((option) => option.value === settings.store.pluginFilter) ?? FILTERS[0];
-  const filter = activeFilter.value;
   const shown = all.filter((plugin) => activeFilter.test(plugin) && matchesQuery(plugin, query));
   const enabledCount = all.filter(isPluginEnabled).length;
   const needsReload = getPluginsNeedingReload();
@@ -296,13 +296,13 @@ export function PluginsTab() {
               />
               <Combobox
                 aria-label="Filter plugins"
-                value={filter}
+                value={activeFilter.value}
                 isSearchable={false}
                 options={FILTERS.map((option) => ({
                   value: option.value,
                   label: `${option.label} (${all.filter(option.test).length})`,
                 }))}
-                onChange={(value: PluginFilter) => {
+                onChange={(value: string) => {
                   settings.store.pluginFilter = value;
                 }}
               />
@@ -324,7 +324,7 @@ export function PluginsTab() {
               Icon={iconOrFallback(query.trim() ? "MagnifyingGlassIcon" : "PlugIcon")}
               title="No plugins to show"
               description={
-                query.trim() ? `No plugins match "${query.trim()}".` : EMPTY_MESSAGES[filter]
+                query.trim() ? `No plugins match "${query.trim()}".` : activeFilter.empty
               }
             />
           )}

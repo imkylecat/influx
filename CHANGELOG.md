@@ -11,6 +11,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - ForceFlags adds "Force flags" to user menus and "Force features" to server menus. Click a flag or
   feature to force it on or off, and click it again to undo. Changes apply without reloading Fluxer.
+- The Influx and Plugins tabs appear in the menu that opens when you right-click the settings
+  button.
+
+### Changed
+
+- The Influx and Plugins tabs use Fluxer's own section headings, search field and compact filter.
+  The link to all releases sits in the Updates description.
+- Plugin settings have sentence-case names, such as "Log deletes", and every description is the
+  same size.
+- MessageLogger's and LocalNotes' menu items have icons, like the rest of Fluxer's menus.
+
+### Fixed
+
+- MessageLogger showed deleted messages in white text instead of red, and turned default avatars
+  black.
 
 ## [0.3.0] - 2026-09-27
 

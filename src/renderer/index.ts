@@ -1,5 +1,6 @@
 import pluginList from "~plugins";
 
+import * as Gateway from "./api/Gateway";
 import * as Plugins from "./api/Plugins";
 import * as Settings from "./api/Settings";
 import { Logger } from "./utils/Logger";
@@ -14,6 +15,7 @@ const Influx = {
   plugins: Plugins.plugins,
   Plugins,
   Settings,
+  Gateway,
   webpack: {
     ...finders,
     common,
@@ -47,6 +49,7 @@ function initialize(): void {
   window.Influx = Influx;
 
   Plugins.registerPlugins(pluginList);
+  Plugins.pendingPatches.push(Gateway.gatewayPatch);
   if (evalAllowed()) {
     webpack.installWebpackHook(Plugins.pendingPatches);
   } else {

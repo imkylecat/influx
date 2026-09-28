@@ -1,4 +1,4 @@
-import { type GatewayHandler, hookGatewayEvents } from "@api/Gateway";
+import { onGatewayEvents } from "@api/Gateway";
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
@@ -125,6 +125,8 @@ function onMessageCreate(message: MessageWire): void {
   notify(message);
 }
 
+let stopListening: (() => void) | undefined;
+
 export default definePlugin({
   name: "KeywordNotify",
   description:
@@ -133,13 +135,6 @@ export default definePlugin({
   settings,
 
   patches: [
-    {
-      find: '"SESSIONS_REPLACE"',
-      replacement: {
-        match: /(\i)\.set\("SESSIONS_REPLACE",\(\)=>\{\}\)/,
-        replace: "$&,$self.wrapGatewayHandlers($1)",
-      },
-    },
     {
       // The message row's class list: match keyword hits with Fluxer's mention highlight.
       find: '"channel.message.article.alt-click"',
@@ -156,7 +151,11 @@ export default definePlugin({
     );
   },
 
-  wrapGatewayHandlers(registry: Map<string, GatewayHandler>): void {
-    hookGatewayEvents(registry, { MESSAGE_CREATE: onMessageCreate }, this.name);
+  start() {
+    stopListening = onGatewayEvents(this.name, { MESSAGE_CREATE: onMessageCreate });
+  },
+
+  stop() {
+    stopListening?.();
   },
 });

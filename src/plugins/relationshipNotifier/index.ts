@@ -1,4 +1,4 @@
-import { type GatewayHandler, hookGatewayEvents } from "@api/Gateway";
+import { onGatewayEvents } from "@api/Gateway";
 import definePlugin from "@api/Plugins";
 import { definePluginSettings, getPluginData, saveSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
@@ -76,6 +76,7 @@ function consumeSelfAction(id: string): boolean {
 let accountId: string | null = null;
 let snapshot: Snapshot | null = null;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
+let stopListening: (() => void) | undefined;
 
 function savedSnapshots(): Record<string, Snapshot> {
   const data = getPluginData("RelationshipNotifier");
@@ -202,13 +203,6 @@ export default definePlugin({
       ],
     },
     {
-      find: '"SESSIONS_REPLACE"',
-      replacement: {
-        match: /(\i)\.set\("SESSIONS_REPLACE",\(\)=>\{\}\)/,
-        replace: "$&,$self.wrapGatewayHandlers($1)",
-      },
-    },
-    {
       find: '"app.app-layout.nagbar-container.container"',
       replacement: {
         match:
@@ -243,11 +237,12 @@ export default definePlugin({
     return id;
   },
 
-  wrapGatewayHandlers(registry: Map<string, GatewayHandler>): void {
-    hookGatewayEvents(registry, LISTENERS, this.name);
+  start() {
+    stopListening = onGatewayEvents(this.name, LISTENERS);
   },
 
   stop() {
+    stopListening?.();
     clearTimeout(saveTimer);
     for (const timer of selfActions.values()) clearTimeout(timer);
     selfActions.clear();

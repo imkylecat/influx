@@ -24,6 +24,15 @@ export function captureInviteEmbed<T extends ComponentType<any>>(component: T): 
   return component;
 }
 
+// Fluxer's compact settings search field, captured the same way.
+export let SettingsSearch:
+  | ComponentType<{ value: string; onChange: (value: string) => void; placeholder: string }>
+  | undefined;
+export function captureSettingsSearch<T extends ComponentType<any>>(component: T): T {
+  SettingsSearch = component;
+  return component;
+}
+
 export const MissingComponents = () => (
   <div className={nativeClasses("AdvancedSettingsTab.module__emptyState___")}>
     Influx couldn't load this page. Fluxer probably changed; update Influx.

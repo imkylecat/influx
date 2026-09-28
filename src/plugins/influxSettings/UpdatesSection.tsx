@@ -7,7 +7,7 @@ import {
   restartToUpdate,
   updateChannel,
 } from "@api/Updater";
-import { Components, nativeClasses, openExternal, React } from "@webpack/common";
+import { Components, openExternal, React } from "@webpack/common";
 
 import { RELEASES_URL } from "../../shared/version";
 import { settings } from "./settings";
@@ -56,12 +56,12 @@ export function UpdatesSection() {
     pendingRestart ? { kind: "installed", version: pendingRestart } : { kind: "idle" },
   );
   useSettings();
-  const SettingsTabSection = Components.SettingsTabSection();
+  const SettingsSection = Components.SettingsSection();
   const Switch = Components.Switch();
   const Button = Components.Button();
   const WarningAlert = Components.WarningAlert();
   const ExternalLink = Components.ExternalLink();
-  if (!SettingsTabSection || !Switch || !Button || !WarningAlert || !ExternalLink) return null;
+  if (!SettingsSection || !Switch || !Button || !WarningAlert || !ExternalLink) return null;
 
   const check = async () => {
     setState({ kind: "checking" });
@@ -114,40 +114,39 @@ export function UpdatesSection() {
     );
 
   return (
-    <SettingsTabSection
+    <SettingsSection
+      id="influx-updates"
       title="Updates"
       description={
         <>
           Influx {INFLUX_VERSION} ({CHANNEL_LABELS[updateChannel]}).{" "}
-          <output>{statusText(state)}</output>
+          <output>{statusText(state)}</output>{" "}
+          <ExternalLink href={RELEASES_URL}>All releases and changelogs</ExternalLink>
         </>
       }
       actions={actions}
     >
-      <div className={nativeClasses("AdvancedSettingsTab.module__controlStackCompact___")}>
-        <Switch
-          label="Automatically update"
-          description={AUTO_UPDATE_DESCRIPTIONS[updateChannel]}
-          value={canInstallUpdates && settings.store.autoUpdate}
-          disabled={!canInstallUpdates}
-          onChange={(value: boolean) => {
-            settings.store.autoUpdate = value;
-          }}
-        />
-        {state.kind === "installed" && (
-          <WarningAlert
-            title="Restart required"
-            actions={
-              <Button small onClick={restartToUpdate}>
-                Restart Fluxer
-              </Button>
-            }
-          >
-            Influx {state.version} is installed. Restart Fluxer to start using it.
-          </WarningAlert>
-        )}
-        <ExternalLink href={RELEASES_URL}>All releases and changelogs</ExternalLink>
-      </div>
-    </SettingsTabSection>
+      <Switch
+        label="Automatically update"
+        description={AUTO_UPDATE_DESCRIPTIONS[updateChannel]}
+        value={canInstallUpdates && settings.store.autoUpdate}
+        disabled={!canInstallUpdates}
+        onChange={(value: boolean) => {
+          settings.store.autoUpdate = value;
+        }}
+      />
+      {state.kind === "installed" && (
+        <WarningAlert
+          title="Restart required"
+          actions={
+            <Button small onClick={restartToUpdate}>
+              Restart Fluxer
+            </Button>
+          }
+        >
+          Influx {state.version} is installed. Restart Fluxer to start using it.
+        </WarningAlert>
+      )}
+    </SettingsSection>
   );
 }

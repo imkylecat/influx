@@ -15,7 +15,7 @@ import {
   React,
 } from "@webpack/common";
 
-import { iconOrFallback, MissingComponents } from "./components";
+import { iconOrFallback, MissingComponents, SettingsSearch } from "./components";
 import { settings } from "./settings";
 
 const humanize = (key: string): string =>
@@ -234,7 +234,7 @@ export function PluginsTab() {
 
   const SettingsTabContainer = Components.SettingsTabContainer();
   const SettingsTabContent = Components.SettingsTabContent();
-  const SettingsTabSection = Components.SettingsTabSection();
+  const SettingsSection = Components.SettingsSection();
   const Input = Components.Input();
   const Combobox = Components.Combobox();
   const Button = Components.Button();
@@ -243,7 +243,7 @@ export function PluginsTab() {
   if (
     !SettingsTabContainer ||
     !SettingsTabContent ||
-    !SettingsTabSection ||
+    !SettingsSection ||
     !Input ||
     !Combobox ||
     !Button ||
@@ -264,24 +264,27 @@ export function PluginsTab() {
   return (
     <SettingsTabContainer>
       <SettingsTabContent>
-        {needsReload.length > 0 && (
-          <WarningAlert
-            title="Reload required"
-            actions={
-              <Button small onClick={() => location.reload()}>
-                Reload
-              </Button>
-            }
-          >
-            Reload Fluxer to apply changes to {needsReload.join(", ")}.
-          </WarningAlert>
-        )}
-        <SettingsTabSection
+        <SettingsSection
+          id="influx-plugins"
           title="Installed plugins"
           description={`Influx ${INFLUX_VERSION}. ${enabledCount} of ${all.length} plugins enabled.`}
         >
-          <div className={row("section")}>
-            <div className={nativeClasses("GuildAuditLogTab.module__filterRow___")}>
+          {needsReload.length > 0 && (
+            <WarningAlert
+              title="Reload required"
+              actions={
+                <Button small onClick={() => location.reload()}>
+                  Reload
+                </Button>
+              }
+            >
+              Reload Fluxer to apply changes to {needsReload.join(", ")}.
+            </WarningAlert>
+          )}
+          <div className={nativeClasses("GuildAuditLogTab.module__filterRow___")}>
+            {SettingsSearch ? (
+              <SettingsSearch value={query} onChange={setQuery} placeholder="Search plugins" />
+            ) : (
               <Input
                 placeholder="Search plugins"
                 aria-label="Search plugins"
@@ -291,32 +294,32 @@ export function PluginsTab() {
                   setQuery(event.currentTarget.value)
                 }
               />
-              <Combobox
-                aria-label="Filter plugins"
-                value={activeFilter.value}
-                isSearchable={false}
-                options={FILTERS.map((option) => ({
-                  value: option.value,
-                  label: `${option.label} (${all.filter(option.test).length})`,
-                }))}
-                onChange={(value: string) => {
-                  settings.store.pluginFilter = value;
-                }}
-              />
-            </div>
-            {shown.length > 0 && (
-              <div className={row("itemList")}>
-                {shown.map((plugin) => (
-                  <PluginRow
-                    key={plugin.name}
-                    plugin={plugin}
-                    needsReload={needsReload.includes(plugin.name)}
-                  />
-                ))}
-              </div>
             )}
+            <Combobox
+              aria-label="Filter plugins"
+              density="compact"
+              value={activeFilter.value}
+              isSearchable={false}
+              options={FILTERS.map((option) => ({
+                value: option.value,
+                label: `${option.label} (${all.filter(option.test).length})`,
+              }))}
+              onChange={(value: string) => {
+                settings.store.pluginFilter = value;
+              }}
+            />
           </div>
-          {shown.length === 0 && (
+          {shown.length > 0 ? (
+            <div className={row("itemList")}>
+              {shown.map((plugin) => (
+                <PluginRow
+                  key={plugin.name}
+                  plugin={plugin}
+                  needsReload={needsReload.includes(plugin.name)}
+                />
+              ))}
+            </div>
+          ) : (
             <StatusSlate
               Icon={iconOrFallback(query.trim() ? "MagnifyingGlassIcon" : "PlugIcon")}
               title="No plugins to show"
@@ -325,7 +328,7 @@ export function PluginsTab() {
               }
             />
           )}
-        </SettingsTabSection>
+        </SettingsSection>
       </SettingsTabContent>
     </SettingsTabContainer>
   );

@@ -79,9 +79,7 @@ export const Components = {
   SettingsTabContent: lazy(() =>
     findComponentByCode("app.settings-tab-layout.settings-tab-content.content"),
   ),
-  SettingsTabSection: lazy(() =>
-    findComponentByCode("app.settings-tab-layout.settings-tab-section.subsection"),
-  ),
+  SettingsSection: lazy(() => findComponentByCode("app.settings-section.section")),
   StatusSlate: lazy(() => findComponentByCode("app.status-slate.container")),
   Tooltip: lazy(() => findComponentByCode("ui.tooltip.tooltip.trigger-wrapper")),
   Spinner: lazy(() => findComponentByCode('"ui.spinner.spinner"')),

@@ -3,7 +3,7 @@ import { disableStyle, enableStyle } from "@api/Styles";
 import { Contributor } from "@utils/constants";
 
 import { autoUpdateTimer, scheduleAutoUpdate } from "./autoUpdate";
-import { captureInviteEmbed, iconOrFallback } from "./components";
+import { captureInviteEmbed, captureSettingsSearch, iconOrFallback } from "./components";
 import { InfluxTab } from "./InfluxTab";
 import { PluginsTab } from "./PluginsTab";
 import { settings } from "./settings";
@@ -78,9 +78,18 @@ export default definePlugin({
         replace: "$1influx.settings-context-menu.menu-group$2$self.influxTabs()$3,$&",
       },
     },
+    {
+      find: '"app.settings-search.container"',
+      replacement: {
+        match:
+          /(\i)=(\(0,\i\.\i\)\(\(\{className:\i,placeholder:\i,value:\i,onChange:\i\}\)=>\{.+?"app\.settings-search\.input\.query-change\.text"\}\)\}\)\}\)\}\))/,
+        replace: "$1=$self.captureSettingsSearch($2)",
+      },
+    },
   ],
 
   captureInviteEmbed,
+  captureSettingsSearch,
   versionLabel: `Influx ${INFLUX_VERSION}`,
   tabComponents: Object.fromEntries(TABS.map((tab) => [tab.type, tab.component])),
 

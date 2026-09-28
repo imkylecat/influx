@@ -7,9 +7,9 @@ import { UpdatesSection } from "./UpdatesSection";
 export function InfluxTab() {
   const SettingsTabContainer = Components.SettingsTabContainer();
   const SettingsTabContent = Components.SettingsTabContent();
-  const SettingsTabSection = Components.SettingsTabSection();
+  const SettingsSection = Components.SettingsSection();
   const Button = Components.Button();
-  if (!SettingsTabContainer || !SettingsTabContent || !SettingsTabSection || !Button) {
+  if (!SettingsTabContainer || !SettingsTabContent || !SettingsSection || !Button) {
     return <MissingComponents />;
   }
 
@@ -17,7 +17,8 @@ export function InfluxTab() {
     <SettingsTabContainer>
       <SettingsTabContent>
         <UpdatesSection />
-        <SettingsTabSection
+        <SettingsSection
+          id="influx-community"
           title="Influx community"
           description="Join the Influx server on Fluxer to get help, suggest plugins, and follow development."
           actions={
@@ -29,7 +30,7 @@ export function InfluxTab() {
           }
         >
           {InviteEmbed && <InviteEmbed code={INFLUX_SERVER_INVITE_CODE} />}
-        </SettingsTabSection>
+        </SettingsSection>
       </SettingsTabContent>
     </SettingsTabContainer>
   );

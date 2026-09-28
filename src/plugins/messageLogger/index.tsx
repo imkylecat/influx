@@ -96,9 +96,7 @@ function setEdits(id: string, edits: readonly PastEdit[]) {
 
 function subscribeToEdits(listener: () => void) {
   editListeners.add(listener);
-  return () => {
-    editListeners.delete(listener);
-  };
+  return () => editListeners.delete(listener);
 }
 
 function isIgnored(message: FluxerMessage): boolean {

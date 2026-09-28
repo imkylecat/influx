@@ -94,9 +94,7 @@ export function saveSettings(): void {
 
 function subscribeToChanges(listener: () => void): () => void {
   changeListeners.add(listener);
-  return () => {
-    changeListeners.delete(listener);
-  };
+  return () => changeListeners.delete(listener);
 }
 
 // Rerenders the component that calls it whenever a setting changes.

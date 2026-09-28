@@ -58,7 +58,6 @@ export function patchFactory(
   for (let index = 0; index < pending.length; index++) {
     const patch = pending[index];
     if (!matchesFind(code, patch.find)) continue;
-    if (patch.predicate && !patch.predicate()) continue;
     pending.splice(index--, 1);
 
     let candidate = code;

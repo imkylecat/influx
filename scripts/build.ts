@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -159,12 +158,8 @@ if (watch) {
 async function stageRelease() {
   const releaseDirectory = path.join(dist, "release");
   await mkdir(releaseDirectory, { recursive: true });
-  const checksums: string[] = [];
   for (const [file, asset] of Object.entries(DESKTOP_ASSETS)) {
-    const data = await readFile(path.join(dist, "desktop", file));
-    await writeFile(path.join(releaseDirectory, asset), data);
-    checksums.push(`${createHash("sha256").update(data).digest("hex")}  ${asset}`);
+    await cp(path.join(dist, "desktop", file), path.join(releaseDirectory, asset));
   }
-  await writeFile(path.join(releaseDirectory, "SHA256SUMS"), `${checksums.join("\n")}\n`);
   console.log(`Staged release ${version} in dist/release/`);
 }

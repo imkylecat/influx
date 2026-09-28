@@ -35,6 +35,12 @@ export const Components = {
   MenuItem: lazy(() =>
     findComponentByDisplayName("ui.action-menu.menu-item.menu-item-primitive.select", "MenuItem"),
   ),
+  // A context menu item that opens a nested menu built by its render prop.
+  MenuItemSubmenu: lazy(() => findComponentByCode("ui.action-menu.menu-item-submenu.sub-menu")),
+  // A context menu item with a checkbox. Toggling it keeps the menu open.
+  MenuItemCheckbox: lazy(() =>
+    findComponentByDisplayName("ui.action-menu.context-menu.checkbox-item.item", "CheckboxItem"),
+  ),
   // A context menu section, with a separator after it when anything follows.
   MenuGroup: lazy(() => findComponentByCode("ui.action-menu.menu-group.menu-group-primitive")),
   Button: lazy(() => findComponentByCode("ui.button.button.focus-ring", "Button")),
@@ -88,6 +94,7 @@ export interface FluxerUser {
   displayName: string;
   avatar: string | null;
   bot?: boolean;
+  flags: number;
 }
 
 export interface FluxerChannel {
@@ -100,6 +107,8 @@ export interface FluxerChannel {
 export interface FluxerGuild {
   id: string;
   name: string;
+  features: ReadonlySet<string>;
+  toJSON(): object;
 }
 
 export const Modals = lazy<{
@@ -118,9 +127,11 @@ export const Stores = {
   Channels: lazy<{ getChannel(id: string): FluxerChannel | undefined }>(() =>
     findByProperties("getChannel", "getGuildChannels", "getPrivateChannels"),
   ),
-  Guilds: lazy<{ getGuild(id: string): FluxerGuild | undefined }>(() =>
-    findByProperties("getGuild", "getGuildRoles", "getOwnedGuilds"),
-  ),
+  Guilds: lazy<{
+    getGuild(id: string): FluxerGuild | undefined;
+    // Rebuilds the server's record, as when the server sends an update.
+    handleGuildUpdate(guild: object): void;
+  }>(() => findByProperties("getGuild", "getGuildRoles", "getOwnedGuilds")),
   Messages: lazy<{
     getMessage(channelId: string, messageId: string): any;
     // A channel's loaded messages, without creating an empty list for unloaded channels.

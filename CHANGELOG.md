@@ -13,6 +13,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   feature to force it on or off, and click it again to undo. Changes apply without reloading Fluxer.
 - The Influx and Plugins tabs appear in the menu that opens when you right-click the settings
   button.
+- MessageLogger keeps deleted messages and edit history after Fluxer restarts. They're saved on
+  this device, and removed when you turn off "Save logs".
+- LocalNotes shows the local note on user profiles, under Fluxer's own note. Click it to write or
+  change the note.
+- RelationshipNotifier notifies you when you're removed from a group chat, including while Fluxer
+  was closed.
+- KeywordNotify can ignore chosen user, channel and server IDs.
+- SendConfirmation can ask before you send in any channel of chosen servers.
+- SilentTyping can still show that you're typing in chosen channels. Its chat bar button shows when
+  the channel you're in is one of them.
 
 ### Changed
 

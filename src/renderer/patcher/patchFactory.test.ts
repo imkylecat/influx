@@ -31,7 +31,7 @@ describe("patchFactory", () => {
   it("applies SilentTyping and consults $self at runtime", () => {
     const pending = pendingFor(silentTyping);
     const store = { active: true };
-    (globalThis as any).Influx.plugins.SilentTyping = { settings: { store } };
+    (globalThis as any).Influx.plugins.SilentTyping = { isSilent: () => store.active };
 
     const patched = patchFactory(1, typingModule, pending, logger);
     assert.notEqual(patched, typingModule);

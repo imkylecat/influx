@@ -1,6 +1,7 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings, useSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
+import { idListIncludes } from "@utils/idList";
 import { Components, findIcon, React } from "@webpack/common";
 
 const settings = definePluginSettings({
@@ -9,20 +10,32 @@ const settings = definePluginSettings({
     description: "Hide your typing indicator. You can also toggle this from the chat bar.",
     default: true,
   },
+  showInChannels: {
+    type: "string",
+    description:
+      "Always show that you're typing in these channel IDs, separated by commas or spaces.",
+    default: "",
+  },
 });
 
-function ChatBarButton() {
+function isSilent(channelId: string | undefined): boolean {
+  return settings.store.active && !idListIncludes(settings.store.showInChannels, channelId);
+}
+
+function ChatBarButton({ channelId }: { channelId?: string }) {
   useSettings();
   const { active } = settings.store;
+  const silent = isSilent(channelId);
   const TextareaButton = Components.TextareaButton();
   const KeyboardIcon = findIcon("KeyboardIcon");
   if (!TextareaButton || !KeyboardIcon) return null;
+  const state = silent ? "on" : active ? "off in this channel" : "off";
   return (
     <TextareaButton
       icon={KeyboardIcon}
-      iconProps={active ? { weight: "fill" } : undefined}
-      label={active ? "Silent typing: on" : "Silent typing: off"}
-      isSelected={active}
+      iconProps={silent ? { weight: "fill" } : undefined}
+      label={`Silent typing: ${state}`}
+      isSelected={silent}
       onClick={() => {
         settings.store.active = !active;
       }}
@@ -40,8 +53,8 @@ export default definePlugin({
     {
       find: "Failed to send typing indicator to channel",
       replacement: {
-        match: /postTyping\(\i\)\{/,
-        replace: "$&if($self.settings.store.active)return;",
+        match: /postTyping\((\i)\)\{/,
+        replace: "$&if($self.isSilent($1))return;",
       },
     },
     {
@@ -50,10 +63,16 @@ export default definePlugin({
         match:
           // Reuse the GIF and sticker buttons' guard, which hides them on mobile and in narrow chat bars.
           /(\(0,(\i)\.jsxs\)\("div",\{[^{}]*?"data-flx":"channel\.textarea\.textarea-buttons\.button-container-dense",children:\[)(!\i&&\i&&)/,
-        replace: "$1$3(0,$2.jsx)($self.ChatBarButton,{}),$3",
+        replace: (_, head: string, jsx: string, guard: string, offset: number, code: string) => {
+          // The component takes its channel as a prop, named where it unpacks them.
+          const props = code.lastIndexOf("channelId:", offset);
+          const channelId = /^channelId:([\w$]+)/.exec(code.slice(props, props + 40))?.[1];
+          return `${head}${guard}(0,${jsx}.jsx)($self.ChatBarButton,{channelId:${channelId}}),${guard}`;
+        },
       },
     },
   ],
 
+  isSilent,
   ChatBarButton,
 });

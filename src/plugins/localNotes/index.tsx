@@ -119,17 +119,7 @@ export default definePlugin({
         onClick={() => {
           const accountId = Stores.Users()?.currentUserId;
           const modals = Modals();
-          if (
-            !accountId ||
-            !modals ||
-            !Components.ModalRoot() ||
-            !Components.ModalHeader() ||
-            !Components.ModalContent() ||
-            !Components.ModalContentLayout() ||
-            !Components.ModalFooter() ||
-            !Components.Textarea() ||
-            !Components.Button()
-          ) {
+          if (!accountId || !modals) {
             showToast("error", "Couldn't open local notes. Try updating Influx.");
             return;
           }

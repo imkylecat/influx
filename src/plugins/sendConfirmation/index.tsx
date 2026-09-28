@@ -46,8 +46,7 @@ function Confirmation({
 }) {
   // Escape, the close button, and dismissal must cancel the waiting send too.
   React.useEffect(() => () => finish(false), [finish]);
-  const ConfirmModal = Components.ConfirmModal();
-  if (!ConfirmModal) return null;
+  const ConfirmModal = Components.ConfirmModal()!;
   const channel = Stores.Channels()?.getChannel(channelId);
   const destination = channel?.name ? `#${channel.name}` : `channel ${channelId}`;
   return (

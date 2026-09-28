@@ -31,10 +31,6 @@ function matchesFind(code: string, find: string | RegExp): boolean {
   return typeof find === "string" ? code.includes(find) : canonicalizeMatch(find).test(code);
 }
 
-function toFunctionExpression(code: string): string {
-  return /^(?:async\s+)?(?:function\b|\()/.test(code) ? code : `function ${code}`;
-}
-
 const evaluateFactory = (code: string, id: ModuleId, plugins: string[]): ModuleFactory =>
   (0, eval)(
     `// Influx patched module ${id} (${plugins.join(", ")})\n0,${code}\n//# sourceURL=InfluxPatched/${id}`,
@@ -77,10 +73,7 @@ export function patchFactory(
 
     if (failure === undefined) {
       try {
-        compiled = evaluateFactory(toFunctionExpression(candidate), id, [
-          ...appliedBy,
-          patch.plugin,
-        ]);
+        compiled = evaluateFactory(candidate, id, [...appliedBy, patch.plugin]);
       } catch (error) {
         failure = `patched code failed to compile: ${String(error)}`;
       }

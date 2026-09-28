@@ -18,6 +18,7 @@ import type {
   FluxerMessagesStore,
   FluxerUser,
 } from "./fluxer";
+import { moduleChanges } from "./patchWebpack";
 
 const logger = new Logger("Common");
 
@@ -32,9 +33,29 @@ type AnyComponent = ComponentType<any>;
 // Fluxer's modal building blocks all live in one module.
 const MODAL_MODULE = "app.modal.content-layout.content-layout";
 
+// Looks up once, and after finding nothing, again only when more of Fluxer has loaded.
 function lazy<T>(lookup: () => T | undefined): () => T | undefined {
   let value: T | undefined;
-  return () => (value ??= lookup());
+  let searchedAt = -1;
+  return () => {
+    if (value === undefined && searchedAt !== moduleChanges) {
+      searchedAt = moduleChanges;
+      value = lookup();
+    }
+    return value;
+  };
+}
+
+function lazyByKey<T>(lookup: (key: string) => T | undefined): (key: string) => T | undefined {
+  const lookups = new Map<string, () => T | undefined>();
+  return (key) => {
+    let cached = lookups.get(key);
+    if (!cached) {
+      cached = lazy(() => lookup(key));
+      lookups.set(key, cached);
+    }
+    return cached();
+  };
 }
 
 export const Components = {
@@ -86,16 +107,7 @@ export const Components = {
   ErrorBoundary: lazy(() => findComponentByCode("An error was thrown.")),
 };
 
-const icons = new Map<string, AnyComponent>();
-
-export function findIcon(name: string): AnyComponent | undefined {
-  let icon = icons.get(name);
-  if (!icon) {
-    icon = findComponentByName(name);
-    if (icon) icons.set(name, icon);
-  }
-  return icon;
-}
+export const findIcon = lazyByKey<AnyComponent>(findComponentByName);
 
 export const Modals = lazy<{
   push(modal: unknown): void;
@@ -130,22 +142,16 @@ export const Stores = {
   ),
 };
 
-const classCache = new Map<string, string>();
-
 // Finds a CSS module class by its readable prefix, for example "Message.module__messageTimestamp___".
-function findClassName(prefix: string): string | undefined {
-  let className = classCache.get(prefix);
-  if (className) return className;
+const findClassName = lazyByKey<string>((prefix) => {
   const matches = (value: unknown): value is string =>
     typeof value === "string" && value.startsWith(prefix);
   const module = find(
     (value) =>
       typeof value === "object" && !Array.isArray(value) && Object.values(value).some(matches),
   );
-  className = module && Object.values(module).find(matches);
-  if (className) classCache.set(prefix, className);
-  return className;
-}
+  return module && Object.values(module).find(matches);
+});
 
 export const nativeClasses = (...prefixes: string[]): string =>
   prefixes
@@ -180,20 +186,28 @@ export const NativeNotification = lazy<ShowNotification>(() =>
   findByCode("Electron native notification show failed; refusing browser/Web Push fallback"),
 );
 
+const externalOpener = lazy<(url: string) => unknown>(() =>
+  findByCode("Failed to open external URL via Electron"),
+);
+
 export function openExternal(url: string): void {
-  const open = findByCode("Failed to open external URL via Electron");
+  const open = externalOpener();
   if (open) void open(url);
   else window.open(url, "_blank", "noopener");
 }
 
 type ToastType = "success" | "error" | "info";
 
+const Toasts = lazy<{ createToast(toast: object): void }>(() =>
+  findByProperties("createToast", "getCurrentToast"),
+);
+
 export function showToast(
   type: ToastType,
   message: string,
   options: { timeout?: number; onClick?: () => void } = {},
 ): void {
-  const toasts = findByProperties("createToast", "getCurrentToast");
+  const toasts = Toasts();
   if (!toasts) {
     logger.warn(`Couldn't find Fluxer's toasts: ${message}`);
     return;
@@ -206,8 +220,12 @@ export function showToast(
   });
 }
 
+const linkedUserProfileOpener = lazy<(userId: string) => Promise<boolean>>(() =>
+  findByCode("Skipping linked profile open before fetch"),
+);
+
 export async function openUserProfile(userId: string): Promise<boolean> {
-  const openLinkedUserProfile = findByCode("Skipping linked profile open before fetch");
+  const openLinkedUserProfile = linkedUserProfileOpener();
   if (!openLinkedUserProfile) {
     logger.error("Couldn't find Fluxer's openLinkedUserProfile");
     return false;
@@ -215,9 +233,13 @@ export async function openUserProfile(userId: string): Promise<boolean> {
   return openLinkedUserProfile(userId);
 }
 
+const inviteAcceptModalOpener = lazy<(code: string) => void>(() =>
+  findByCode("invite.invite-commands.open-accept-modal"),
+);
+
 export function openInvite(url: string): void {
   const code = new URL(url).pathname.split("/").filter(Boolean).pop();
-  const openAcceptModal = code && findByCode("invite.invite-commands.open-accept-modal");
+  const openAcceptModal = code && inviteAcceptModalOpener();
   if (openAcceptModal) {
     openAcceptModal(code);
   } else {

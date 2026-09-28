@@ -12,6 +12,9 @@ export let webpackRequire: WebpackRequire | undefined;
 
 export const moduleCache = new Map<ModuleId, WebpackModule>();
 
+// Counts factories added and modules loaded, so lookups that found nothing know when to retry.
+export let moduleChanges = 0;
+
 type ModuleListener = (module: WebpackModule, id: ModuleId) => void;
 const moduleListeners = new Set<ModuleListener>();
 
@@ -47,6 +50,7 @@ export function installWebpackHook(pendingPatches: Patch[]): void {
         }
       }
       moduleCache.set(id, module);
+      moduleChanges++;
       for (const listener of moduleListeners) {
         try {
           listener(module, id);
@@ -57,6 +61,7 @@ export function installWebpackHook(pendingPatches: Patch[]): void {
     };
     Object.defineProperty(wrapper, ORIGINAL_FACTORY, { value: original });
     wrapper.toString = () => Function.prototype.toString.call(original);
+    moduleChanges++;
     return wrapper;
   }
 

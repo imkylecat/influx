@@ -162,11 +162,18 @@ export function findComponentByCode(
   return undefined;
 }
 
+const factorySources = new Map<ModuleId, string>();
+
 export function search(...code: Array<string | RegExp>): ModuleId[] {
   if (!webpackRequire) return [];
   return Object.entries(webpackRequire.m)
-    .filter(([, factory]) =>
-      sourceMatches(Function.prototype.toString.call(getOriginalFactory(factory)), code),
-    )
+    .filter(([id, factory]) => {
+      let source = factorySources.get(id);
+      if (source === undefined) {
+        source = Function.prototype.toString.call(getOriginalFactory(factory));
+        factorySources.set(id, source);
+      }
+      return sourceMatches(source, code);
+    })
     .map(([id]) => id);
 }

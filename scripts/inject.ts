@@ -35,7 +35,7 @@ Usage: influx-installer [options]
   --stable          Use stable Fluxer even when only Canary is found
   --path <folder>   Fluxer's resources folder, or its .app bundle on macOS
   --uninstall       Remove Influx and restore Fluxer's original files
-  --dev             Install this checkout's build (source checkout only)
+  --development     Install this checkout's build (source checkout only)
   --local           Install this checkout's release build (source checkout only)
   --help            Show this help`;
 
@@ -45,8 +45,8 @@ const options = process.argv.slice(2);
 const pathOption = options.includes("--path") ? options[options.indexOf("--path") + 1] : undefined;
 const mode = options.includes("--uninstall")
   ? "uninstall"
-  : options.includes("--dev")
-    ? "dev"
+  : options.includes("--development")
+    ? "development"
     : options.includes("--local")
       ? "local"
       : "release";
@@ -54,7 +54,7 @@ const mode = options.includes("--uninstall")
 const sudoUser = process.platform === "linux" ? process.env.SUDO_USER : undefined;
 const homeDirectory = sudoUser ? `/home/${sudoUser}` : os.homedir();
 const influxInstallDirectory = path.join(influxDataDirectory(homeDirectory), "dist");
-const influxDevelopmentDirectory = path.join(influxDataDirectory(homeDirectory), "dev");
+const influxDevelopmentDirectory = path.join(influxDataDirectory(homeDirectory), "development");
 
 function fluxerResourcesDirectory(): string {
   if (pathOption) return resolveResourcesPath(pathOption);
@@ -130,7 +130,7 @@ async function main(): Promise<void> {
     console.log(USAGE);
     return;
   }
-  if (compiled && (mode === "dev" || mode === "local")) {
+  if (compiled && (mode === "development" || mode === "local")) {
     throw new Error(
       `--${mode} needs a source checkout of Influx; run it with \`bun run inject --${mode}\`.`,
     );
@@ -160,7 +160,7 @@ async function main(): Promise<void> {
 
   let mainScript: string;
   let installed: string;
-  if (mode === "dev") {
+  if (mode === "development") {
     const buildDirectory = path.join(root, "dist", "desktop");
     if (!existsSync(path.join(buildDirectory, "main.js")))
       throw new Error("dist/desktop/main.js not found. Run `bun run build` first.");
@@ -259,7 +259,7 @@ main().then(
       console.error(
         compiled
           ? error.message
-          : `${error.message}\nUse --dev to run this checkout, or --local after \`bun run build --release\`.`,
+          : `${error.message}\nUse --development to run this checkout, or --local after \`bun run build --release\`.`,
       );
     } else {
       console.error(error.message);

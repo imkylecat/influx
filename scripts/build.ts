@@ -15,7 +15,7 @@ const dist = path.join(root, "dist");
 const pluginsDirectory = path.join(root, "src/plugins");
 const watch = process.argv.includes("--watch");
 const release = process.argv.includes("--release");
-const developmentInstallDirectory = path.join(influxDataDirectory(), "dev");
+const developmentInstallDirectory = path.join(influxDataDirectory(), "development");
 
 const { version } = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
 

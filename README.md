@@ -24,7 +24,7 @@ Have an idea or found a bug? Join the [Influx server](https://fluxer.gg/5YmmEFoj
 ```sh
 bun install
 bun run build
-bun run inject --dev   # then restart Fluxer
+bun run inject --development   # then restart Fluxer
 ```
 
 For the browser, load `dist/extension` as an unpacked extension.

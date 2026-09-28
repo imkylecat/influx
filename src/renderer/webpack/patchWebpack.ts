@@ -60,6 +60,10 @@ export function installWebpackHook(pendingPatches: Patch[]): void {
     return wrapper;
   }
 
+  // Fluxer's runtime creates its require function, then assigns the module table to it as `m`.
+  // Every function inherits this setter from Function.prototype, so it runs on that assignment,
+  // captures the runtime before any module executes, and removes itself. The proxy it leaves on
+  // `m` wraps the factories that later chunks add.
   Object.defineProperty(Function.prototype, "m", {
     configurable: true,
     set(this: unknown, modules: Record<ModuleId, ModuleFactory>) {

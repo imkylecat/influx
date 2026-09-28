@@ -180,6 +180,11 @@ export const MessageRecord = lazy<new (wire: unknown, options?: object) => any>(
   findByCode("this.editedTimestamp=e.edited_timestamp"),
 );
 
+// NicknameUtils.getNickname: the name Fluxer shows in the header, such as a server or friend nickname.
+export const NicknameLookup = lazy<
+  (user: { username: string }, guildId?: string, channelId?: string) => string
+>(() => findByCode(".displayName||", ".globalName||", ".username||", ".nickname)", ".nicks"));
+
 export type ShowNotification = (options: {
   title: string;
   body: string;

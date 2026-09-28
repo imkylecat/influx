@@ -1,8 +1,7 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
-import { findClassName, React, Stores } from "@webpack/common";
-import { findByCode } from "@webpack/finders";
+import { findClassName, NicknameLookup, React, Stores } from "@webpack/common";
 
 const settings = definePluginSettings({
   format: {
@@ -28,13 +27,6 @@ interface Author {
   globalName?: string | null;
   tag?: string;
 }
-
-type GetNickname = (user: Author, guildId?: string, channelId?: string) => string;
-let nicknameLookup: GetNickname | null | undefined;
-// NicknameUtils.getNickname: the name Fluxer shows in the header, such as a server or friend nickname.
-const getNickname = () =>
-  (nicknameLookup ??=
-    findByCode(".displayName||", ".globalName||", ".username||", ".nickname)", ".nicks") ?? null);
 
 // Fluxer's own streamer-mode truncation: keep the first character.
 const truncate = (name: string) => `${Array.from(name.trim())[0] ?? ""}…`;
@@ -73,7 +65,7 @@ export default definePlugin({
       // A webhook's "username" is just its display name.
       if (!author?.username || message?.webhookId != null) return null;
       if (settings.store.hideWhenSame) {
-        const shown = getNickname()?.(author, undefined, message?.channelId) ?? author.username;
+        const shown = NicknameLookup()?.(author, undefined, message?.channelId) ?? author.username;
         if (shown.toLowerCase() === author.username.toLowerCase()) return null;
       }
       const text = label(author);

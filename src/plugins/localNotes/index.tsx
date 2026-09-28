@@ -106,8 +106,6 @@ export default definePlugin({
       find: '"ui.action-menu.user-context-menu.render-advanced-menu-group.copy-user-id-menu-item"',
       replacement: {
         match:
-          // Influx expands \i into a JavaScript identifier pattern.
-          // oxlint-disable-next-line no-useless-escape
           /(\(0,\i\.jsx\)\(\i(?:\.\i)?,\{user:(\i),onClose:(\i),"data-flx":"ui\.action-menu\.user-context-menu\.render-advanced-menu-group\.copy-user-id-menu-item"\}\))/,
         replace: "$1,$self.renderMenuItem($2,$3)",
       },

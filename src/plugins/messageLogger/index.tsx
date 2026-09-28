@@ -5,9 +5,6 @@ import { Contributor } from "@utils/constants";
 import { Components, nativeClasses, React, Stores } from "@webpack/common";
 import type { ComponentType } from "react";
 
-// Influx expands \i into a JavaScript identifier pattern.
-/* oxlint-disable no-useless-escape */
-
 // Fluxer only defines flag bits up to 1 << 13, so this one is free for marking deleted messages.
 // Changing flags also makes Message.equals() see a difference, which rerenders the row.
 const DELETED_FLAG = 1 << 30;

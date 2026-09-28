@@ -88,7 +88,7 @@ type PluginFilter = "all" | "enabled" | "disabled" | "configurable";
 const FILTERS: Array<{
   value: PluginFilter;
   label: string;
-  test(plugin: PluginDefinition): boolean;
+  test: (plugin: PluginDefinition) => boolean;
 }> = [
   { value: "all", label: "Show all", test: () => true },
   { value: "enabled", label: "Show enabled", test: (plugin) => isPluginEnabled(plugin) },
@@ -161,7 +161,7 @@ function PluginRow({
 }: {
   plugin: PluginDefinition;
   needsReload: boolean;
-  onToggle(): void;
+  onToggle: () => void;
 }) {
   const enabled = isPluginEnabled(plugin);
   const Switch = Components.Switch();

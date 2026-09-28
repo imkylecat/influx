@@ -27,7 +27,7 @@ describe("ForceDeveloperMode", () => {
 
 describe("ForceDeveloperMode staff", () => {
   it("makes only the current user staff, and only when the setting is on", () => {
-    mock.module("@webpack/common", () => ({
+    void mock.module("@webpack/common", () => ({
       ...common,
       Stores: { ...common.Stores, Users: () => ({ currentUserId: "1" }) },
     }));

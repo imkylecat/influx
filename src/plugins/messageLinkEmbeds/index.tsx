@@ -112,8 +112,8 @@ function LinkEmbed({ link }: { link: MessageLink }) {
 
   React.useEffect(() => {
     let active = true;
-    void loadLinkedMessage(link.channelId, link.messageId).then((next) => {
-      if (active) setState(next);
+    void loadLinkedMessage(link.channelId, link.messageId).then((loaded) => {
+      if (active) setState(loaded);
     });
     return () => {
       active = false;

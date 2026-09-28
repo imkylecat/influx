@@ -41,7 +41,7 @@ ipcMain.on(IPC_GET_RENDERER, (event) => {
   event.returnValue = readFileSync(path.join(INFLUX_DIR, "renderer.js"), "utf8");
 });
 
-app.whenReady().then(() => {
+void app.whenReady().then(() => {
   session.defaultSession.registerPreloadScript({
     id: "influx",
     type: "frame",
@@ -49,13 +49,13 @@ app.whenReady().then(() => {
   });
 
   const urls = FLUXER_APP_HOSTS.map((host) => `https://${host}/*`);
-  session.defaultSession.webRequest.onHeadersReceived({ urls }, ({ responseHeaders }, callback) => {
+  session.defaultSession.webRequest.onHeadersReceived({ urls }, ({ responseHeaders }, respond) => {
     for (const name of Object.keys(responseHeaders ?? {})) {
       if (name.toLowerCase() === "content-security-policy") {
         responseHeaders![name] = responseHeaders![name].map(allowEval);
       }
     }
-    callback({ responseHeaders });
+    respond({ responseHeaders });
   });
 });
 

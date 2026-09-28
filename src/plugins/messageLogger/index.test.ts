@@ -93,7 +93,7 @@ describe("MessageLogger", () => {
 
   // Renders a message's past edits with a stand-in React, returning null when there are none.
   function renderPastEdits(message: FakeMessage): unknown {
-    mock.module("@webpack/common", () => ({
+    void mock.module("@webpack/common", () => ({
       ...common,
       React: {
         createElement: (type: unknown, props: object | null, ...children: unknown[]) => ({

@@ -14,12 +14,33 @@
   "categories": {
     "correctness": "error"
   },
-  "rules": {},
+  "rules": {
+    "react/static-components": "off",
+    "react/immutability": "off",
+    "jsx-a11y/no-autofocus": "off",
+    "typescript/no-this-alias": ["error", { "allowedNames": ["webpackRequire"] }]
+  },
   "overrides": [
     {
       "files": ["**/*.test.ts"],
       "rules": {
         "typescript/no-implied-eval": "off"
+      }
+    },
+    {
+      "files": ["src/plugins/**", "src/renderer/patcher/**"],
+      "rules": {
+        "no-useless-escape": "off"
+      }
+    },
+    {
+      "files": [
+        "src/desktop/preload.ts",
+        "src/renderer/index.ts",
+        "src/renderer/patcher/patchFactory.ts"
+      ],
+      "rules": {
+        "no-eval": "off"
       }
     }
   ],

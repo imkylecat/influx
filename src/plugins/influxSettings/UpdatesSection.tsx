@@ -111,8 +111,7 @@ export function UpdatesSection() {
       title="Updates"
       description={
         <>
-          Influx {INFLUX_VERSION} ({CHANNEL_LABELS[updateChannel]}).{" "}
-          <span role="status">{status}</span>
+          Influx {INFLUX_VERSION} ({CHANNEL_LABELS[updateChannel]}). <output>{status}</output>
         </>
       }
       actions={actions}

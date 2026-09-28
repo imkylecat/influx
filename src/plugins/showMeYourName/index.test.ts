@@ -1,4 +1,4 @@
-import { beforeEach, describe, it } from "bun:test";
+import { beforeEach, describe, it, spyOn } from "bun:test";
 import assert from "node:assert/strict";
 
 import type { ModuleFactory } from "@webpack/types";
@@ -19,15 +19,16 @@ describe("ShowMeYourName", () => {
       `e.exports=[${site("channel.user-message.message-username--2")},${site("channel.compact-message-layout.compact-author-prefix.message-username")}]}`;
     const module = new Function(code)() as ModuleFactory;
     const calls: unknown[] = [];
-    const original = showMeYourName.renderUsername;
-    showMeYourName.renderUsername = (author: any) => (calls.push(author.username), null);
+    const renderUsername = spyOn(showMeYourName, "renderUsername").mockImplementation(
+      (author: any) => (calls.push(author.username), null),
+    );
     try {
       const patched = patchFactory(1, module, pendingFor(showMeYourName), logger);
       assert.deepEqual(errors, []);
       run(patched);
       assert.deepEqual(calls, ["kim", "kim"]);
     } finally {
-      showMeYourName.renderUsername = original;
+      renderUsername.mockRestore();
     }
   });
 });

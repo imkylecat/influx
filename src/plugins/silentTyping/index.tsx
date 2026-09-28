@@ -49,7 +49,6 @@ export default definePlugin({
     {
       find: "Failed to send typing indicator to channel",
       replacement: {
-        // oxlint-disable-next-line no-useless-escape
         match: /postTyping\(\i\)\{/,
         replace: "$&if($self.settings.store.active)return;",
       },
@@ -59,7 +58,6 @@ export default definePlugin({
       replacement: {
         match:
           // Reuse the GIF and sticker buttons' guard, which hides them on mobile and in narrow chat bars.
-          // oxlint-disable-next-line no-useless-escape
           /(\(0,(\i)\.jsxs\)\("div",\{[^{}]*?"data-flx":"channel\.textarea\.textarea-buttons\.button-container-dense",children:\[)(!\i&&\i&&)/,
         replace: "$1$3(0,$2.jsx)($self.ChatBarButton,{}),$3",
       },

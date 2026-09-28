@@ -39,7 +39,7 @@ function Confirmation({
   finish,
 }: {
   channelId: string;
-  finish(confirmed: boolean): void;
+  finish: (confirmed: boolean) => void;
 }) {
   // Escape, the close button, and dismissal must cancel the waiting send too.
   React.useEffect(() => () => finish(false), [finish]);
@@ -70,14 +70,12 @@ export default definePlugin({
       replacement: [
         {
           // Guard the shared send command before uploads or queueing, including forwards and retries.
-          // oxlint-disable-next-line no-useless-escape
           match: /(?=if\(!(\i\.\i)\.consumeLocalSendReservation\((\i),(\i)\.nonce\)\))/,
           replace:
             "if(!(yield $self.authorize($2,$3.nonce))){$1.rejectLocalRateLimitedSend($2,$3.nonce,$3.hasAttachments);return null;}",
         },
         {
           // Block normal composer sends before Fluxer clears the draft or creates an optimistic message.
-          // oxlint-disable-next-line no-useless-escape
           match: /return (\i\.\i)\.reserveLocalSend\((\i),(\i)\)/,
           replace: "return !$self.blocked($2)&&$1.reserveLocalSend($2,$3)",
         },

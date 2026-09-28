@@ -195,7 +195,7 @@ export type ToastType = "success" | "error" | "info";
 export function showToast(
   type: ToastType,
   message: string,
-  options: { timeout?: number; onClick?(): void } = {},
+  options: { timeout?: number; onClick?: () => void } = {},
 ): void {
   const toasts = findByProperties("createToast", "getCurrentToast");
   if (!toasts) {

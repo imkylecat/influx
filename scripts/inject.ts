@@ -52,7 +52,10 @@ const influxInstallDirectory = path.join(influxDirectory, "dist");
 const influxDevelopmentDirectory = path.join(influxDirectory, "development");
 
 function fluxerResourcesDirectory(): string {
-  if (pathOption) return resolveResourcesPath(pathOption);
+  if (pathOption) {
+    const resolved = path.resolve(pathOption);
+    return resolved.endsWith(".app") ? path.join(resolved, "Contents", "Resources") : resolved;
+  }
   const stable = defaultResourcesDirectory(false);
   const canary = defaultResourcesDirectory(true);
   if (options.includes("--canary")) return canary;
@@ -65,11 +68,6 @@ function hasFluxer(resourcesDirectory: string): boolean {
     existsSync(path.join(resourcesDirectory, "app.asar")) ||
     existsSync(path.join(resourcesDirectory, "_app.asar"))
   );
-}
-
-function resolveResourcesPath(input: string): string {
-  const resolved = path.resolve(input);
-  return resolved.endsWith(".app") ? path.join(resolved, "Contents", "Resources") : resolved;
 }
 
 function defaultResourcesDirectory(canary: boolean): string {

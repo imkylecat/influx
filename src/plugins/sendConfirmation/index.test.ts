@@ -16,9 +16,9 @@ beforeEach(() => {
 });
 
 describe("SendConfirmation", () => {
-  it("blocks the supplied honeypot by default and lets other channels send normally", () => {
-    assert.deepEqual(HONEYPOT_CHANNEL_IDS, ["1513407003270057984"]);
-    assert.equal(sendPolicy(HONEYPOT_CHANNEL_IDS[0]), "block");
+  it("blocks the supplied honeypots by default and lets other channels send normally", () => {
+    assert.deepEqual(HONEYPOT_CHANNEL_IDS, ["1513407003270057984", "1545829681800949760"]);
+    for (const id of HONEYPOT_CHANNEL_IDS) assert.equal(sendPolicy(id), "block");
     assert.equal(sendPolicy("123"), "allow");
   });
 

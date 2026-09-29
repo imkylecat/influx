@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- SendConfirmation blocks messages to one more known honeypot channel.
+
 ## [0.4.0] - 2026-09-28
 
 ### Added

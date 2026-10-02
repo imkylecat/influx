@@ -11,6 +11,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - SendConfirmation blocks messages to one more known honeypot channel.
 
+### Fixed
+
+- The patch replacement signatures for ContributorBadges and MessageLogger changed in a Fluxer
+  update.
+
 ## [0.4.0] - 2026-09-28
 
 ### Added

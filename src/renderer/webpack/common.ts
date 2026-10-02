@@ -143,7 +143,22 @@ export const Stores = {
     // Calls the listener at once, and again whenever the user's status or device changes.
     subscribeToUserStatus(userId: string, listener: () => void): () => void;
   }>(() => findByProperties("getStatus", "isMobile", "subscribeToUserStatus")),
+  MemberPresenceSubscription: lazy<{
+    // Asks the server for a member's status and its changes, for the next 5 minutes.
+    touchMember(guildId: string, userId: string): void;
+  }>(() => findByProperties("touchMember", "getSubscribedMembers")),
 };
+
+// MobX, which Fluxer's stores and components are built on.
+export const observable = lazy<{
+  map<K, V>(entries?: undefined, options?: { deep?: boolean }): Map<K, V>;
+  box<T>(value: T): { get(): T; set(value: T): void };
+}>(() => findByProperties("box", "map", "array"));
+
+// Runs the effect whenever the expression reads observable values that changed. Returns a function that stops it.
+export const reaction = lazy<<T>(expression: () => T, effect: (value: T) => void) => () => void>(
+  () => findByCode('"Reaction"', "fireImmediately"),
+);
 
 // Finds a CSS module class by its readable prefix, for example "Message.module__messageTimestamp___".
 const findClassName = lazyByKey<string>((prefix) => {

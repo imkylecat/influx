@@ -13,10 +13,11 @@ const jsx =
 describe("PlatformIndicators", () => {
   it("adds the icon before the bot tag in the member list", () => {
     const code =
-      `function(e,t,n){const o=${jsx},tD=0,Su={o:1},Sm={a1:0},l={id:"7",bot:true,system:false};` +
-      'e.exports=[l.bot&&(0,o.jsx)(Su.o,{className:Sm.a1,system:l.system,"data-flx":"channel.member-list-item.user-tag"})]}';
+      `function(e,t,n){const o=${jsx},tD=0,iN={A:2},Su={o:1},Sm={a1:0},l={id:"7",bot:true,system:false},_="idle";` +
+      'e.exports=[(0,o.jsx)(iN.A,{user:l,size:32,status:_,"data-flx":"channel.member-list-item.status-aware-avatar"}),l.bot&&(0,o.jsx)(Su.o,{className:Sm.a1,system:l.system,"data-flx":"channel.member-list-item.user-tag"})]}';
     assert.deepEqual(runPatched(pendingFor(platformIndicators), compile(code)), [
-      { userId: "7", place: "memberList" },
+      "tag",
+      { user: { id: "7", bot: true, system: false }, status: "idle", place: "memberList" },
       "tag",
     ]);
   });
@@ -31,7 +32,7 @@ describe("PlatformIndicators", () => {
     );
     try {
       const props = runPatched(pendingFor(platformIndicators), compile(code));
-      assert.deepEqual(calls, [[{ id: "7" }, "idle", true]]);
+      assert.deepEqual(calls, [[{ id: "7" }, "idle"]]);
       assert.equal(props.customStatusBadgeLabel, "badge");
       assert.equal(props.size, 32);
     } finally {
@@ -60,7 +61,11 @@ describe("PlatformIndicators", () => {
   const messageCode =
     `function(e,t,n){const d=${jsx},tD=0,eM={um:0},N=null,O=null,v={id:"7",username:"kim"},r={webhookId:"1"};` +
     'e.exports=[(0,d.jsx)(tD,{user:v,message:r,guild:N,member:null!=O?O:void 0,className:eM.um,"data-flx":"channel.user-message.message-username--2"})]}';
-  const expected = ["name", null, { userId: "7", place: "messages" }];
+  const expected = [
+    "name",
+    null,
+    { user: { id: "7", username: "kim" }, message: { webhookId: "1" }, place: "messages" },
+  ];
 
   it("adds the icon after the author name and ShowMeYourName's username", () => {
     const patches = [...pendingFor(showMeYourName), ...pendingFor(platformIndicators)];

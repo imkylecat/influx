@@ -329,7 +329,7 @@ export default definePlugin({
       find: '"channel.user-message.render-message-content.safe-markdown"',
       replacement: {
         match:
-          /\(0,(\i)\.jsx\)\((\i\.\i),\{content:(\i)\.content,options:(\i),"data-flx":"channel\.user-message\.render-message-content\.safe-markdown"\}\)/,
+          /\(0,(\i)\.jsx\)\((\i\.\i),\{content:\i\((\i),\i\),options:(\i),"data-flx":"channel\.user-message\.render-message-content\.safe-markdown"\}\)/,
         replace: "(0,$1.jsx)($self.PastEdits,{message:$3,Markdown:$2,options:$4}),$&",
       },
     },
@@ -337,7 +337,7 @@ export default definePlugin({
       find: '"channel.user-message.safe-markdown--2"',
       replacement: {
         match:
-          /!(\i)&&(\(0,(\i)\.jsx\)\((\i\.\i),\{content:(\i)\.content,options:(\i),"data-flx":"channel\.user-message\.safe-markdown--2"\}\))/,
+          /!(\i)&&(\(0,(\i)\.jsx\)\((\i\.\i),\{content:\i\((\i),\i\),options:(\i),"data-flx":"channel\.user-message\.safe-markdown--2"\}\))/,
         replace: "!$1&&(0,$3.jsx)($self.PastEdits,{message:$5,Markdown:$4,options:$6}),!$1&&$2",
       },
     },

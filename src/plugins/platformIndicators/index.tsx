@@ -82,7 +82,7 @@ function listedPlatform(guildId: string, userId: string): Platform | undefined {
 }
 
 // Fluxer's presence store knows friends and watched members. The member list knows who it shows.
-// The member list and avatars pass the status they show.
+// Callers that already show a status pass it.
 function platformOf(
   userId: string,
   guildId?: string | null,
@@ -110,10 +110,11 @@ function render(platform: Platform | undefined, size: string) {
   };
 }
 
+// Fluxer follows a touched member for 5 minutes, so watching repeats before then.
 const WATCH_MILLISECONDS = 4 * 60_000;
 const watched = new Map<string, number>();
 
-// Has Fluxer's presence store follow a member, as opening their profile does, for 5 minutes.
+// Has Fluxer's presence store follow a member, as opening their profile does.
 function watch(guildId: string, userId: string): void {
   const key = `${guildId}:${userId}`;
   if (Date.now() - (watched.get(key) ?? 0) < WATCH_MILLISECONDS) return;
@@ -181,7 +182,7 @@ let stopWatchingSettings: (() => void) | undefined;
 export default definePlugin({
   name: "PlatformIndicators",
   description:
-    "Shows whether people are on mobile or on desktop or web, with an icon colored by their status. Fluxer doesn't share which of desktop and web it is.",
+    "Shows whether people are on mobile or on desktop or web, with an icon colored by their status.",
   authors: [Contributor.Kairu],
   settings,
 

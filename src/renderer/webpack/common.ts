@@ -137,6 +137,12 @@ export const Stores = {
   StreamerMode: lazy<{ shouldTruncateUsernames: boolean }>(() =>
     findByProperties("shouldTruncateUsernames", "shouldHidePersonalInformation"),
   ),
+  Presence: lazy<{
+    getStatus(userId: string): string;
+    isMobile(userId: string): boolean;
+    // Calls the listener at once, and again whenever the user's status or device changes.
+    subscribeToUserStatus(userId: string, listener: () => void): () => void;
+  }>(() => findByProperties("getStatus", "isMobile", "subscribeToUserStatus")),
 };
 
 // Finds a CSS module class by its readable prefix, for example "Message.module__messageTimestamp___".

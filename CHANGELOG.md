@@ -7,6 +7,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- PlatformIndicators plugin: shows whether people are on mobile or on desktop or web, with an icon
+  colored by their status.
+
 ## [0.4.1] - 2026-10-02
 
 ### Added

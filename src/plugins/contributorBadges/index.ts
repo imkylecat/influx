@@ -29,8 +29,8 @@ export default definePlugin({
     {
       find: '"user.user-profile-badges.div"',
       replacement: {
-        match: /return (\i)\},\[(\i),(\i)\.flags,/,
-        replace: "return $self.addBadges($1,$3)},[$2,$3.flags,$3.id,",
+        match: /return (\i)\},\[((?:\i,)*)(\i)\.flags,/,
+        replace: "return $self.addBadges($1,$3)},[$2$3.flags,$3.id,",
       },
     },
   ],

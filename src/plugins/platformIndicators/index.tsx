@@ -1,4 +1,3 @@
-import { onGatewayEvents } from "@api/Gateway";
 import definePlugin from "@api/Plugins";
 import { definePluginSettings, onSettingsChange, useSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
@@ -55,55 +54,50 @@ interface Platform {
   mobile: boolean;
 }
 
-interface WirePresence {
-  user?: { id?: string };
-  status?: string;
-  mobile?: boolean;
-}
-
-// Fluxer forgets which members are on mobile, and its own store only knows friends and people
-// it has subscribed to. These are observable, so Fluxer's components redraw when they change.
-let seen: Map<string, Platform> | undefined;
 let settingsVersion: { get(): number; set(value: number): void } | undefined;
-
-const seenPlatforms = () => (seen ??= observable()?.map(undefined, { deep: false }));
 const settingsChanges = () => (settingsVersion ??= observable()?.box(0));
 
-function capture(presence: WirePresence | null | undefined, userId = presence?.user?.id): void {
-  if (!userId || !presence?.status) return;
-  seenPlatforms()?.set(userId, { status: presence.status, mobile: presence.mobile === true });
+type MemberListRows = NonNullable<
+  ReturnType<typeof Stores.MemberList>
+>["lists"][string][string]["rows"];
+const listedPlatforms = new WeakMap<MemberListRows, Map<string, Platform>>();
+
+// The member list's rows keep each member's presence as the server sent it, mobile flag included.
+function listedPlatform(guildId: string, userId: string): Platform | undefined {
+  for (const { rows } of Object.values(Stores.MemberList()?.lists[guildId] ?? {})) {
+    let platforms = listedPlatforms.get(rows);
+    if (!platforms) {
+      platforms = new Map();
+      for (const { userId: id, presence } of rows.values()) {
+        if (id && presence?.status) {
+          platforms.set(id, { status: presence.status, mobile: presence.mobile === true });
+        }
+      }
+      listedPlatforms.set(rows, platforms);
+    }
+    const listed = platforms.get(userId);
+    if (listed) return listed;
+  }
+  return undefined;
 }
 
-const LISTENERS = {
-  READY(data: { presences?: WirePresence[] }) {
-    seen?.clear();
-    data.presences?.forEach((presence) => capture(presence));
-  },
-  PRESENCE_UPDATE: (data: WirePresence) => capture(data),
-  PRESENCE_UPDATE_BULK(data: { presences?: WirePresence[] }) {
-    data.presences?.forEach((presence) => capture(presence));
-  },
-  GUILD_MEMBERS_CHUNK(data: { presences?: WirePresence[] }) {
-    data.presences?.forEach((presence) => capture(presence));
-  },
-  GUILD_MEMBER_LIST_UPDATE(data: {
-    ops?: { items?: { member?: { user?: { id?: string }; presence?: WirePresence | null } }[] }[];
-  }) {
-    for (const operation of data.ops ?? []) {
-      for (const { member } of operation.items ?? []) capture(member?.presence, member?.user?.id);
-    }
-  },
-};
-
-// Fluxer's own status when it has one. The member list and avatars pass the status they show.
-function platformOf(userId: string, status?: string | null): Platform | undefined {
+// Fluxer's presence store knows friends and watched members. The member list knows who it shows.
+// The member list and avatars pass the status they show.
+function platformOf(
+  userId: string,
+  guildId?: string | null,
+  status?: string | null,
+): Platform | undefined {
   const presence = Stores.Presence();
   const live = presence?.getStatus(userId);
-  const known = live !== undefined && live !== "offline";
-  const captured = seenPlatforms()?.get(userId);
-  const mobile = known ? presence!.isMobile(userId) : captured?.mobile;
-  status ??= known ? live : captured?.status;
-  return status ? { status, mobile: mobile ?? false } : undefined;
+  const platform =
+    live !== undefined && live !== "offline"
+      ? { status: live, mobile: presence!.isMobile(userId) }
+      : guildId
+        ? listedPlatform(guildId, userId)
+        : undefined;
+  status ??= platform?.status;
+  return status ? { status, mobile: platform?.mobile ?? false } : undefined;
 }
 
 function render(platform: Platform | undefined, size: string) {
@@ -119,7 +113,7 @@ function render(platform: Platform | undefined, size: string) {
 const WATCH_MILLISECONDS = 4 * 60_000;
 const watched = new Map<string, number>();
 
-// Asks Fluxer for a member's status, as opening their profile does. Fluxer drops it after 5 minutes.
+// Has Fluxer's presence store follow a member, as opening their profile does, for 5 minutes.
 function watch(guildId: string, userId: string): void {
   const key = `${guildId}:${userId}`;
   if (Date.now() - (watched.get(key) ?? 0) < WATCH_MILLISECONDS) return;
@@ -131,28 +125,31 @@ function PlatformIndicator({
   user,
   place,
   status,
+  guildId: listGuildId,
   message,
 }: {
   user?: FluxerUser;
   place: Place;
   status?: string | null;
+  guildId?: string | null;
   message?: FluxerMessage;
 }) {
   useSettings();
   const userId = user?.id;
+  const guildId = listGuildId ?? message?.guildId;
   const subscribe = React.useCallback(
     (onChange: () => void) =>
-      reaction()?.(() => JSON.stringify(userId && platformOf(userId, status)), onChange) ??
+      reaction()?.(() => JSON.stringify(userId && platformOf(userId, guildId, status)), onChange) ??
       (() => {}),
-    [userId, status],
+    [userId, guildId, status],
   );
   const platform = React.useSyncExternalStore(subscribe, () =>
-    JSON.stringify(userId && platformOf(userId, status)),
+    JSON.stringify(userId && platformOf(userId, guildId, status)),
   );
   // Bots are online without using an app.
   const person = userId !== undefined && !user?.bot && message?.webhookId == null;
-  const guildId = message?.guildId;
-  const watching = person && guildId && (settings.store.messages || settings.store.messageAvatars);
+  const watching =
+    person && message && guildId && (settings.store.messages || settings.store.messageAvatars);
   React.useEffect(() => {
     if (!watching) return;
     watch(guildId, userId);
@@ -168,8 +165,8 @@ function PlatformIndicator({
 }
 
 // Props for the badge Fluxer draws over an avatar's status, as it does for muted people in voice.
-function badge(user: FluxerUser, status?: string | null) {
-  const shown = user.bot ? undefined : render(platformOf(user.id, status), "100%");
+function badge(user: FluxerUser, guildId?: string | null, status?: string | null) {
+  const shown = user.bot ? undefined : render(platformOf(user.id, guildId, status), "100%");
   return (
     shown && {
       customStatusBadge: shown.icon,
@@ -179,7 +176,6 @@ function badge(user: FluxerUser, status?: string | null) {
   );
 }
 
-let stopListening: (() => void) | undefined;
 let stopWatchingSettings: (() => void) | undefined;
 
 export default definePlugin({
@@ -196,12 +192,12 @@ export default definePlugin({
         match:
           /(\i)\.bot&&\(0,(\i)\.jsx\)\(\i\.\i,\{className:\i\.\i,system:\1\.system,"data-flx":"channel\.member-list-item\.user-tag"\}\)/,
         replace: (match: string, user: string, jsx: string, offset: number, code: string) => {
-          // The status the member list shows, passed to the avatar a little earlier.
-          const status =
-            /status:([\w$]+),[^{}]*"data-flx":"channel\.member-list-item\.status-aware-avatar"/.exec(
+          // The server and the status the member list shows, passed to the avatar a little earlier.
+          const [, guildId, status] =
+            /guildId:([\w$]+),status:([\w$]+),[^{}]*"data-flx":"channel\.member-list-item\.status-aware-avatar"/.exec(
               code.slice(0, offset),
-            )?.[1];
-          return `(0,${jsx}.jsx)($self.PlatformIndicator,{user:${user},status:${status},place:"memberList"}),${match}`;
+            ) ?? [];
+          return `(0,${jsx}.jsx)($self.PlatformIndicator,{user:${user},guildId:${guildId},status:${status},place:"memberList"}),${match}`;
         },
       },
     },
@@ -218,16 +214,16 @@ export default definePlugin({
       find: '"ui.status-aware-avatar.avatar"',
       replacement: {
         match:
-          /user:(\i),size:\i,status:(\i),isMobileStatus:\i,[^}]{0,400}?"data-flx":"ui\.status-aware-avatar\.avatar"/,
-        replace: "$&,...$self.avatarBadge($1,$2)",
+          /user:(\i),size:\i,status:(\i),isMobileStatus:\i,[^}]{0,300}?guildId:(\i),[^}]{0,100}?"data-flx":"ui\.status-aware-avatar\.avatar"/,
+        replace: "$&,...$self.avatarBadge($1,$3,$2)",
       },
     },
     {
       find: '"channel.message-avatar.avatar"',
       replacement: {
         match:
-          /user:(\i),size:\i,className:\i,forceAnimate:\i,[^}]{0,120}?"data-flx":"channel\.message-avatar\.avatar"/,
-        replace: "$&,...$self.messageAvatarBadge($1)",
+          /user:(\i),size:\i,className:\i,forceAnimate:\i,guildId:(\i),[^}]{0,120}?"data-flx":"channel\.message-avatar\.avatar"/,
+        replace: "$&,...$self.messageAvatarBadge($1,$2)",
       },
     },
   ],
@@ -235,18 +231,17 @@ export default definePlugin({
   PlatformIndicator,
 
   // Reading the settings version redraws Fluxer's avatars when a setting changes.
-  avatarBadge(user: FluxerUser, status: string | null | undefined) {
+  avatarBadge(user: FluxerUser, guildId: string | null | undefined, status?: string | null) {
     settingsChanges()?.get();
-    return settings.store.avatars && status ? badge(user, status) : undefined;
+    return settings.store.avatars && status ? badge(user, guildId, status) : undefined;
   },
 
-  messageAvatarBadge(user: FluxerUser) {
+  messageAvatarBadge(user: FluxerUser, guildId?: string) {
     settingsChanges()?.get();
-    return settings.store.messageAvatars ? badge(user) : undefined;
+    return settings.store.messageAvatars ? badge(user, guildId) : undefined;
   },
 
   start() {
-    stopListening = onGatewayEvents(this.name, LISTENERS);
     stopWatchingSettings = onSettingsChange(() => {
       const changes = settingsChanges();
       changes?.set(changes.get() + 1);
@@ -254,9 +249,7 @@ export default definePlugin({
   },
 
   stop() {
-    stopListening?.();
     stopWatchingSettings?.();
-    seen?.clear();
     watched.clear();
   },
 });

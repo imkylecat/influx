@@ -13,26 +13,31 @@ const jsx =
 describe("PlatformIndicators", () => {
   it("adds the icon before the bot tag in the member list", () => {
     const code =
-      `function(e,t,n){const o=${jsx},tD=0,iN={A:2},Su={o:1},Sm={a1:0},l={id:"7",bot:true,system:false},_="idle";` +
-      'e.exports=[(0,o.jsx)(iN.A,{user:l,size:32,status:_,"data-flx":"channel.member-list-item.status-aware-avatar"}),l.bot&&(0,o.jsx)(Su.o,{className:Sm.a1,system:l.system,"data-flx":"channel.member-list-item.user-tag"})]}';
+      `function(e,t,n){const o=${jsx},tD=0,iN={A:2},Su={o:1},Sm={a1:0},l={id:"7",bot:true,system:false},s="5",_="idle";` +
+      'e.exports=[(0,o.jsx)(iN.A,{user:l,size:32,guildId:s,status:_,"data-flx":"channel.member-list-item.status-aware-avatar"}),l.bot&&(0,o.jsx)(Su.o,{className:Sm.a1,system:l.system,"data-flx":"channel.member-list-item.user-tag"})]}';
     assert.deepEqual(runPatched(pendingFor(platformIndicators), compile(code)), [
       "tag",
-      { user: { id: "7", bot: true, system: false }, status: "idle", place: "memberList" },
+      {
+        user: { id: "7", bot: true, system: false },
+        guildId: "5",
+        status: "idle",
+        place: "memberList",
+      },
       "tag",
     ]);
   });
 
   it("passes the avatar its status badge", () => {
     const code =
-      'function(e,t,n){const i={jsx:(c,p)=>p},s={e:0},e2={id:"7"},C="idle",I=true,v=false,z=32;' +
-      'e.exports=(0,i.jsx)(s.e,{user:e2,size:z,status:C,isMobileStatus:I,animateStatusCutout:v,"data-flx":"ui.status-aware-avatar.avatar"})}';
+      'function(e,t,n){const i={jsx:(c,p)=>p},s={e:0},e2={id:"7"},C="idle",I=true,v=false,z=32,f="5";' +
+      'e.exports=(0,i.jsx)(s.e,{user:e2,size:z,status:C,isMobileStatus:I,guildId:f,animateStatusCutout:v,"data-flx":"ui.status-aware-avatar.avatar"})}';
     const calls: unknown[][] = [];
     const avatarBadge = spyOn(platformIndicators, "avatarBadge").mockImplementation(
       (...values: unknown[]) => (calls.push(values), { customStatusBadgeLabel: "badge" } as any),
     );
     try {
       const props = runPatched(pendingFor(platformIndicators), compile(code));
-      assert.deepEqual(calls, [[{ id: "7" }, "idle"]]);
+      assert.deepEqual(calls, [[{ id: "7" }, "5", "idle"]]);
       assert.equal(props.customStatusBadgeLabel, "badge");
       assert.equal(props.size, 32);
     } finally {
@@ -50,7 +55,7 @@ describe("PlatformIndicators", () => {
     );
     try {
       const props = runPatched(pendingFor(platformIndicators), compile(code));
-      assert.deepEqual(calls, [[{ id: "7" }]]);
+      assert.deepEqual(calls, [[{ id: "7" }, "1"]]);
       assert.equal(props.customStatusBadgeLabel, "badge");
       assert.equal(props.size, 40);
     } finally {

@@ -143,8 +143,23 @@ export const Stores = {
     // Calls the listener at once, and again whenever the user's status or device changes.
     subscribeToUserStatus(userId: string, listener: () => void): () => void;
   }>(() => findByProperties("getStatus", "isMobile", "subscribeToUserStatus")),
+  // The member list of each channel, by server ID and then by list ID.
+  MemberList: lazy<{
+    lists: Record<
+      string,
+      Record<
+        string,
+        {
+          rows: Map<
+            number,
+            { userId?: string; presence?: { status?: string; mobile?: boolean } | null }
+          >;
+        }
+      >
+    >;
+  }>(() => findByProperties("getList", "getPresence", "handleListUpdate")),
   MemberPresenceSubscription: lazy<{
-    // Asks the server for a member's status and its changes, for the next 5 minutes.
+    // Has the presence store follow a member's status for the next 5 minutes.
     touchMember(guildId: string, userId: string): void;
   }>(() => findByProperties("touchMember", "getSubscribedMembers")),
 };

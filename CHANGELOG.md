@@ -11,6 +11,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Influx stays installed when Fluxer updates itself on Windows and macOS, so there's no need to run
   the installer again.
+- CallTimer plugin: shows how long you've been in a call, in the voice panel and next to your voice
+  channel in the channel list.
+- BetterFolders plugin: shows the servers of open folders on a dedicated sidebar next to the server
+  list.
+- UserVoiceShow plugin: shows an indicator when a user is in a voice channel, in profiles, the
+  member, direct message and friends lists, and messages. Hover it to see the channel and who is in
+  it, click it to open the channel, and double-click it to join.
 
 ## [0.5.0] - 2026-10-02
 

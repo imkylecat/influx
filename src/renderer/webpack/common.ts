@@ -162,6 +162,13 @@ export const Stores = {
     // Has the presence store follow a member's status for the next 5 minutes.
     touchMember(guildId: string, userId: string): void;
   }>(() => findByProperties("touchMember", "getSubscribedMembers")),
+  // The voice engine. It tells its subscribers about every change, such as each second of a call.
+  MediaEngine: lazy<{
+    connected: boolean;
+    channelId: string | null;
+    voiceStats: { duration: number };
+    subscribe(listener: () => void): () => void;
+  }>(() => findByProperties("voiceStats", "disconnectFromVoiceChannel")),
 };
 
 // MobX, which Fluxer's stores and components are built on.
@@ -202,6 +209,11 @@ export const MessageRecord = lazy<new (wire: unknown, options?: object) => Fluxe
 export const NicknameLookup = lazy<
   (user: { username: string }, guildId?: string, channelId?: string) => string
 >(() => findByCode(".displayName||", ".globalName||", ".username||", ".nickname)", ".nicks"));
+
+// Formats seconds as Fluxer shows a call's length, such as 1:05 or 1:01:05.
+export const formatDuration = lazy<(seconds: number) => string>(() =>
+  findByCode('="en-US"', "Number.isFinite(", "/3600)"),
+);
 
 interface NotificationContent {
   title: string;

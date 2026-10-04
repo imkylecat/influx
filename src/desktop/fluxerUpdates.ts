@@ -12,6 +12,11 @@ type ApplyUpdate = (
   restartArguments?: string[],
 ) => void;
 
+type UpdateManager = {
+  getUpdatePendingRestart: () => unknown;
+  waitExitThenApplyUpdate: ApplyUpdate;
+};
+
 // Fluxer's updates replace its app files and with them the Influx shim. After Fluxer exits and its
 // updater finishes, these scripts move the new app.asar aside, put the shim back and, when Fluxer
 // was restarting for the update, start it again.
@@ -59,7 +64,10 @@ try {
     Move-Item -LiteralPath $stagedShim -Destination $fluxerAsar
   }
 } finally {
-  if ($${restart}) { Start-Process -FilePath ${quotePowerShell(process.execPath)} }
+  if ($${restart}) {
+    $env:VELOPACK_RESTART = 'true'
+    Start-Process -FilePath ${quotePowerShell(process.execPath)}
+  }
 }
 `;
 }
@@ -108,7 +116,9 @@ function reinjectAfterExit(installDirectory: string, restart: boolean): void {
 
 export function keepAcrossFluxerUpdates(installDirectory: string, fluxerMain: string): void {
   if (process.platform === "win32") {
-    let velopack: { UpdateManager: { prototype: { waitExitThenApplyUpdate: ApplyUpdate } } };
+    let velopack: {
+      UpdateManager: { new (source: string): UpdateManager; prototype: UpdateManager };
+    };
     try {
       velopack = createRequire(fluxerMain)("velopack");
     } catch {
@@ -129,6 +139,20 @@ export function keepAcrossFluxerUpdates(installDirectory: string, fluxerMain: st
       }
       applyUpdate.call(this, update, silent, false, restartArguments);
     };
+    // As Fluxer starts, Velopack applies a downloaded update from native code, which skips the
+    // patch above, so apply it here first. Velopack leaves the update alone when it runs Fluxer
+    // for a hook or has just restarted it, and marks a restart with VELOPACK_RESTART.
+    if (process.argv[1]?.startsWith("--veloapp-") || process.env.VELOPACK_RESTART) return;
+    try {
+      const updateManager = new velopack.UpdateManager("");
+      const update = updateManager.getUpdatePendingRestart();
+      if (!update) return;
+      updateManager.waitExitThenApplyUpdate(update);
+    } catch (error) {
+      console.error("[Influx] Failed to keep Influx after the update", error);
+      return;
+    }
+    app.exit(0);
   } else if (process.platform === "darwin") {
     // ShipIt relaunches Fluxer before the shim can be restored, so quit instead and let the script
     // relaunch it. ShipIt still installs the downloaded update when Fluxer quits.

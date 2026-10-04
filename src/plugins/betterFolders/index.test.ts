@@ -8,7 +8,6 @@ import { compile, pendingFor, resetPatching, runPatched } from "../../renderer/p
 
 beforeEach(() => resetPatching(betterFolders));
 
-// Fluxer's store of open folders, with the toggle it ships.
 function openFolders(...expandedFolderIds: number[]) {
   return {
     expandedFolderIds,
@@ -35,7 +34,6 @@ describe("BetterFolders", () => {
   const jsx = "{jsx:(type,props)=>({type,props}),jsxs:(type,props)=>({type,props})}";
 
   it("draws folders itself and adds the sidebar after the server list", () => {
-    // Shape of Fluxer's server list, trimmed to a folder row and the unread indicators.
     const listModule = compile(
       `function(e,t,n){const o=${jsx},_6="Folder",jy="Indicators",de={Dt:"list"};` +
         'e.exports=t=>{return(0,o.jsxs)("nav",{className:de.Dt,"aria-label":"Servers","data-flx":"app.guilds-layout.guild-list.guild-list-scroller-wrapper",children:[' +
@@ -69,7 +67,6 @@ describe("BetterFolders", () => {
   });
 
   it("lets the plugin decide a folder's open look, folder icon, background, and servers", () => {
-    // Shape of Fluxer's folder component, trimmed to its folder icon and its servers.
     const folderModule = compile(
       `function(e,t,n){const o=${jsx},_b={isExpanded:e=>1===e},eA={m_:"Tooltip"},_K="Background",_Y="Servers",xD={k9:"background",QD:"servers"};` +
         "e.exports=e=>{var t;let{folder:l,guilds:r,registerScrollTarget:v}=e,b=0,y=_b.isExpanded(null==(t=l.id)?-1:t);" +
@@ -135,7 +132,6 @@ describe("BetterFolders", () => {
   });
 
   it("watches Fluxer's store of open folders and still hands it on to be saved", () => {
-    // Shape of Fluxer's GuildFolderExpanded store, which saves its open folders.
     const storeModule = compile(
       "function(e,t,n){const uu={iv:(store,key,properties)=>({store,key,properties})};" +
         'e.exports=new class{constructor(){this.expandedFolderIds=[];this.saved=this.initPersistence()}initPersistence(){return(0,uu.iv)(this,"GuildFolderExpanded",["expandedFolderIds"])}}}',
@@ -158,7 +154,6 @@ describe("BetterFolders", () => {
   });
 
   it("closes every folder when the home button is clicked", () => {
-    // Shape of Fluxer's home button, trimmed to its click handler.
     const buttonModule = compile(
       `function(e,t,n){const o=${jsx},tD={pX:e=>e},s={B:{ME:"/channels/@me"}},S=0,r=0;` +
         'e.exports=()=>(0,o.jsxs)("button",{type:"button",onClick:()=>{let e=s.B.ME;tD.pX(e)},onContextMenu:S,ref:r,"data-flx":"app.sidebar-nav.fluxer-button.fluxer-button.select",children:[]})}',

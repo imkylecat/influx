@@ -1,4 +1,3 @@
-// Fluxer's layout has two columns, the server list and the content. These add the folder sidebar between them.
 const LAYOUT =
   '[class*="GuildsLayout.module__guildsLayoutContainer___"]:has(> .influx-folder-sidebar';
 

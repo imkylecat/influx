@@ -61,17 +61,14 @@ const settings = definePluginSettings({
   },
 });
 
-// Fluxer's store of open folders, which no module exports.
 interface ExpandedFolders {
   expandedFolderIds: number[];
   toggleExpanded(folderId: number): void;
 }
 
-// The props the server list gives Fluxer's folder component.
 interface FolderProps {
   folder: { id: number | null };
   registerScrollTarget: unknown;
-  // Set on the copy in the folder sidebar: whether it shows its folder icon and background.
   influxFolderIcon?: boolean;
 }
 
@@ -81,11 +78,9 @@ interface OpenFolder {
 }
 
 const STYLE_ID = "influx-better-folders";
-// The ID of the folders that hold the servers outside any folder.
 const NO_FOLDER = -1;
 
 let expandedFolders: ExpandedFolders | undefined;
-// The open folders of the server list being drawn, for the sidebar drawn right after it.
 const openFolders: OpenFolder[] = [];
 let lastGuildId: string | null = null;
 let closingFolders = false;
@@ -93,7 +88,6 @@ let closingFolders = false;
 let settingsVersion: { get(): number; set(value: number): void } | undefined;
 const settingsChanges = () => (settingsVersion ??= observable()?.box(0));
 
-// Reading the settings version redraws Fluxer's server list when a setting changes.
 function usesSidebar(): boolean {
   settingsChanges()?.get();
   return settings.store.sidebar && !Stores.MobileLayout()?.enabled;
@@ -117,19 +111,16 @@ export function onFoldersChange(open: number[], previous: number[]): void {
     ...open.filter((id) => !previous.includes(id)),
     ...previous.filter((id) => !open.includes(id)),
   ];
-  // Several at once is Fluxer restoring the folders that were open last time.
   if (toggled.length === 1 && open.length > 1) closeFolders(toggled[0]);
 }
 
 export function onNavigate(navigationGuildId: string | null | undefined): void {
   const { closeAllFolders, closeServerFolder, forceOpen } = settings.store;
   if (!expandedFolders || (!closeAllFolders && !closeServerFolder && !forceOpen)) return;
-  // Direct messages, favorites, and other pages have no server.
   const guildId =
     !navigationGuildId || navigationGuildId.startsWith("@") ? null : navigationGuildId;
   if (guildId === lastGuildId) return;
   lastGuildId = guildId;
-  // Fluxer loads its servers and folders a moment after it starts.
   if (guildId && !Stores.Guilds()?.getGuild(guildId)) return;
   const folder = Stores.UserSettings()?.guildFolders.find(
     ({ id, guildIds }) => id !== NO_FOLDER && guildId && guildIds.includes(guildId),
@@ -144,7 +135,6 @@ export function onNavigate(navigationGuildId: string | null | undefined): void {
   if (closeServerFolder && wasExpanded) expandedFolders.toggleExpanded(folderId);
 }
 
-// A second server list that holds the open folders, built from the same parts as Fluxer's own.
 function FolderSidebar({ folders }: { folders: OpenFolder[] }) {
   const { showFolderIcon, sidebarAnim } = settings.store;
   const folderIcon =
@@ -208,7 +198,6 @@ export default definePlugin({
           replace: "$self.renderFolder($1,$2)",
         },
         {
-          // The whole server list, which by now has drawn its folders.
           match:
             /\(0,\i\.jsxs\)\("nav",\{className:\i\.\i,"aria-label":[^,]+,"data-flx":"app\.guilds-layout\.guild-list\.guild-list-scroller-wrapper",.{0,3000}?"data-flx":"app\.guilds-layout\.guild-list\.guild-scroll-indicators"\}\)\]\}\)/,
           replace: "($self.withSidebar($&))",
@@ -269,7 +258,6 @@ export default definePlugin({
     if (settings.store.closeAllHomeButton) closeFolders();
   },
 
-  // Draws a folder in the server list, and notes it for the sidebar when it's open.
   renderFolder(FolderItem: ComponentType<FolderProps>, props: FolderProps) {
     const open = expandedFolders?.expandedFolderIds.includes(props.folder.id ?? NO_FOLDER);
     if (open && usesSidebar()) openFolders.push({ FolderItem, props });
@@ -286,7 +274,6 @@ export default definePlugin({
     );
   },
 
-  // What a folder shows: its open look, its folder icon and background, and its servers.
   folderView({ influxFolderIcon }: FolderProps, expanded: boolean) {
     if (influxFolderIcon !== undefined) {
       return { expanded, folderIcon: influxFolderIcon, guilds: expanded };

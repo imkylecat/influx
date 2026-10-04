@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Influx stays installed on Windows when Fluxer installs a downloaded update as it starts.
+
 ## [0.6.0] - 2026-10-04
 
 ### Added

@@ -1,5 +1,5 @@
 export const STYLES = `
-.influx-uvs-speaker {
+.influx-voice-indicator {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -10,12 +10,7 @@ export const STYLES = `
 	color: var(--text-tertiary);
 	cursor: pointer;
 }
-.influx-uvs-speaker:hover {
+.influx-voice-indicator:hover {
 	color: var(--text-primary);
-}
-.influx-uvs-row {
-	display: flex;
-	align-items: center;
-	gap: 6px;
 }
 `;

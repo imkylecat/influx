@@ -97,13 +97,13 @@ function VoiceChannelTooltip({ channel, icon }: { channel: FluxerChannel; icon: 
       <span className={nativeClasses("GuildsLayout.module__guildTooltipName___")}>
         In Voice Chat
       </span>
-      <span
-        className={`influx-uvs-row ${nativeClasses("GuildsLayout.module__guildTooltipName___")}`}
-      >
+      <div className={nativeClasses("GuildsLayout.module__guildTooltipHeader___")}>
         {!channel.isPrivate() && channelIcon()?.(channel, { size: "1rem" })}
-        {channel.isPrivate() ? directMessageName(channel) : channel.name}
-      </span>
-      <div className="influx-uvs-row">
+        <span className={nativeClasses("GuildsLayout.module__guildTooltipName___")}>
+          {channel.isPrivate() ? directMessageName(channel) : channel.name}
+        </span>
+      </div>
+      <div className={nativeClasses("GuildsLayout.module__guildVoiceInfo___")}>
         {icon}
         {AvatarStack && (
           <AvatarStack
@@ -152,9 +152,9 @@ function VoiceChannelIndicator({
   if (!shown || !channel) return null;
 
   const permission = Stores.Permission();
-  const isDM = channel.isPrivate();
-  if (!isDM && !permission?.can(VIEW_CHANNEL, channel)) return null;
-  const isLocked = !isDM && !permission?.can(CONNECT, channel);
+  const isDirectMessage = channel.isPrivate();
+  if (!isDirectMessage && !permission?.can(VIEW_CHANNEL, channel)) return null;
+  const isLocked = !isDirectMessage && !permission?.can(CONNECT, channel);
   const isMuted = voiceState.mute || voiceState.self_mute;
   const isDeaf = voiceState.deaf || voiceState.self_deaf;
 
@@ -212,7 +212,7 @@ function VoiceChannelIndicator({
   const button = (
     <button
       type="button"
-      className={`influx-uvs-speaker ${nativeClasses(
+      className={`influx-voice-indicator ${nativeClasses(
         isMessage ? "Message.module__userTagOffset___" : "MemberListItem.module__ownerIcon___",
       )}`}
       aria-label="In Voice Chat"

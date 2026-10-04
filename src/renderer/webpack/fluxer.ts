@@ -11,8 +11,12 @@ export interface FluxerUser {
 }
 
 export interface FluxerChannel {
+  id: string;
   name?: string;
   guildId?: string;
+  recipientIds: readonly string[];
+  // Whether it's a direct message or a group.
+  isPrivate(): boolean;
 }
 
 export interface FluxerGuild {
@@ -70,6 +74,15 @@ export interface MessageWire {
   author: { id: string; username: string; global_name?: string | null; bot?: boolean };
   member?: { nick?: string | null };
   referenced_message?: MessageWire | null;
+}
+
+export interface VoiceStateWire {
+  user_id: string;
+  channel_id: string;
+  mute?: boolean;
+  deaf?: boolean;
+  self_mute?: boolean;
+  self_deaf?: boolean;
 }
 
 export interface RelationshipWire {

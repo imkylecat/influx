@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import { getPluginData } from "@api/Settings";
 import { Stores } from "@webpack/common";
+import type { FluxerChannel } from "@webpack/fluxer";
 
 import sendConfirmation, { HONEYPOT_CHANNEL_IDS, sendPolicy } from ".";
 import { compile, pendingFor, resetPatching, runPatched } from "../../renderer/patcher/testing";
@@ -39,7 +40,9 @@ describe("SendConfirmation", () => {
   it("confirms every channel of a chosen server", () => {
     const findChannels = Stores.Channels;
     const servers: Record<string, string> = { "123": "50", "456": "51" };
-    Stores.Channels = () => ({ getChannel: (id) => ({ guildId: servers[id] }) });
+    Stores.Channels = () => ({
+      getChannel: (id) => ({ guildId: servers[id] }) as FluxerChannel,
+    });
     try {
       getPluginData(sendConfirmation.name).confirmServers = "50, 52";
       assert.equal(sendPolicy("123"), "confirm");

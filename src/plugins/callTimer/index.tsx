@@ -13,7 +13,6 @@ const settings = definePluginSettings({
 
 const subscribe = (onChange: () => void) => Stores.MediaEngine()?.subscribe(onChange) ?? (() => {});
 
-// The seconds spent in the current call. With a channel, only while the call is in that channel.
 function useCallSeconds(channelId?: string): number | undefined {
   return React.useSyncExternalStore(subscribe, () => {
     const engine = Stores.MediaEngine();
@@ -23,7 +22,6 @@ function useCallSeconds(channelId?: string): number | undefined {
   });
 }
 
-// A row styled like the connection ID row that Fluxer can show in the same panel.
 function CallTimer() {
   const seconds = useCallSeconds();
   const format = formatDuration();
@@ -44,7 +42,6 @@ function CallTimer() {
   );
 }
 
-// A badge styled like the user count of voice channels with a user limit.
 function ChannelTimer({ channelId }: { channelId: string }) {
   useSettings();
   const seconds = useCallSeconds(channelId);
@@ -82,7 +79,6 @@ export default definePlugin({
     {
       find: '"app.channel-item.voice-user-count"',
       replacement: {
-        // Before the user count and everything that decides whether it shows.
         match:
           /(?<=,)[^,]{0,60}null!=(\i)\.userLimit&&\(0,(\i)\.jsx\)\("div",\{className:\i\.\i,"data-flx":"app\.channel-item\.voice-user-count"/,
         replace: "(0,$2.jsx)($self.ChannelTimer,{channelId:$1.id}),$&",

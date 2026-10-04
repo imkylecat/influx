@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { app, ipcMain, session } from "electron";
 
 import { FLUXER_APP_HOSTS, IPC_GET_RENDERER } from "./constants";
+import { keepAcrossFluxerUpdates } from "./fluxerUpdates";
 import { registerUpdater } from "./updater";
 
 // Set by the build banner; Bun would otherwise bake in the build machine's __dirname.
@@ -12,6 +13,7 @@ declare const INFLUX_DIRECTORY: string;
 
 const fluxerAsar = path.join(process.resourcesPath, "_app.asar");
 const fluxerPackage = JSON.parse(readFileSync(path.join(fluxerAsar, "package.json"), "utf8"));
+const fluxerMain = path.join(fluxerAsar, fluxerPackage.main);
 
 const internalApp = app as typeof app & {
   setAppPath(appPath: string): void;
@@ -36,6 +38,7 @@ function allowEval(policy: string): string {
 }
 
 registerUpdater(INFLUX_DIRECTORY);
+keepAcrossFluxerUpdates(INFLUX_DIRECTORY, fluxerMain);
 
 ipcMain.on(IPC_GET_RENDERER, (event) => {
   event.returnValue = readFileSync(path.join(INFLUX_DIRECTORY, "renderer.js"), "utf8");
@@ -59,7 +62,7 @@ void app.whenReady().then(() => {
   });
 });
 
-import(pathToFileURL(path.join(fluxerAsar, fluxerPackage.main)).href).catch((error) => {
+import(pathToFileURL(fluxerMain).href).catch((error) => {
   console.error("[Influx] Failed to start Fluxer", error);
   app.exit(1);
 });

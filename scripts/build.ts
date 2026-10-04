@@ -72,7 +72,7 @@ const builds: BuildConfig[] = [
     naming: "[name].js",
     format: "cjs",
     target: "node",
-    external: ["electron"],
+    external: ["electron", "original-fs"],
     // Bun inlines __dirname as the build machine's source path; capture the real one first.
     banner: "var INFLUX_DIRECTORY = __dirname;",
   },

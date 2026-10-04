@@ -20,17 +20,17 @@ import { STYLES } from "./styles";
 const settings = definePluginSettings({
   showInUserProfileModal: {
     type: "boolean",
-    description: "Show a user's Voice Channel indicator in their profile next to the name.",
+    description: "Show a user's voice channel indicator in their profile next to the name.",
     default: true,
   },
   showInMemberList: {
     type: "boolean",
-    description: "Show a user's Voice Channel indicator in the member and DMs list.",
+    description: "Show a user's voice channel indicator in the member and direct message lists.",
     default: true,
   },
   showInMessages: {
     type: "boolean",
-    description: "Show a user's Voice Channel indicator in messages.",
+    description: "Show a user's voice channel indicator in messages.",
     default: true,
   },
 });
@@ -95,7 +95,7 @@ function VoiceChannelTooltip({ channel, icon }: { channel: FluxerChannel; icon: 
   return (
     <div className={nativeClasses("GuildsLayout.module__guildTooltipContainer___")}>
       <span className={nativeClasses("GuildsLayout.module__guildTooltipName___")}>
-        In Voice Chat
+        In voice chat
       </span>
       <div className={nativeClasses("GuildsLayout.module__guildTooltipHeader___")}>
         {!channel.isPrivate() && channelIcon()?.(channel, { size: "1rem" })}
@@ -168,7 +168,7 @@ function VoiceChannelIndicator({
 
     if (event.detail > 1) {
       if (isLocked) {
-        showToast("error", "You cannot join the user's Voice Channel");
+        showToast("error", "You can't join this user's voice channel.");
         return;
       }
       void Stores.MediaEngine()?.connectToVoiceChannel(channel.guildId ?? null, channel.id);
@@ -215,7 +215,7 @@ function VoiceChannelIndicator({
       className={`influx-voice-indicator ${nativeClasses(
         isMessage ? "Message.module__userTagOffset___" : "MemberListItem.module__ownerIcon___",
       )}`}
-      aria-label="In Voice Chat"
+      aria-label="In voice chat"
       onClick={onClick}
     >
       {icon}
@@ -226,7 +226,7 @@ function VoiceChannelIndicator({
 
 export default definePlugin({
   name: "UserVoiceShow",
-  description: "Shows an indicator when a user is in a Voice Channel.",
+  description: "Shows an indicator when a user is in a voice channel.",
   authors: [Contributor.Kairu],
   settings,
 

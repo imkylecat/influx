@@ -15,7 +15,6 @@ export interface FluxerChannel {
   name?: string;
   guildId?: string;
   recipientIds: readonly string[];
-  // Whether it's a direct message or a group.
   isPrivate(): boolean;
 }
 

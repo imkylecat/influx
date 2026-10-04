@@ -102,9 +102,7 @@ export const Components = {
   ModalFooter: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalFooter")),
   // The full message row, as rendered in pins, confirm modals, and unread-channel previews.
   Message: lazy(() => findComponentByCode("channel.message.message-view-context-provider")),
-  // Overlapping avatars of a few users, with a count of the rest.
   AvatarStack: lazy(() => findComponentByCode("ui.avatars.avatar-stack.avatar")),
-  // A scrolling area with Fluxer's scrollbar.
   Scroller: lazy(() => findComponentByCode("ui.scroller.scroller-children")),
   // Lexical's error boundary. It calls onError, and shows a red box unless fallback is set, even to null.
   ErrorBoundary: lazy(() => findComponentByCode("An error was thrown.")),
@@ -136,7 +134,6 @@ export const Stores = {
     findByProperties("getMessage", "handleMessageDelete", "handleMessageDeleteBulk"),
   ),
   Navigation: lazy<{
-    // The open server's ID, or "@me" in direct messages.
     guildId: string | null;
     navigateToGuild(guildId: string, channelId?: string, messageId?: string, mode?: string): void;
     navigateToDM(channelId?: string, messageId?: string, mode?: string): void;
@@ -175,21 +172,17 @@ export const Stores = {
   Authentication: lazy<{ isAuthenticated: boolean }>(() =>
     findByProperties("isAuthenticated", "setUserId", "handleLogout"),
   ),
-  // Whether Fluxer is using its layout for narrow windows and phones.
   MobileLayout: lazy<{ enabled: boolean }>(() =>
     findByProperties("navExpanded", "chatExpanded", "isEnabled"),
   ),
   UserSettings: lazy<{
-    // The server list in order. Folders with the ID -1 hold the servers outside any folder.
     guildFolders: Array<{ id: number | null; guildIds: string[] }>;
   }>(() => findByProperties("getGuildFolders", "getGuildPositions")),
-  // The voice engine. It tells its subscribers about every change, such as each second of a call.
   MediaEngine: lazy<{
     connected: boolean;
     channelId: string | null;
     voiceStats: { duration: number };
     subscribe(listener: () => void): () => void;
-    // Everyone in voice, by server ID ("@me" for direct messages), channel ID, and connection ID.
     getAllVoiceStates(): Record<string, Record<string, Record<string, VoiceStateWire>>>;
     connectToVoiceChannel(guildId: string | null, channelId: string): Promise<void>;
   }>(() => findByProperties("voiceStats", "disconnectFromVoiceChannel")),
@@ -234,12 +227,10 @@ export const NicknameLookup = lazy<
   (user: { username: string }, guildId?: string, channelId?: string) => string
 >(() => findByCode(".displayName||", ".globalName||", ".username||", ".nickname)", ".nicks"));
 
-// ChannelUtils.getIcon: a channel's icon, such as the speaker with a lock of a voice channel you can't join.
 export const channelIcon = lazy<
   (channel: FluxerChannel, props?: object, options?: { locked?: boolean }) => JSX.Element
 >(() => findByCode("channel.channel-utils.get-icon.locked-voice-channel-icon"));
 
-// Formats seconds as Fluxer shows a call's length, such as 1:05 or 1:01:05.
 export const formatDuration = lazy<(seconds: number) => string>(() =>
   findByCode('="en-US"', "Number.isFinite(", "/3600)"),
 );

@@ -7,6 +7,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Influx stays installed when Fluxer updates itself on Windows and macOS, so there's no need to run
+  the installer again.
+
 ## [0.5.0] - 2026-10-02
 
 ### Added

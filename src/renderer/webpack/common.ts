@@ -101,6 +101,8 @@ export const Components = {
   ModalFooter: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalFooter")),
   // The full message row, as rendered in pins, confirm modals, and unread-channel previews.
   Message: lazy(() => findComponentByCode("channel.message.message-view-context-provider")),
+  // A scrolling area with Fluxer's scrollbar.
+  Scroller: lazy(() => findComponentByCode("ui.scroller.scroller-children")),
   // Lexical's error boundary. It calls onError, and shows a red box unless fallback is set, even to null.
   ErrorBoundary: lazy(() => findComponentByCode("An error was thrown.")),
 };
@@ -131,6 +133,8 @@ export const Stores = {
     findByProperties("getMessage", "handleMessageDelete", "handleMessageDeleteBulk"),
   ),
   Navigation: lazy<{
+    // The open server's ID, or "@me" in direct messages.
+    guildId: string | null;
     navigateToGuild(guildId: string, channelId?: string, messageId?: string, mode?: string): void;
     navigateToDM(channelId?: string, messageId?: string, mode?: string): void;
   }>(() => findByProperties("navigateToGuild", "navigateToDM", "navigateToFavorites")),
@@ -162,6 +166,17 @@ export const Stores = {
     // Has the presence store follow a member's status for the next 5 minutes.
     touchMember(guildId: string, userId: string): void;
   }>(() => findByProperties("touchMember", "getSubscribedMembers")),
+  Authentication: lazy<{ isAuthenticated: boolean }>(() =>
+    findByProperties("isAuthenticated", "setUserId", "handleLogout"),
+  ),
+  // Whether Fluxer is using its layout for narrow windows and phones.
+  MobileLayout: lazy<{ enabled: boolean }>(() =>
+    findByProperties("navExpanded", "chatExpanded", "isEnabled"),
+  ),
+  UserSettings: lazy<{
+    // The server list in order. Folders with the ID -1 hold the servers outside any folder.
+    guildFolders: Array<{ id: number | null; guildIds: string[] }>;
+  }>(() => findByProperties("getGuildFolders", "getGuildPositions")),
   // The voice engine. It tells its subscribers about every change, such as each second of a call.
   MediaEngine: lazy<{
     connected: boolean;
@@ -178,9 +193,9 @@ export const observable = lazy<{
 }>(() => findByProperties("box", "map", "array"));
 
 // Runs the effect whenever the expression reads observable values that changed. Returns a function that stops it.
-export const reaction = lazy<<T>(expression: () => T, effect: (value: T) => void) => () => void>(
-  () => findByCode('"Reaction"', "fireImmediately"),
-);
+export const reaction = lazy<
+  <T>(expression: () => T, effect: (value: T, previous: T) => void) => () => void
+>(() => findByCode('"Reaction"', "fireImmediately"));
 
 // Finds a CSS module class by its readable prefix, for example "Message.module__messageTimestamp___".
 const findClassName = lazyByKey<string>((prefix) => {

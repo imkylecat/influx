@@ -13,7 +13,7 @@ const settings = definePluginSettings({
     description: "Display servers from folder on dedicated sidebar.",
     default: true,
   },
-  sidebarAnim: {
+  sidebarAnimation: {
     type: "boolean",
     description: "Animate opening the folder sidebar.",
     default: true,
@@ -136,7 +136,7 @@ export function onNavigate(navigationGuildId: string | null | undefined): void {
 }
 
 function FolderSidebar({ folders }: { folders: OpenFolder[] }) {
-  const { showFolderIcon, sidebarAnim } = settings.store;
+  const { showFolderIcon, sidebarAnimation } = settings.store;
   const folderIcon =
     showFolderIcon === "always" || (showFolderIcon === "moreThanOne" && folders.length > 1);
   const Scroller = Components.Scroller();
@@ -157,7 +157,7 @@ function FolderSidebar({ folders }: { folders: OpenFolder[] }) {
       className={`influx-folder-sidebar ${nativeClasses("GuildsLayout.module__guildListScrollerWrapper___")}`}
       aria-label="Open folders"
       data-open={folders.length > 0}
-      data-animate={sidebarAnim}
+      data-animate={sidebarAnimation}
     >
       {Scroller ? (
         <Scroller

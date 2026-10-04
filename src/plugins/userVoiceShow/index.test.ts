@@ -8,7 +8,6 @@ import showMeYourName from "../showMeYourName";
 
 beforeEach(() => resetPatching(userVoiceShow, platformIndicators, showMeYourName));
 
-// Shows the plugin's indicator as its props, and Fluxer's own elements by their data-flx.
 const jsx =
   "{jsx:(type,props)=>type===Influx.plugins.UserVoiceShow.VoiceChannelIndicator?props:type===Influx.plugins.PlatformIndicators?.PlatformIndicator?'platform':props['data-flx']??props}";
 

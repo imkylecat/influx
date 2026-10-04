@@ -38,7 +38,6 @@ const settings = definePluginSettings({
 const STYLE_ID = "influx-user-voice-show";
 const VIEW_CHANNEL = 1n << 10n;
 const CONNECT = 1n << 20n;
-// How long a click waits for a second one before it opens the channel.
 const DOUBLE_CLICK_MILLISECONDS = 250;
 
 type AllVoiceStates = ReturnType<
@@ -48,7 +47,6 @@ const voiceStatesByUser = new WeakMap<AllVoiceStates, Map<string, VoiceStateWire
 
 const subscribe = (onChange: () => void) => Stores.MediaEngine()?.subscribe(onChange) ?? (() => {});
 
-// Fluxer keeps voice states by server and channel. It replaces them on every change, so each set is indexed once.
 function voiceStateOf(userId: string | undefined): VoiceStateWire | undefined {
   const all = Stores.MediaEngine()?.getAllVoiceStates();
   if (!all || !userId) return undefined;
@@ -78,7 +76,6 @@ function channelUsers(channel: FluxerChannel): FluxerUser[] {
     .filter((user) => user !== undefined);
 }
 
-// A group's name, or the names of the people in a direct message.
 function directMessageName(channel: FluxerChannel): string {
   return (
     channel.name ||
@@ -129,7 +126,6 @@ interface VoiceChannelIndicatorProps {
   userId?: string;
   isProfile?: boolean;
   isMessage?: boolean;
-  // Fluxer's button for the actions of a row in the friends list.
   ActionButton?: ComponentType<{
     tooltip: () => ReactNode;
     onClick: (event: MouseEvent) => void;
@@ -235,7 +231,6 @@ export default definePlugin({
   settings,
 
   patches: [
-    // The profile card of popouts.
     {
       find: '"user.profile.profile-card.profile-card-user-info.badge-container"',
       replacement: {
@@ -244,7 +239,6 @@ export default definePlugin({
         replace: "$1[(0,$3.jsx)($self.VoiceChannelIndicator,{userId:$4.id,isProfile:!0}),$2]",
       },
     },
-    // The full profile.
     {
       find: '"user.user-profile-modal.user-info.user-tag"',
       replacement: {
@@ -282,7 +276,6 @@ export default definePlugin({
           offset: number,
           code: string,
         ) => {
-          // The row takes its user's ID as a prop, named where it unpacks them.
           const props = code.lastIndexOf(",relationshipType:", offset);
           const userId = /\{userId:([\w$]+)$/.exec(code.slice(props - 40, props))?.[1];
           return `children:[(0,${jsx}.jsx)($self.VoiceChannelIndicator,{userId:${userId},ActionButton:${button}}),${actions}]`;
@@ -292,7 +285,6 @@ export default definePlugin({
     {
       find: '"channel.user-message.message-username--2"',
       replacement: {
-        // The same author names as ShowMeYourName and PlatformIndicators, after what they add.
         match:
           /\(0,(\i)\.jsx\)\(\i,\{user:(\i),message:\i,guild:\i,member:[^}]{0,300}?"data-flx":"channel\.(?:user-message|compact-message-layout\.compact-author-prefix)\.message-username(?:--\d)?"\}\)(?:,Influx\.plugins\["ShowMeYourName"\]\.renderUsername\(\i,\i\))?(?:,\(0,\i\.jsx\)\(Influx\.plugins\["PlatformIndicators"\]\.PlatformIndicator,\{[^}]*\}\))?/g,
         replace: "$&,(0,$1.jsx)($self.VoiceChannelIndicator,{userId:$2?.id,isMessage:!0})",

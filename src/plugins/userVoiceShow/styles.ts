@@ -1,4 +1,3 @@
-// The indicator is a bare icon button, which Fluxer has no class for.
 export const STYLES = `
 .influx-uvs-speaker {
 	display: inline-flex;

@@ -16,6 +16,7 @@ import type {
   FluxerGuild,
   FluxerMessage,
   FluxerMessagesStore,
+  FluxerProfile,
   FluxerUser,
   VoiceStateWire,
 } from "./fluxer";
@@ -166,6 +167,10 @@ export const Stores = {
     // Has the presence store follow a member's status for the next 5 minutes.
     touchMember(guildId: string, userId: string): void;
   }>(() => findByProperties("touchMember", "getSubscribedMembers")),
+  // Profiles by user and server. Each one is dropped a minute after it loads.
+  UserProfile: lazy<{ getProfile(userId: string, guildId?: string): FluxerProfile | null }>(() =>
+    findByProperties("getProfile", "handleProfileCreate", "handleProfilesClear"),
+  ),
   Permission: lazy<{ can(permission: bigint, channel: FluxerChannel): boolean }>(() =>
     findByProperties("can", "canManageUser", "getChannelPermissions"),
   ),
@@ -226,6 +231,11 @@ export const MessageRecord = lazy<new (wire: unknown, options?: object) => Fluxe
 export const NicknameLookup = lazy<
   (user: { username: string }, guildId?: string, channelId?: string) => string
 >(() => findByCode(".displayName||", ".globalName||", ".username||", ".nickname)", ".nicks"));
+
+// Loads a profile into the UserProfile store. Unless forced, a profile already there is kept.
+export const fetchUserProfile = lazy<
+  (userId: string, guildId?: string, force?: boolean) => Promise<FluxerProfile>
+>(() => findByCode("Force refresh requested but request already in-flight"));
 
 export const channelIcon = lazy<
   (channel: FluxerChannel, props?: object, options?: { locked?: boolean }) => JSX.Element

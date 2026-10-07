@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- UwUifier plugin: adds a /uwuify command that uwuifies your message.
+- UserMessagesPronouns plugin: shows people's pronouns next to their messages in chat.
+- FakeExpressions plugin: lets you use emojis and stickers from other servers, and in direct
+  messages, without Plutonium. They're sent as image links, and shown as real emojis and stickers
+  to people with the plugin.
+
 ### Fixed
 
 - Influx stays installed on Windows when Fluxer installs a downloaded update as it starts.

@@ -32,6 +32,20 @@ export interface FluxerGuild {
   toJSON(): object;
 }
 
+export interface FluxerEmoji {
+  id?: string;
+  guildId?: string;
+  name: string;
+  animated?: boolean;
+}
+
+export interface FluxerSticker {
+  id: string;
+  guildId: string;
+  name: string;
+  animated: boolean;
+}
+
 export interface FluxerMessage {
   id: string;
   channelId: string;

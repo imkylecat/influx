@@ -13,10 +13,12 @@ import {
 } from "./finders";
 import type {
   FluxerChannel,
+  FluxerEmoji,
   FluxerGuild,
   FluxerMessage,
   FluxerMessagesStore,
   FluxerProfile,
+  FluxerSticker,
   FluxerUser,
   VoiceStateWire,
 } from "./fluxer";
@@ -61,6 +63,7 @@ function lazyByKey<T>(lookup: (key: string) => T | undefined): (key: string) => 
 export const Components = {
   ConfirmModal: lazy(() => findComponentByCode("app.confirm-modal.modal-root")),
   Switch: lazy(() => findComponentByCode("-switch-label")),
+  Checkbox: lazy(() => findComponentByCode("ui.checkbox.checkbox.checkbox-wrapper")),
   Input: lazy(() => findComponentByCode("ui.form.input.field-set.fieldset", "Input")),
   Textarea: lazy(() => findComponentByDisplayName("ui.form.input.textarea.field-set", "Textarea")),
   MenuItem: lazy(() =>
@@ -174,6 +177,15 @@ export const Stores = {
   Permission: lazy<{ can(permission: bigint, channel: FluxerChannel): boolean }>(() =>
     findByProperties("can", "canManageUser", "getChannelPermissions"),
   ),
+  Emojis: lazy<{ getEmojiById(id: string): FluxerEmoji | undefined }>(() =>
+    findByProperties("getEmojiById", "getQuickReactionEmojis"),
+  ),
+  Stickers: lazy<{ getStickerById(id: string): FluxerSticker | null }>(() =>
+    findByProperties("getStickerById", "getGuildStickers"),
+  ),
+  RuntimeConfig: lazy<{ mediaEndpoint: string }>(() =>
+    findByProperties("mediaEndpoint", "gatewayEndpoint"),
+  ),
   Authentication: lazy<{ isAuthenticated: boolean }>(() =>
     findByProperties("isAuthenticated", "setUserId", "handleLogout"),
   ),
@@ -240,6 +252,21 @@ export const fetchUserProfile = lazy<
 export const channelIcon = lazy<
   (channel: FluxerChannel, props?: object, options?: { locked?: boolean }) => JSX.Element
 >(() => findByCode("channel.channel-utils.get-icon.locked-voice-channel-icon"));
+
+type ExpressionAvailability<T> = (
+  i18n: { _(message: object, values?: object): string },
+  expression: T,
+  channel: FluxerChannel | null,
+  guildId?: string | null,
+) => { canUse: boolean };
+
+// ExpressionPermissionUtils: whether Fluxer lets the user send an emoji or sticker in a channel.
+export const checkEmojiAvailability = lazy<ExpressionAvailability<FluxerEmoji>>(() =>
+  findByCode("USE_EXTERNAL_EMOJIS", "isLockedByPermission"),
+);
+export const checkStickerAvailability = lazy<ExpressionAvailability<FluxerSticker>>(() =>
+  findByCode("USE_EXTERNAL_STICKERS", "isLockedByPermission"),
+);
 
 export const formatDuration = lazy<(seconds: number) => string>(() =>
   findByCode('="en-US"', "Number.isFinite(", "/3600)"),

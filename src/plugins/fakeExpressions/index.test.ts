@@ -13,7 +13,7 @@ const MEDIA = "https://media.example";
 const EMOJI_LINK = `${MEDIA}/emojis/5001.webp?size=48&animated=true&name=wave`;
 const STICKER_LINK = `${MEDIA}/stickers/6001.webp?size=160&name=hello`;
 const AVAILABLE = "{canUse:!0,isLockedByPremium:!1,isLockedByPermission:!1}";
-const i18n = { _: () => "" };
+const translations = { _: () => "" };
 
 const emojis: Record<string, object> = {
   "5001": { id: "5001", guildId: "100", name: "wave", animated: true },
@@ -29,7 +29,6 @@ const channels: Record<string, object> = {
 };
 const channel = channels["300"] as FluxerChannel;
 
-// Shape of Fluxer's ExpressionPermissionUtils, for an account without Plutonium.
 const availabilityModule = compile(
   `function(e,t,n){const s={default:{can:()=>!1}},u={xB:{USE_EXTERNAL_EMOJIS:1n,USE_EXTERNAL_STICKERS:2n}};` +
     "function f(e,t,n){return b(e,t,n,null)}" +
@@ -38,9 +37,8 @@ const availabilityModule = compile(
     "e.exports={f,b,y}}",
 );
 
-// Runs functions that Fluxer's build turned from async into generators.
 const asyncRunner =
-  "function ec(fn){return function(){const iterator=fn.apply(this,arguments);return new Promise((resolve,reject)=>{function step(value){let next;try{next=iterator.next(value)}catch(error){reject(error);return}if(next.done)resolve(next.value);else Promise.resolve(next.value).then(step,reject)}step()})}}";
+  "function ec(generator){return function(){const iterator=generator.apply(this,arguments);return new Promise((resolve,reject)=>{function step(value){let next;try{next=iterator.next(value)}catch(error){reject(error);return}if(next.done)resolve(next.value);else Promise.resolve(next.value).then(step,reject)}step()})}}";
 
 const originalStores = { ...Stores };
 let availability: Record<"f" | "b" | "y", (...values: any[]) => { canUse: boolean }>;
@@ -71,27 +69,30 @@ beforeEach(() => {
 describe("FakeExpressions", () => {
   it("unlocks emojis and stickers in chat, and keeps Fluxer's rules where they can't be faked", () => {
     const { f, b, y } = availability;
-    assert.equal(f(i18n, emojis["5001"], channel).canUse, true);
-    assert.equal(f(i18n, emojis["5001"], channels["301"]).canUse, true);
-    assert.equal(b(i18n, emojis["5001"], null, "200").canUse, true);
-    assert.equal(f(i18n, emojis["5001"], null).canUse, false, "a profile or status has no channel");
-    assert.equal(y(i18n, stickers["6001"], channel).canUse, true);
+    assert.equal(f(translations, emojis["5001"], channel).canUse, true);
+    assert.equal(f(translations, emojis["5001"], channels["301"]).canUse, true);
+    assert.equal(b(translations, emojis["5001"], null, "200").canUse, true);
+    assert.equal(
+      f(translations, emojis["5001"], null).canUse,
+      false,
+      "a profile or status has no channel",
+    );
+    assert.equal(y(translations, stickers["6001"], channel).canUse, true);
     fakeExpressions.withNativeRules(() => {
-      assert.equal(f(i18n, emojis["5001"], channel).canUse, false);
-      assert.equal(f(i18n, emojis["5002"], channel).canUse, true);
-      assert.equal(y(i18n, stickers["6001"], channel).canUse, false);
+      assert.equal(f(translations, emojis["5001"], channel).canUse, false);
+      assert.equal(f(translations, emojis["5002"], channel).canUse, true);
+      assert.equal(y(translations, stickers["6001"], channel).canUse, false);
     });
 
     const store = fakeExpressions.settings.store;
     store.enableEmojiBypass = false;
     store.enableStickerBypass = false;
-    assert.equal(f(i18n, emojis["5001"], channel).canUse, false);
-    assert.equal(y(i18n, stickers["6001"], channel).canUse, false);
+    assert.equal(f(translations, emojis["5001"], channel).canUse, false);
+    assert.equal(y(translations, stickers["6001"], channel).canUse, false);
   });
 
   it("offers only usable emojis as quick reactions", () => {
     (globalThis as any).fakeExpressionsCheck = availability.f;
-    // Shape of the method in Fluxer's Emoji store.
     const emojiStoreModule = compile(
       "function(e,t,n){const g={ao:globalThis.fakeExpressionsCheck},_={Ru:{}};e.exports=class{getQuickReactionEmojis(e,t){let n=[],a=new Set,r=(i,r)=>{!r||a.has(i)||n.length>=t||(0,g.ao)(_.Ru,r,e).canUse&&(a.add(i),n.push(r))};for(let i of this.frecent)r(i.id,i);return n}}}",
     );
@@ -133,7 +134,6 @@ describe("FakeExpressions", () => {
   });
 
   it("prepares messages and edits before Fluxer sends them, and can cancel both", async () => {
-    // Shape of Fluxer's shared MessageCommands send and edit functions.
     const factory = compile(`function(module){${asyncRunner}
       const events=[],F={debug(){}};
       const Q={A:{consumeLocalSendReservation:()=>!0,rejectLocalRateLimitedSend:(...values)=>events.push(["recover",...values])}};
@@ -174,7 +174,6 @@ describe("FakeExpressions", () => {
   });
 
   it("shows fake emoji links as emojis and drops fake sticker links", () => {
-    // Shape of Fluxer's MarkdownParseCache, with a parser that only knows links and text.
     const parseModule = compile(
       "function(e,t,n){const i={t:e=>e},a={s:class{constructor(e){this.content=e}parse(){return{nodes:this.content.split(/( )/).filter(Boolean).map(e=>{let t=/^\\[.+\\]\\((.+)\\)$/.exec(e);return t||e.startsWith('http')?{type:'Link',url:t?t[1]:e,escaped:!1}:{type:'Text',content:e}})}}}};let r=new Map;function s({content:e,context:t}){let n=`${t}\\0${e}`,o=r.get(n);if(void 0!==o)return o;let l=(0,i.t)(t),u=new a.s(e,l).parse();return r.set(n,u),u}e.exports=s}",
     );
@@ -215,7 +214,6 @@ describe("FakeExpressions", () => {
 
   it("shows fake sticker links as stickers and hides the previews of fake links", () => {
     const jsx = "{jsx:(type,props)=>props}";
-    // Shape of the sticker and embed lists in Fluxer's MessageAttachments.
     const attachmentsModule = compile(
       `function(e,t,n){const a=${jsx},rW={ye:0},sN=0,rg=0,l=!1,n2=()=>{};` +
         'e.exports=t=>[t.stickers&&t.stickers.length>0&&(0,a.jsx)("div",{className:rW.ye,"data-flx":"channel.message-attachments.stickers-container",children:t.stickers.map(i=>(0,a.jsx)(sN,{sticker:i,message:t,"data-flx":"channel.message-attachments.sticker-item"},i.id))}),' +
@@ -264,7 +262,6 @@ describe("FakeExpressions", () => {
 
   it("says in the info card that an emoji or sticker is fake", () => {
     const jsx = "{jsx:(type,props)=>props,jsxs:(type,props)=>props}";
-    // Shape of Fluxer's ExpressionInfoCard.
     const cardModule = compile(
       `function(m,t,n){const i=${jsx},l={},o={_:e=>e},F={emoji:"From another server.",sticker:"From another server."};` +
         'm.exports=function(e){let c="default_emoji"===e.kind?null:e.kind,d="default_emoji"===e.kind?null:e.expressionId;return(0,i.jsxs)("div",{className:l.Nr,"data-flx":"expressions.expression-info-card.card",children:[(0,i.jsxs)("div",{className:l.Gd,children:[(0,i.jsxs)("div",{className:l.g5,children:[(0,i.jsx)("span",{className:l.UU,"data-flx":"expressions.expression-info-card.name",children:d}),(0,i.jsx)("span",{className:l.h_,"data-flx":"expressions.expression-info-card.description",children:null==c?o._("Default"):o._(F[c])})]})]}),null!=c]})}}',
@@ -277,7 +274,6 @@ describe("FakeExpressions", () => {
       "From another server. This is a fake sticker and looks like a real sticker only for you. People without the plugin see a link.",
     );
 
-    // Shape of the info cards that Fluxer's sticker item and emoji renderer open.
     const stickerModule = compile(
       `function(m,t,n){const a=${jsx},si={N:0},h=null,p="url";` +
         'm.exports=e=>({renderCard:({onClose:t})=>{var n;return(0,a.jsx)(si.N,{kind:"sticker",expressionId:e.id,guildId:null!=(n=null==h?void 0:h.guildId)?n:null,displayName:e.name,previewUrl:p,onClose:t,"data-flx":"channel.message-attachments.sticker-item.expression-info-card"})}})}',

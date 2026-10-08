@@ -125,7 +125,6 @@ let nativeChecks = 0;
 let reactionPickers = 0;
 let reactionPickerRenderedAt = 0;
 
-// Runs a check by Fluxer's own rules, without the bypass.
 function withNativeRules<T>(check: () => T): T {
   nativeChecks++;
   try {
@@ -135,7 +134,6 @@ function withNativeRules<T>(check: () => T): T {
   }
 }
 
-// A reaction picker draws its emojis before its effects run, so its first render counts for a moment too.
 const reactionPickerOpen = () =>
   reactionPickers > 0 ||
   Date.now() - reactionPickerRenderedAt < REACTION_PICKER_RENDER_MILLISECONDS;
@@ -290,7 +288,7 @@ export default definePlugin({
       replacement: {
         match: /function (\i)\((\{content:\i,context:\i\})\)\{/,
         replace:
-          "function $1(influxOptions){return $self.transformAst(influxParse(influxOptions))}function influxParse($2){",
+          "function $1(influxOptions){return $self.transformParseResult(influxParse(influxOptions))}function influxParse($2){",
       },
     },
     {
@@ -319,7 +317,6 @@ export default definePlugin({
     {
       find: '"messaging.markdown.renderers.emoji-renderer.expression-info-card.custom"',
       replacement: {
-        // The card is built in an arrow function, so arguments are the emoji renderer's.
         match:
           /expressionId:(?=[^{}]*?"data-flx":"messaging\.markdown\.renderers\.emoji-renderer\.expression-info-card\.custom")/,
         replace: "influxFake:arguments[0].node.fake,$&",
@@ -387,7 +384,6 @@ export default definePlugin({
     }
   },
 
-  // Resolves to false when the edit is canceled.
   async preEdit(
     channelId: string,
     content: string | undefined,
@@ -403,7 +399,7 @@ export default definePlugin({
     }
   },
 
-  transformAst(parsed: ParseResult): ParseResult {
+  transformParseResult(parsed: ParseResult): ParseResult {
     const { transformEmojis, transformStickers, transformCompoundSentence } = settings.store;
     const key = `${transformEmojis}${transformStickers}${transformCompoundSentence}`;
     const cached = transformed.get(parsed);

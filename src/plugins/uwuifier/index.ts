@@ -119,7 +119,7 @@ export default definePlugin({
       find: "Editing message $",
       replacement: {
         match:
-          /function \i\((\i),(\i),(\i),\i,\i,\i\)\{return \i\(function\*\(\)\{(?=var \i,\i;\i\.debug\(`Editing message )/,
+          /function \i\((\i),(\i),(\i),\i,\i,\i\)\{return \i\(function\*\(\)\{(?=[^`]{0,300}?\i\.debug\(`Editing message )/,
         replace: "$&$3=$self.onEdit($1,$2,$3);",
       },
     },

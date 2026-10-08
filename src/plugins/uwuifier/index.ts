@@ -85,7 +85,6 @@ export default definePlugin({
     {
       find: 'name:"/tableflip"',
       replacement: {
-        // Reuse the /spoiler command's message option, which has Fluxer's translated description.
         match: /\{type:"action",name:"\/spoiler",description:[^,]+,(options:\[[^\]]+\])\}/,
         replace: "$&,{...$self.command,$1}",
       },
@@ -112,7 +111,6 @@ export default definePlugin({
     {
       find: '"Cannot change nickname outside of a guild"',
       replacement: {
-        // Lets slowmode hold back /uwuify like the other commands that send a message.
         match: /"tts"===(\i)\.type(?=\|\|"unknown"===\1\.type)/,
         replace: '$&||"uwuify"===$1.type',
       },
@@ -139,7 +137,6 @@ export default definePlugin({
 
   onEdit(channelId: string, messageId: string, content?: string): string | undefined {
     if (!content || !settings.store.uwuEveryMessage) return content;
-    // Fluxer also saves edits that change nothing, which would uwuify the message once more.
     const unchanged = Stores.Messages()?.getMessage(channelId, messageId)?.content === content;
     return unchanged ? content : uwuify(content);
   },

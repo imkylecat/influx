@@ -31,7 +31,6 @@ describe("UwUifier", () => {
   });
 
   it("adds /uwuify after /spoiler with the same message option", () => {
-    // Shape of Fluxer's compiled useCommands list.
     const commandsModule = compile(
       'function(e){const D=[];e.exports=e=>[{type:"simple",name:"/tableflip",content:"flip",description:e._("flip")},' +
         '{type:"action",name:"/spoiler",description:e._("spoiler"),options:[{name:"message",description:e._("message"),type:"string",required:!0,allowEmpty:!1,choices:D}]},' +
@@ -54,7 +53,6 @@ describe("UwUifier", () => {
   });
 
   it("uwuifies the /uwuify command and, when chosen, every sent message", () => {
-    // Excerpts of Fluxer's compiled command resolver, useTextareaSubmit and useMessageSubmission.
     const textareaModule = compile(
       'function(e){const M={useCallback:e=>e},aR=()=>!0,aB=(e,t)=>e[t],_=e=>e,aw={ls:e=>e},iT={error(){}};try{}catch(e){iT.error("Failed to execute command",e)}' +
         'function resolve(t,n){if("/me"===t||"/spoiler"===t||"/tts"===t){if(!aR(n,["message"]))return null;let e=aB(n,"message",!1);return null==e?null:"/me"===t?{type:"me",content:e}:"/spoiler"===t?{type:"spoiler",content:e}:{type:"tts",content:e}}return null}' +
@@ -74,7 +72,6 @@ describe("UwUifier", () => {
   });
 
   it("counts /uwuify as a command that sends a message", () => {
-    // Shape of Fluxer's compiled doesCommandSendCurrentChannelMessage.
     const commandUtilitiesModule = compile(
       'function(e){e.exports=function(e){return"me"===e.type||"spoiler"===e.type||"tts"===e.type||"unknown"===e.type};' +
         'function nick(e){if(!e)throw Error("Cannot change nickname outside of a guild")}}',
@@ -85,7 +82,6 @@ describe("UwUifier", () => {
   });
 
   it("uwuifies changed edits when every message is uwuified", async () => {
-    // Shape of Fluxer's compiled MessageCommands.edit.
     const messageCommandsModule = compile(
       "function(e){const eF={debug(){}};function eI(e){return function(){const t=e.apply(this,arguments);return Promise.resolve(t.next().value)}}" +
         "function eY(e,t,a,o,l,u){return eI(function*(){var d,m;eF.debug(`Editing message ${t} in channel ${e}`);return a})()}e.exports=eY}",

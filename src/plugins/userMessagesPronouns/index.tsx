@@ -38,7 +38,6 @@ interface Entry {
 const REFRESH_MILLISECONDS = 60 * 60_000;
 const MAXIMUM_REQUESTS = 4;
 
-// What Fluxer's profile store last held for each user and server.
 const known = new Map<string, Entry>();
 const queued = new Set<string>();
 const waiting: Array<() => Promise<unknown>> = [];
@@ -50,7 +49,6 @@ function remember(userId: string, guildId: string | undefined, pronouns: string 
   known.set(keyOf(userId, guildId), { userId, guildId, pronouns, time: Date.now() });
 }
 
-// Fluxer's profile store drops a profile a minute after loading it.
 function pronounsOf(userId: string, guildId?: string): string | null | undefined {
   const profile = Stores.UserProfile()?.getProfile(userId, guildId);
   if (profile) {
@@ -63,10 +61,8 @@ function pronounsOf(userId: string, guildId?: string): string | null | undefined
 async function load(userId: string, guildId?: string, force?: boolean): Promise<void> {
   try {
     await fetchUserProfile()?.(userId, guildId, force);
-    // Remembers the profile even when no message on screen reads it.
     pronounsOf(userId, guildId);
   } catch (error) {
-    // Other failures try again the next time the author's messages show.
     const { status } = error as { status?: number };
     if (status === 403 || status === 404) remember(userId, guildId, null);
   }
@@ -82,7 +78,6 @@ function runWaiting(): void {
   }
 }
 
-// Has Fluxer load the profile into its store, as resting the pointer on a name does.
 function request(userId: string, guildId?: string, force?: boolean): void {
   const key = keyOf(userId, guildId);
   const entry = known.get(key);
@@ -134,13 +129,11 @@ export default definePlugin({
       find: '"channel.user-message.message-timestamp--2"',
       replacement: [
         {
-          // After the time in the header of a message.
           match:
             /\(0,(\i)\.jsxs\)\(\i(?:\.\i)?,\{date:(\i)\.timestamp,className:\i\.\i,"data-flx":"channel\.user-message\.message-timestamp--\d",children:\[[^\]]+\]\}\)/g,
           replace: "$&,(0,$1.jsx)($self.Pronouns,{message:$2})",
         },
         {
-          // After the name in compact mode.
           match:
             /\(0,(\i)\.jsxs\)\("span",\{className:\i\.\i,"data-flx":"channel\.compact-message-layout\.compact-author-prefix\.copy-only--2"/,
           replace: "(0,$1.jsx)($self.Pronouns,{message:arguments[0].message}),$&",
@@ -164,7 +157,6 @@ export default definePlugin({
 
   Pronouns,
 
-  // Fluxer drops your own profiles from its store when you edit them.
   refreshProfiles(userId = Stores.Users()?.currentUserId) {
     for (const entry of known.values()) {
       if (entry.userId === userId) request(entry.userId, entry.guildId, true);

@@ -278,7 +278,7 @@ export default definePlugin({
         },
         {
           match:
-            /function \i\((\i),\i,(\i),\i,\i,\i\)\{return \i\(function\*\(\)\{(?=var \i,\i;\i\.debug\(`Editing message )/,
+            /function \i\((\i),\i,(\i),\i,\i,\i\)\{return \i\(function\*\(\)\{[^`]{0,300}?(?=var \i,\i;\i\.debug\(`Editing message )/,
           replace: "$&if(($2=yield $self.preEdit($1,$2))===!1)return null;",
         },
       ],

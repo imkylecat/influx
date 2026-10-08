@@ -170,7 +170,6 @@ export const Stores = {
     // Has the presence store follow a member's status for the next 5 minutes.
     touchMember(guildId: string, userId: string): void;
   }>(() => findByProperties("touchMember", "getSubscribedMembers")),
-  // Profiles by user and server. Each one is dropped a minute after it loads.
   UserProfile: lazy<{ getProfile(userId: string, guildId?: string): FluxerProfile | null }>(() =>
     findByProperties("getProfile", "handleProfileCreate", "handleProfilesClear"),
   ),
@@ -244,7 +243,6 @@ export const NicknameLookup = lazy<
   (user: { username: string }, guildId?: string, channelId?: string) => string
 >(() => findByCode(".displayName||", ".globalName||", ".username||", ".nickname)", ".nicks"));
 
-// Loads a profile into the UserProfile store. Unless forced, a profile already there is kept.
 export const fetchUserProfile = lazy<
   (userId: string, guildId?: string, force?: boolean) => Promise<FluxerProfile>
 >(() => findByCode("Force refresh requested but request already in-flight"));
@@ -254,13 +252,12 @@ export const channelIcon = lazy<
 >(() => findByCode("channel.channel-utils.get-icon.locked-voice-channel-icon"));
 
 type ExpressionAvailability<T> = (
-  i18n: { _(message: object, values?: object): string },
+  translations: { _(message: object, values?: object): string },
   expression: T,
   channel: FluxerChannel | null,
   guildId?: string | null,
 ) => { canUse: boolean };
 
-// ExpressionPermissionUtils: whether Fluxer lets the user send an emoji or sticker in a channel.
 export const checkEmojiAvailability = lazy<ExpressionAvailability<FluxerEmoji>>(() =>
   findByCode("USE_EXTERNAL_EMOJIS", "isLockedByPermission"),
 );

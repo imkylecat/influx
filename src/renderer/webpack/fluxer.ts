@@ -11,7 +11,6 @@ export interface FluxerUser {
   toJSON(): MessageWire["author"];
 }
 
-// One user's profile, with the fields they changed for one server when it was loaded for a server.
 export interface FluxerProfile {
   userProfile: { pronouns: string | null };
   guildMemberProfile: { pronouns: string | null } | null;

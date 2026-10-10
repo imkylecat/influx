@@ -16,7 +16,7 @@ describe("UserMessagesPronouns", () => {
     `function(e,t,n){const d={jsx:${jsx},jsxs:${jsx}},eF={g:0},eQ={oL:0,BK:0,AY:0,U6:0},_="now",r={id:"1",timestamp:0};` +
     `e.exports={headers:[[${timestamp("")}],[${timestamp("--2")}],[${timestamp("--3")}]],` +
     'CompactAuthorPrefix:function({message:e,author:t}){return[(0,d.jsxs)("span",{className:eQ.AY,"data-flx":"channel.compact-message-layout.compact-author-prefix.message-author-part",children:["name"]}),(0,d.jsxs)("span",{className:eQ.U6,"data-flx":"channel.compact-message-layout.compact-author-prefix.copy-only--2",children:[":"," "]})]}}}';
-  const patched = () => runPatched(pendingFor(userMessagesPronouns).slice(0, 1), compile(code));
+  const patched = () => runPatched(pendingFor(userMessagesPronouns).slice(0, 2), compile(code));
 
   it("adds the pronouns after the time in message headers", () => {
     assert.deepEqual(patched().headers, [
@@ -44,7 +44,7 @@ describe("UserMessagesPronouns", () => {
       (...values: unknown[]) => void calls.push(values),
     );
     try {
-      const store = runPatched(pendingFor(userMessagesPronouns).slice(1), compile(code));
+      const store = runPatched(pendingFor(userMessagesPronouns).slice(2), compile(code));
       store.handleProfileInvalidate("7", "5");
       store.handleProfilesClear();
       assert.deepEqual(calls, [["7"], []]);

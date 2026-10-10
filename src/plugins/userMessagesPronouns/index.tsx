@@ -127,18 +127,19 @@ export default definePlugin({
   patches: [
     {
       find: '"channel.user-message.message-timestamp--2"',
-      replacement: [
-        {
-          match:
-            /\(0,(\i)\.jsxs\)\(\i(?:\.\i)?,\{date:(\i)\.timestamp,className:\i\.\i,"data-flx":"channel\.user-message\.message-timestamp--\d",children:\[[^\]]+\]\}\)/g,
-          replace: "$&,(0,$1.jsx)($self.Pronouns,{message:$2})",
-        },
-        {
-          match:
-            /\(0,(\i)\.jsxs\)\("span",\{className:\i\.\i,"data-flx":"channel\.compact-message-layout\.compact-author-prefix\.copy-only--2"/,
-          replace: "(0,$1.jsx)($self.Pronouns,{message:arguments[0].message}),$&",
-        },
-      ],
+      replacement: {
+        match:
+          /\(0,(\i)\.jsxs\)\(\i(?:\.\i)?,\{date:(\i)\.timestamp,className:\i\.\i,"data-flx":"channel\.user-message\.message-timestamp--\d",children:\[[^\]]+\]\}\)/g,
+        replace: "$&,(0,$1.jsx)($self.Pronouns,{message:$2})",
+      },
+    },
+    {
+      find: '"channel.compact-message-layout.compact-author-prefix.copy-only--2"',
+      replacement: {
+        match:
+          /\(0,(\i)\.jsxs\)\("span",\{className:\i\.\i,"data-flx":"channel\.compact-message-layout\.compact-author-prefix\.copy-only--2"/,
+        replace: "(0,$1.jsx)($self.Pronouns,{message:arguments[0].message}),$&",
+      },
     },
     {
       find: '"Attempted to set invalid profile:"',

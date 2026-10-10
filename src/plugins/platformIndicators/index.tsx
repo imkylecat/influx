@@ -207,7 +207,7 @@ export default definePlugin({
       replacement: {
         // The same author names as ShowMeYourName, after its username when that patch ran first.
         match:
-          /\(0,(\i)\.jsx\)\(\i,\{user:(\i),message:(\i),guild:\i,member:[^}]{0,300}?"data-flx":"channel\.(?:user-message|compact-message-layout\.compact-author-prefix)\.message-username(?:--\d)?"\}\)(?:,Influx\.plugins\["ShowMeYourName"\]\.renderUsername\(\i,\i\))?/g,
+          /\(0,(\i)\.jsx\)\(\i(?:\.\i)?,\{user:(\i),message:(\i),guild:\i,member:[^}]{0,300}?"data-flx":"channel\.(?:user-message|compact-message-layout\.compact-author-prefix)\.message-username(?:--\d)?"\}\)(?:,Influx\.plugins\["ShowMeYourName"\]\.renderUsername\(\i,\i\))?/g,
         replace: '$&,(0,$1.jsx)($self.PlatformIndicator,{user:$2,message:$3,place:"messages"})',
       },
     },

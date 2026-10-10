@@ -301,7 +301,7 @@ export default definePlugin({
         },
         {
           match:
-            /(\i)\.embeds\.map\(\((\i),\i\)=>\{(?=let \i=`[^`]+`;return\(0,\i\.jsx\)\(\i,\{[^{}]*?"data-flx":"channel\.message-attachments\.embed"\})/,
+            /(\i)\.embeds\.map\(\((\i),\i\)=>\{(?=let \i=`[^`]+`;return\(0,\i\.jsx\)\(\i(?:\.\i)?,\{[^{}]*?"data-flx":"channel\.message-attachments\.embed"\})/,
           replace: "$&if($self.shouldIgnoreEmbed($2,$1))return null;",
         },
       ],

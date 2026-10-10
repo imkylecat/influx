@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 
 import { app, ipcMain, session } from "electron";
 
-import { FLUXER_APP_HOSTS, IPC_GET_RENDERER } from "./constants";
+import { FLUXER_APP_ORIGINS, IPC_GET_RENDERER } from "./constants";
 import { keepAcrossFluxerUpdates } from "./fluxerUpdates";
 import { registerUpdater } from "./updater";
 
@@ -51,7 +51,7 @@ void app.whenReady().then(() => {
     filePath: path.join(INFLUX_DIRECTORY, "preload.js"),
   });
 
-  const urls = FLUXER_APP_HOSTS.map((host) => `https://${host}/*`);
+  const urls = FLUXER_APP_ORIGINS.map((origin) => `${origin}/*`);
   session.defaultSession.webRequest.onHeadersReceived({ urls }, ({ responseHeaders }, respond) => {
     for (const name of Object.keys(responseHeaders ?? {})) {
       if (name.toLowerCase() === "content-security-policy") {

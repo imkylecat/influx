@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 import {
-  FLUXER_APP_HOSTS,
+  FLUXER_APP_ORIGINS,
   IPC_GET_RENDERER,
   IPC_UPDATER_CHECK,
   IPC_UPDATER_INSTALL,
@@ -9,7 +9,7 @@ import {
 } from "./constants";
 import type { InfluxNative } from "./types";
 
-if (process.isMainFrame && FLUXER_APP_HOSTS.includes(location.hostname)) {
+if (process.isMainFrame && FLUXER_APP_ORIGINS.includes(location.origin)) {
   const native: InfluxNative = {
     updater: {
       check: () => ipcRenderer.invoke(IPC_UPDATER_CHECK),

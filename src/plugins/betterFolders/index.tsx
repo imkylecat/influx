@@ -5,7 +5,7 @@ import { Contributor } from "@utils/constants";
 import { Components, nativeClasses, observable, React, reaction, Stores } from "@webpack/common";
 import type { ComponentType } from "react";
 
-import { STYLES } from "./styles";
+import STYLES from "./styles.css" with { type: "text" };
 
 const settings = definePluginSettings({
   sidebar: {

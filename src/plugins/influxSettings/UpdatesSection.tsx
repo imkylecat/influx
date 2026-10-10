@@ -5,7 +5,6 @@ import {
   installUpdate,
   pendingRestart,
   restartToUpdate,
-  updateChannel,
 } from "@api/Updater";
 import { Components, openExternal, React } from "@webpack/common";
 
@@ -21,20 +20,17 @@ type UpdateState =
   | { kind: "installed"; version: string }
   | { kind: "error"; message: string };
 
-const CHANNEL_LABELS = {
-  desktop: "Desktop",
-  "desktop-development": "Desktop, development build",
-  browser: "Browser extension",
-};
+const CHANNEL_LABEL = INFLUX_DESKTOP
+  ? INFLUX_DEVELOPMENT
+    ? "Desktop, development build"
+    : "Desktop"
+  : "Browser extension";
 
-const AUTO_UPDATE_DESCRIPTIONS = {
-  desktop:
-    "Download and install new Influx versions when Fluxer starts. They load the next time Fluxer restarts.",
-  "desktop-development":
-    "Not available for development builds. Update with git pull && bun run build.",
-  browser:
-    "Not available in the browser extension. Browsers only let extensions update through their store.",
-};
+const AUTO_UPDATE_DESCRIPTION = INFLUX_DESKTOP
+  ? INFLUX_DEVELOPMENT
+    ? "Not available for development builds. Update with git pull && bun run build."
+    : "Download and install new Influx versions when Fluxer starts. They load the next time Fluxer restarts."
+  : "Not available in the browser extension. Browsers only let extensions update through their store.";
 
 function statusText(state: UpdateState): string | null {
   switch (state.kind) {
@@ -73,16 +69,6 @@ export function UpdatesSection() {
     else setState({ kind: "upToDate" });
   };
 
-  const install = async (version: string) => {
-    setState({ kind: "installing", version });
-    const result = await installUpdate();
-    setState(
-      result.ok
-        ? { kind: "installed", version: result.version }
-        : { kind: "error", message: result.error },
-    );
-  };
-
   const actions =
     state.kind === "installed" ? null : (
       <>
@@ -100,16 +86,26 @@ export function UpdatesSection() {
             Get {state.version}
           </Button>
         )}
-        {(state.kind === "available" || state.kind === "installing") && canInstallUpdates && (
-          <Button
-            small
-            fitContent
-            submitting={state.kind === "installing"}
-            onClick={() => install(state.version)}
-          >
-            Update to {state.version}
-          </Button>
-        )}
+        {INFLUX_DESKTOP &&
+          canInstallUpdates &&
+          (state.kind === "available" || state.kind === "installing") && (
+            <Button
+              small
+              fitContent
+              submitting={state.kind === "installing"}
+              onClick={async () => {
+                setState({ kind: "installing", version: state.version });
+                const result = await installUpdate();
+                setState(
+                  result.ok
+                    ? { kind: "installed", version: result.version }
+                    : { kind: "error", message: result.error },
+                );
+              }}
+            >
+              Update to {state.version}
+            </Button>
+          )}
       </>
     );
 
@@ -119,8 +115,7 @@ export function UpdatesSection() {
       title="Updates"
       description={
         <>
-          Influx {INFLUX_VERSION} ({CHANNEL_LABELS[updateChannel]}).{" "}
-          <output>{statusText(state)}</output>{" "}
+          Influx {INFLUX_VERSION} ({CHANNEL_LABEL}). <output>{statusText(state)}</output>{" "}
           <ExternalLink href={RELEASES_URL}>All releases and changelogs</ExternalLink>
         </>
       }
@@ -128,14 +123,14 @@ export function UpdatesSection() {
     >
       <Switch
         label="Automatically update"
-        description={AUTO_UPDATE_DESCRIPTIONS[updateChannel]}
+        description={AUTO_UPDATE_DESCRIPTION}
         value={canInstallUpdates && settings.store.autoUpdate}
         disabled={!canInstallUpdates}
         onChange={(value: boolean) => {
           settings.store.autoUpdate = value;
         }}
       />
-      {state.kind === "installed" && (
+      {INFLUX_DESKTOP && state.kind === "installed" && (
         <WarningAlert
           title="Restart required"
           actions={

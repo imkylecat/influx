@@ -10,15 +10,10 @@ declare global {
   }
 }
 
-const native = window.InfluxNative;
+// The desktop preload script defines this before the renderer runs. Extension builds never read it.
+const native = window.InfluxNative!;
 
-export const updateChannel: "desktop" | "desktop-development" | "browser" = native
-  ? INFLUX_DEVELOPMENT
-    ? "desktop-development"
-    : "desktop"
-  : "browser";
-
-export const canInstallUpdates = updateChannel === "desktop";
+export const canInstallUpdates = INFLUX_DESKTOP && !INFLUX_DEVELOPMENT;
 
 export let pendingRestart: string | null = null;
 
@@ -35,14 +30,14 @@ async function checkFromBrowser(): Promise<UpdateCheckResult> {
 }
 
 export async function checkForUpdates(): Promise<UpdateCheckResult> {
-  const result = native ? await native.updater.check() : await checkFromBrowser();
+  const result = INFLUX_DESKTOP ? await native.updater.check() : await checkFromBrowser();
   if (result.ok) pendingRestart = result.pendingRestart;
   else logger.warn(result.error);
   return result;
 }
 
 export async function installUpdate(): Promise<UpdateInstallResult> {
-  if (!native || !canInstallUpdates) {
+  if (!canInstallUpdates) {
     return { ok: false, error: "This install of Influx cannot update itself" };
   }
   const result = await native.updater.install();
@@ -56,5 +51,5 @@ export async function installUpdate(): Promise<UpdateInstallResult> {
 }
 
 export function restartToUpdate(): void {
-  void native?.updater.restart();
+  if (INFLUX_DESKTOP) void native.updater.restart();
 }

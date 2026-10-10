@@ -110,7 +110,7 @@ export default definePlugin({
   },
 
   start() {
-    scheduleAutoUpdate();
+    if (INFLUX_DESKTOP) scheduleAutoUpdate();
     enableStyle(STYLE_ID, STYLES);
   },
 

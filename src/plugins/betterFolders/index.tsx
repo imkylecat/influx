@@ -209,7 +209,7 @@ export default definePlugin({
       replacement: [
         {
           match:
-            /(registerScrollTarget:\i\}=(\i),.{0,120}?)(\i)=(\i\.isExpanded\(null==\(\i=\i\.id\)\?-1:\i\))/,
+            /(registerScrollTarget:\i\}=(\i),.{0,120}?)(\i)=(\i(?:\.\i)?\.isExpanded\(null==\(\i=\i\.id\)\?-1:\i\))/,
           replace: "$1influxView=$self.folderView($2,$4),$3=influxView.expanded",
         },
         {

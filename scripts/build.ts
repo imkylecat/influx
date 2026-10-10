@@ -70,14 +70,30 @@ async function bundleStyles(): Promise<void> {
 }
 
 const common = {
-  outdir: path.join(dist, "desktop"),
   sourcemap: release ? "none" : "inline",
   minify: release,
   define: { INFLUX_VERSION: JSON.stringify(version), INFLUX_DEVELOPMENT: JSON.stringify(!release) },
 } satisfies Partial<BuildConfig>;
 
+const renderer = (target: "desktop" | "extension"): BuildConfig => ({
+  ...common,
+  outdir: path.join(dist, target),
+  define: { ...common.define, INFLUX_DESKTOP: JSON.stringify(target === "desktop") },
+  entrypoints: [path.join(root, "src/renderer/index.ts")],
+  naming: "renderer.js",
+  format: "iife",
+  target: "browser",
+  plugins: [pluginDiscovery, styles],
+  jsx: {
+    runtime: "classic",
+    factory: "React.createElement",
+    fragment: "React.Fragment",
+  },
+});
+
 const desktop = {
   ...common,
+  outdir: path.join(dist, "desktop"),
   naming: "[name].js",
   format: "cjs",
   target: "node",
@@ -85,19 +101,8 @@ const desktop = {
 } satisfies Partial<BuildConfig>;
 
 const builds: BuildConfig[] = [
-  {
-    ...common,
-    entrypoints: [path.join(root, "src/renderer/index.ts")],
-    naming: "renderer.js",
-    format: "iife",
-    target: "browser",
-    plugins: [pluginDiscovery, styles],
-    jsx: {
-      runtime: "classic",
-      factory: "React.createElement",
-      fragment: "React.Fragment",
-    },
-  },
+  renderer("desktop"),
+  renderer("extension"),
   {
     ...desktop,
     entrypoints: [path.join(root, "src/desktop/main.ts")],
@@ -125,7 +130,6 @@ async function buildAll(): Promise<void> {
     for (const log of result.logs) console.error(log);
   }
   if (results.some((result) => !result.success)) throw new Error("Build failed");
-  await cp(path.join(dist, "desktop/renderer.js"), path.join(dist, "extension/renderer.js"));
 
   if (!release && existsSync(developmentInstallDirectory)) {
     for (const file of Object.keys(DESKTOP_ASSETS)) {

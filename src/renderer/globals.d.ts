@@ -6,3 +6,8 @@ declare module "~plugins" {
 
 declare const INFLUX_VERSION: string;
 declare const INFLUX_DEVELOPMENT: boolean;
+
+declare module "*.css" {
+  const styles: string;
+  export default styles;
+}

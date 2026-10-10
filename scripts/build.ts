@@ -45,6 +45,30 @@ const pluginDiscovery: BunPlugin = {
   },
 };
 
+// Bun's bundler can't run inside a plugin callback, so the style sheets are bundled before each build.
+const styleSheets = new Map<string, string>();
+
+const styles: BunPlugin = {
+  name: "styles",
+  setup(build) {
+    build.onLoad({ filter: /\.css$/ }, ({ path: file }) => ({
+      contents: styleSheets.get(file)!,
+      loader: "text",
+    }));
+  },
+};
+
+async function bundleStyles(): Promise<void> {
+  styleSheets.clear();
+  for await (const file of new Bun.Glob("**/*.css").scan({
+    cwd: path.join(root, "src"),
+    absolute: true,
+  })) {
+    const result = await Bun.build({ entrypoints: [file], minify: release });
+    styleSheets.set(file, await result.outputs[0].text());
+  }
+}
+
 const common = {
   outdir: path.join(dist, "desktop"),
   sourcemap: release ? "none" : "inline",
@@ -67,7 +91,7 @@ const builds: BuildConfig[] = [
     naming: "renderer.js",
     format: "iife",
     target: "browser",
-    plugins: [pluginDiscovery],
+    plugins: [pluginDiscovery, styles],
     jsx: {
       runtime: "classic",
       factory: "React.createElement",
@@ -95,6 +119,7 @@ async function buildAll(): Promise<void> {
     `${JSON.stringify({ ...manifest, version }, null, "\t")}\n`,
   );
 
+  await bundleStyles();
   const results = await Promise.all(builds.map((options) => Bun.build(options)));
   for (const result of results) {
     for (const log of result.logs) console.error(log);

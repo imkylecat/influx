@@ -13,7 +13,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- Updated the patch signatures of plugins, including InfluxSettings, for the current Fluxer.
+- Updated the patch signatures of plugins, including InfluxSettings, for the current Fluxer version.
 - The search box and the filter on the Plugins page sit on one line again.
 
 ## [0.7.1] - 2026-10-10

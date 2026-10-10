@@ -47,7 +47,7 @@ export default definePlugin({
       replacement: {
         // Cozy headers (normal, attachment-only, and bot) and the compact author prefix.
         match:
-          /(\(0,\i\.jsx\)\(\i,\{user:(\i),message:(\i),guild:\i,member:[^}]{0,300}?"data-flx":"channel\.(?:user-message|compact-message-layout\.compact-author-prefix)\.message-username(?:--\d)?"\}\))/g,
+          /(\(0,\i\.jsx\)\(\i(?:\.\i)?,\{user:(\i),message:(\i),guild:\i,member:[^}]{0,300}?"data-flx":"channel\.(?:user-message|compact-message-layout\.compact-author-prefix)\.message-username(?:--\d)?"\}\))/g,
         replace: "$1,$self.renderUsername($2,$3)",
       },
     },

@@ -16,6 +16,8 @@ import type { ComponentType } from "react";
 
 import { type LoadedWindow, mergeDeleted, type PastEdit, publicUser, readSavedLogs } from "./saved";
 
+import STYLES from "./styles.css" with { type: "text" };
+
 // Fluxer only defines flag bits up to 1 << 13, so this one is free for marking deleted messages.
 // Changing flags also makes Message.equals() see a difference, which rerenders the row.
 const DELETED_FLAG = 1 << 30;
@@ -34,15 +36,6 @@ const DELETED_MESSAGE_ACTIONS = new Set([
   "message_copy_id",
   "debug_message",
 ]);
-
-const STYLES = `
-[data-influx-deleted] {
-  background: color-mix(in srgb, var(--status-danger) 8%, transparent);
-}
-[data-influx-deleted] [data-flx$="message-attachments"] {
-  opacity: 0.6;
-}
-`;
 
 const settings = definePluginSettings({
   logDeletes: {

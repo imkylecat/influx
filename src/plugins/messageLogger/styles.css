@@ -1,0 +1,6 @@
+[data-influx-deleted] {
+  background: color-mix(in srgb, var(--status-danger) 8%, transparent);
+}
+[data-influx-deleted] [data-flx$="message-attachments"] {
+  opacity: 0.6;
+}

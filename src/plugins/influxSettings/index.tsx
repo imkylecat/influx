@@ -7,7 +7,8 @@ import { captureInviteEmbed, captureSettingsSearch, iconOrFallback } from "./com
 import { InfluxTab } from "./InfluxTab";
 import { PluginsTab } from "./PluginsTab";
 import { settings } from "./settings";
-import { STYLES } from "./styles";
+
+import STYLES from "./styles.css" with { type: "text" };
 
 const CATEGORY = "influx";
 const STYLE_ID = "influx-settings-styles";

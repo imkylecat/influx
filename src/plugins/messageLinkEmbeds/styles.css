@@ -1,0 +1,6 @@
+/* Fluxer's forwarded-message frame supplies the bar and spacing; this only caps the size. */
+.influx-message-link-embed {
+  max-width: 520px;
+  max-height: 20em;
+  overflow: hidden;
+}

@@ -15,19 +15,12 @@ import {
 import type { FluxerMessage } from "@webpack/fluxer";
 import type { Context } from "react";
 
+import STYLES from "./styles.css" with { type: "text" };
+
 const STYLE_ID = "influx-message-link-embeds";
 const logger = new Logger("MessageLinkEmbeds");
 // Matches Fluxer's own jump links, for example https://web.fluxer.app/channels/@me/<channel>/<message>.
 const MESSAGE_LINK = /https?:\/\/([\w.-]+)\/channels\/(@me|\d+)\/(\d+)\/(\d+)/g;
-
-// Fluxer's forwarded-message frame supplies the bar and spacing; this only caps the size.
-const STYLES = `
-.influx-message-link-embed {
-  max-width: 520px;
-  max-height: 20em;
-  overflow: hidden;
-}
-`;
 
 // Matches what Fluxer's confirm modal passes when it previews a message.
 const PREVIEW_BEHAVIOR = {

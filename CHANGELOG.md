@@ -7,6 +7,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- The Influx Contributor badge has a new look.
+
+### Fixed
+
+- Updated the patch signatures of plugins, including InfluxSettings, for the current Fluxer.
+- The search box and the filter on the Plugins page sit on one line again.
+
 ## [0.7.1] - 2026-10-10
 
 ### Fixed

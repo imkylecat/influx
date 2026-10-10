@@ -286,7 +286,7 @@ export default definePlugin({
       find: '"channel.user-message.message-username--2"',
       replacement: {
         match:
-          /\(0,(\i)\.jsx\)\(\i,\{user:(\i),message:\i,guild:\i,member:[^}]{0,300}?"data-flx":"channel\.(?:user-message|compact-message-layout\.compact-author-prefix)\.message-username(?:--\d)?"\}\)(?:,Influx\.plugins\["ShowMeYourName"\]\.renderUsername\(\i,\i\))?(?:,\(0,\i\.jsx\)\(Influx\.plugins\["PlatformIndicators"\]\.PlatformIndicator,\{[^}]*\}\))?/g,
+          /\(0,(\i)\.jsx\)\(\i(?:\.\i)?,\{user:(\i),message:\i,guild:\i,member:[^}]{0,300}?"data-flx":"channel\.(?:user-message|compact-message-layout\.compact-author-prefix)\.message-username(?:--\d)?"\}\)(?:,Influx\.plugins\["ShowMeYourName"\]\.renderUsername\(\i,\i\))?(?:,\(0,\i\.jsx\)\(Influx\.plugins\["PlatformIndicators"\]\.PlatformIndicator,\{[^}]*\}\))?/g,
         replace: "$&,(0,$1.jsx)($self.VoiceChannelIndicator,{userId:$2?.id,isMessage:!0})",
       },
     },

@@ -52,6 +52,14 @@ const common = {
   define: { INFLUX_VERSION: JSON.stringify(version), INFLUX_DEVELOPMENT: JSON.stringify(!release) },
 } satisfies Partial<BuildConfig>;
 
+const desktop = {
+  ...common,
+  naming: "[name].js",
+  format: "cjs",
+  target: "node",
+  external: ["electron", "original-fs"],
+} satisfies Partial<BuildConfig>;
+
 const builds: BuildConfig[] = [
   {
     ...common,
@@ -67,15 +75,13 @@ const builds: BuildConfig[] = [
     },
   },
   {
-    ...common,
-    entrypoints: ["main", "preload"].map((name) => path.join(root, `src/desktop/${name}.ts`)),
-    naming: "[name].js",
-    format: "cjs",
-    target: "node",
-    external: ["electron", "original-fs"],
+    ...desktop,
+    entrypoints: [path.join(root, "src/desktop/main.ts")],
     // Bun inlines __dirname as the build machine's source path; capture the real one first.
     banner: "var INFLUX_DIRECTORY = __dirname;",
   },
+  // Sandboxed windows have no __dirname, so the preload script gets no banner.
+  { ...desktop, entrypoints: [path.join(root, "src/desktop/preload.ts")] },
 ];
 
 async function buildAll(): Promise<void> {

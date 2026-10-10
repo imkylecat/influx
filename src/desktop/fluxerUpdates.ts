@@ -19,8 +19,10 @@ type UpdateManager = {
 
 // Fluxer's updates replace its app files and with them the Influx shim. After Fluxer exits and its
 // updater finishes, these scripts move the new app.asar aside, put the shim back and, when Fluxer
-// was restarting for the update, start it again.
+// was restarting for the update, start it again. macOS sends SIGTERM to what Fluxer started once
+// Fluxer exits, so the Mac script ignores it.
 const MAC_SCRIPT = `
+trap '' TERM
 label="$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$4/Contents/Info.plist").ShipIt"
 while kill -0 "$1" 2>/dev/null; do sleep 1; done
 attempts=0

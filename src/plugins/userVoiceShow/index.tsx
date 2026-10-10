@@ -15,7 +15,7 @@ import {
 import type { FluxerChannel, FluxerUser, VoiceStateWire } from "@webpack/fluxer";
 import type { ComponentType, MouseEvent, ReactNode } from "react";
 
-import { STYLES } from "./styles";
+import STYLES from "./styles.css" with { type: "text" };
 
 const settings = definePluginSettings({
   showInUserProfileModal: {

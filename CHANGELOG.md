@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-10
+
 ### Fixed
 
 - Influx loads again in the new Fluxer Canary desktop app.
@@ -215,7 +217,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - ForceOwnerCrown plugin: shows the server owner's crown even in servers that hide it.
 - SilentTyping plugin: stops Fluxer from telling others that you're typing.
 
-[Unreleased]: https://github.com/imkylecat/influx/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/imkylecat/influx/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/imkylecat/influx/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/imkylecat/influx/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/imkylecat/influx/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/imkylecat/influx/compare/v0.4.1...v0.5.0

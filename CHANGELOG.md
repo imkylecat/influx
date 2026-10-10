@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-10-10
+
 ### Changed
 
 - The Influx Contributor badge has a new look.
@@ -226,7 +228,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - ForceOwnerCrown plugin: shows the server owner's crown even in servers that hide it.
 - SilentTyping plugin: stops Fluxer from telling others that you're typing.
 
-[Unreleased]: https://github.com/imkylecat/influx/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/imkylecat/influx/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/imkylecat/influx/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/imkylecat/influx/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/imkylecat/influx/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/imkylecat/influx/compare/v0.5.0...v0.6.0

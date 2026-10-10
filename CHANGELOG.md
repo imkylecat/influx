@@ -7,6 +7,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Influx loads again in the new Fluxer Canary desktop app.
+- Influx stays installed on macOS when Fluxer updates itself.
+
 ## [0.7.0] - 2026-10-08
 
 ### Added

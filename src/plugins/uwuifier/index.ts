@@ -90,23 +90,27 @@ export default definePlugin({
       },
     },
     {
+      find: '"/tts"===',
+      replacement: {
+        match:
+          /("\/tts"===(\i))(\)\{if\(!\i\(\i,\["message"\]\)\)return null;let (\i)=\i\(\i,"message",!1\);return null==\4\?null:)/,
+        replace: '$1||"/uwuify"===$2$3"/uwuify"===$2?{type:"uwuify",content:$4}:',
+      },
+    },
+    {
       find: '"Failed to execute command"',
-      replacement: [
-        {
-          match:
-            /("\/tts"===(\i))(\)\{if\(!\i\(\i,\["message"\]\)\)return null;let (\i)=\i\(\i,"message",!1\);return null==\4\?null:)/,
-          replace: '$1||"/uwuify"===$2$3"/uwuify"===$2?{type:"uwuify",content:$4}:',
-        },
-        {
-          match:
-            /("spoiler"===(\i)\.type)(\)\{let \i=\i\(\i\);if\(null!==\i\)\{let (\i)=\i\(\2\.content\);\i=)/,
-          replace: '$1||"uwuify"===$2.type$3"uwuify"===$2.type?$self.onCommand($4):',
-        },
-        {
-          match: /sendMessage:\(0,\i\.useCallback\)\(\((\i),\i,\i=\[\],\i,\i\)=>\{/,
-          replace: "$&$1=$self.onSend($1);",
-        },
-      ],
+      replacement: {
+        match:
+          /("spoiler"===(\i)\.type)(\)\{let \i=\i\(\i\);if\(null!==\i\)\{let (\i)=\i\(\2\.content\);\i=)/,
+        replace: '$1||"uwuify"===$2.type$3"uwuify"===$2.type?$self.onCommand($4):',
+      },
+    },
+    {
+      find: /sendMessage:\(0,\i\.useCallback\)\(\(\i,\i,\i=\[\],\i,\i\)=>\{/,
+      replacement: {
+        match: /sendMessage:\(0,\i\.useCallback\)\(\((\i),\i,\i=\[\],\i,\i\)=>\{/,
+        replace: "$&$1=$self.onSend($1);",
+      },
     },
     {
       find: '"Cannot change nickname outside of a guild"',

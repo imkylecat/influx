@@ -172,10 +172,10 @@ export default definePlugin({
       ],
     },
     {
-      find: "this.features=new Set(e.features)",
+      find: /this\.features=new Set\(\i\.features\)/,
       replacement: {
-        match: /this\.features=new Set\(e\.features\)/,
-        replace: "this.features=$self.serverFeatures(e.id,new Set(e.features))",
+        match: /this\.features=new Set\((\i)\.features\)/,
+        replace: "this.features=$self.serverFeatures($1.id,new Set($1.features))",
       },
     },
     ...USER_MENUS.map((menu) => ({

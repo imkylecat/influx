@@ -286,7 +286,7 @@ export function PluginsTab() {
               Reload Fluxer to apply changes to {needsReload.join(", ")}.
             </WarningAlert>
           )}
-          <div className={nativeClasses("GuildAuditLogTab.module__filterRow___")}>
+          <div className="influx-plugin-filters">
             {SettingsSearch ? (
               <SettingsSearch value={query} onChange={setQuery} placeholder="Search plugins" />
             ) : (

@@ -193,7 +193,7 @@ export const Stores = {
   ),
   UserSettings: lazy<{
     guildFolders: Array<{ id: number | null; guildIds: string[] }>;
-  }>(() => findByProperties("getGuildFolders", "getGuildPositions")),
+  }>(() => findByProperties("guildFolders", "updateUserSettings")),
   MediaEngine: lazy<{
     connected: boolean;
     channelId: string | null;

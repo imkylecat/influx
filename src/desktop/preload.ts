@@ -10,14 +10,13 @@ import {
 import type { InfluxNative } from "./types";
 
 if (process.isMainFrame && FLUXER_APP_ORIGINS.includes(location.origin)) {
-  const native: InfluxNative = {
+  contextBridge.exposeInMainWorld("InfluxNative", {
     updater: {
       check: () => ipcRenderer.invoke(IPC_UPDATER_CHECK),
       install: () => ipcRenderer.invoke(IPC_UPDATER_INSTALL),
       restart: () => ipcRenderer.invoke(IPC_UPDATER_RESTART),
     },
-  };
-  contextBridge.exposeInMainWorld("InfluxNative", native);
+  } satisfies InfluxNative);
 
   const code: string = ipcRenderer.sendSync(IPC_GET_RENDERER);
   contextBridge.executeInMainWorld({

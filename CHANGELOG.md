@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Updated the patch signature of BetterFolders for the current Fluxer version.
+
 ## [0.7.2] - 2026-10-10
 
 ### Changed

@@ -183,7 +183,7 @@ export default definePlugin({
 
   patches: [
     {
-      find: '"GuildFolderExpanded"',
+      find: '"GuildFolderExpanded",["expandedFolderIds"]',
       replacement: {
         match: /\(this,(?="GuildFolderExpanded",)/,
         replace: "($self.watch(this),",

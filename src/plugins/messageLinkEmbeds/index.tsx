@@ -212,7 +212,7 @@ export default definePlugin({
     {
       find: '"channel.message-attachments.embed"',
       replacement: {
-        match: /\i\.default\.getRenderEmbeds\(\)&&!(\i)\.suppressEmbeds&&/,
+        match: /\i\.default\.renderEmbeds&&!(\i)\.suppressEmbeds&&/,
         replace: "$self.renderEmbeds($1),$&",
       },
     },

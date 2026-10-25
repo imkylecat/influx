@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Updated dependencies.
+
+### Fixed
+
+- Updated the patch signatures of all plugins for the current Fluxer version.
+
 ## [0.7.3] - 2026-10-11
 
 ### Fixed

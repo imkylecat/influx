@@ -72,6 +72,23 @@ describe("patchFactory", () => {
     const patched = patchFactory(1, typingModule, pending, logger);
     assert.equal(patched, typingModule);
     assert.equal(errors.length, 1);
+    assert.equal(pending.length, 1, "failed patch stays pending for other modules");
+  });
+
+  it("applies a patch to a later module after it failed on another", () => {
+    const pending: Patch[] = [
+      {
+        plugin: "X",
+        find: "postTyping",
+        replacement: { match: "this.sent=[]", replace: 'this.sent=["x"]' },
+      },
+    ];
+    const lookalike = compile("function(e,t,n){e.exports={postTyping(){}}}");
+    assert.equal(patchFactory(1, lookalike, pending, logger), lookalike);
+    assert.equal(patchFactory(2, lookalike, pending, logger), lookalike);
+    assert.equal(errors.length, 1, "the failure is reported once");
+    assert.deepEqual(run(patchFactory(3, typingModule, pending, logger)).sent, ["x"]);
+    assert.equal(pending.length, 0);
   });
 
   it("rolls back a patch that produces invalid code but keeps earlier good ones", () => {

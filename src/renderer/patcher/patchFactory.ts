@@ -40,6 +40,8 @@ interface PatchLogger {
   error(...values: unknown[]): void;
 }
 
+const reportedFailures = new WeakSet<Patch>();
+
 export function patchFactory(
   id: ModuleId,
   factory: ModuleFactory,
@@ -54,7 +56,6 @@ export function patchFactory(
   for (let index = 0; index < pending.length; index++) {
     const patch = pending[index];
     if (!matchesFind(code, patch.find)) continue;
-    pending.splice(index--, 1);
 
     let candidate = code;
     let failure: string | undefined;
@@ -79,12 +80,17 @@ export function patchFactory(
       }
     }
 
+    // A failed patch stays pending, since another module may also match its find.
     if (failure !== undefined) {
-      logger.error(`Patch by ${patch.plugin} failed on module ${id}, ${failure}. Skipping it.`, {
-        find: patch.find,
-      });
+      if (!reportedFailures.has(patch)) {
+        reportedFailures.add(patch);
+        logger.error(`Patch by ${patch.plugin} failed on module ${id}, ${failure}. Skipping it.`, {
+          find: patch.find,
+        });
+      }
       continue;
     }
+    pending.splice(index--, 1);
     code = candidate;
     appliedBy.push(patch.plugin);
   }

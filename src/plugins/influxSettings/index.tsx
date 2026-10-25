@@ -35,10 +35,11 @@ export default definePlugin({
 
   patches: [
     {
-      find: '"desktop_settings"!==',
+      find: '"desktop_settings"===',
       replacement: {
-        match: /return (\i)\.filter\((?=\i=>!\(!\i&&\("my_profile"===)/,
-        replace: "return $self.addTabs($1).filter(",
+        match:
+          /(\i=\i=>)(\i\.filter\(\i=>\{var \i,\i;return!\i\.\i\.some\(.+?iconWeight:\i\.iconWeight\}\)\))/,
+        replace: "$1$self.addTabs($2)",
       },
     },
     {

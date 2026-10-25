@@ -136,13 +136,13 @@ export function withBanner<T extends NagbarItem>(items: T[], parts: NagbarParts)
 }
 
 const NAGBAR = canonicalizeMatch(
-  /\(0,\i\.jsx\)\((\i),\{isMobile:\i,backgroundColor:(\i\.\i)\[\i\.\i\.[A-Z_]+\]\.backgroundColor/,
+  /\(0,\i\.jsx\)\((\i(?:\.\i)?),\{isMobile:\i,backgroundColor:(\i\.\i)\[\i\.\i\.[A-Z_]+\]\.backgroundColor/,
 );
 const CONTENT = canonicalizeMatch(
-  /children:\(0,\i\.jsx\)\((\i),\{isMobile:\i,(?:onDismiss:[^,]+,)?message:/,
+  /children:\(0,\i\.jsx\)\((\i(?:\.\i)?),\{isMobile:\i,(?:onDismiss:[^,]+,)?message:/,
 );
 const BUTTON = canonicalizeMatch(
-  /\(0,\i\.jsx\)\((\i),\{isMobile:\i,onClick:[^{}]{0,160}?"data-flx":"[\w.-]*nagbar[\w.-]*"/,
+  /\(0,\i\.jsx\)\((\i(?:\.\i)?),\{isMobile:\i,onClick:[^{}]{0,160}?"data-flx":"[\w.-]*nagbar[\w.-]*"/,
 );
 
 // Builds the object literal that hands Fluxer's nagbar parts to withBanner at render time.

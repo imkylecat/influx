@@ -238,11 +238,11 @@ export default definePlugin({
       find: '"app.app-layout.nagbar-container.container"',
       replacement: {
         match:
-          /(\(\{nagbars:(\i)\}\)=>\{let (\i)=\i\.\i,[^;]*;return )0===\2\.length\?null:(\(0,\i\.jsx\)\("div",\{className:\i\.\i,"data-flx":"app\.app-layout\.nagbar-container\.container",children:)\2\.map\((\i)=>\{switch\(\5\.type\)\{/,
+          /(\(\{nagbars:(\i)\}\)=>\{let (\i)=\i\.\i,[^;]*;return )0===\2\.length\?null:(\(0,\i\.jsx\)\("div",\{className:\i\.\i,"data-flx":"app\.app-layout\.nagbar-container\.container",children:)\2\.map\((\i)=>\{/,
         replace: (_, head, list, mobile, container, item, _offset, code) =>
           `${head}0===${list}.length&&!$self.hasBanner()?null:${container}` +
           `$self.withBanner(${list},${nagbarPartsSource(code, `${mobile}.enabled`)})` +
-          `.map(${item}=>{if(${item}.influxBanner)return ${item}.influxBanner;switch(${item}.type){`,
+          `.map(${item}=>{if(${item}.influxBanner)return ${item}.influxBanner;`,
       },
     },
     {

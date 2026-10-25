@@ -10,13 +10,19 @@ const contributorIds = new Set<string>(
   Object.values(Contributor).map((contributor) => contributor.id),
 );
 
-interface IconBadge {
-  type: "icon";
-  key: string;
-  iconUrl: string;
-  tooltip: string;
-  url?: string;
+interface ProfileBadge {
+  kind: string;
+  asset: string | null;
+  label: string;
+  href: string | null;
 }
+
+const BADGE: ProfileBadge = {
+  kind: "influx_contributor",
+  asset: "influx_contributor",
+  label: "Influx Contributor",
+  href: `https://github.com/${INFLUX_REPOSITORY}`,
+};
 
 export default definePlugin({
   name: "ContributorBadges",
@@ -27,24 +33,31 @@ export default definePlugin({
 
   patches: [
     {
-      find: '"user.user-profile-badges.div"',
+      find: "this.profileBadges=Object.freeze(",
       replacement: {
-        match: /return (\i)\},\[((?:\i,)*)(\i)\.flags,/,
-        replace: "return $self.addBadges($1,$3)},[$2$3.flags,$3.id,",
+        match:
+          /this\.profileBadges=(Object\.freeze\(\[\.\.\.null!=\(\i=\i\.profile_badges\)\?\i:\[\]\]\))/,
+        replace: "this.profileBadges=$self.addBadges($1,this.userId)",
+      },
+    },
+    {
+      // Badge images are file names on Fluxer's servers, so this badge's image is swapped in here.
+      find: "/badges/${",
+      replacement: {
+        match: /(function \i\((\i)\)\{return)(`\$\{\i\.\i\.staticCdnEndpoint\}\/badges\/)/,
+        replace: "$1 $2===$self.badgeAsset?$self.badgeIconUrl:$3",
       },
     },
   ],
 
-  addBadges(badges: IconBadge[], user: { id: string }): IconBadge[] {
-    if (contributorIds.has(user.id)) {
-      badges.push({
-        type: "icon",
-        key: "influx_contributor",
-        iconUrl: BADGE_ICON_URL,
-        tooltip: "Influx Contributor",
-        url: `https://github.com/${INFLUX_REPOSITORY}`,
-      });
+  badgeAsset: BADGE.asset,
+  badgeIconUrl: BADGE_ICON_URL,
+
+  // Profiles are rebuilt from their own badges, so the badge may already be there.
+  addBadges(badges: readonly ProfileBadge[], userId: string): readonly ProfileBadge[] {
+    if (!contributorIds.has(userId) || badges.some((badge) => badge.kind === BADGE.kind)) {
+      return badges;
     }
-    return badges;
+    return Object.freeze([...badges, BADGE]);
   },
 });

@@ -23,7 +23,7 @@ export default definePlugin({
       // createChannelStream, which builds the channel and unread-preview message lists.
       find: 'MESSAGE_GROUP_BLOCKED:"MESSAGE_GROUP_BLOCKED"',
       replacement: {
-        match: /(\.forEach\((\i)=>\{)(let \i;if\(!\i\|\|!\(0,\i\.\i\)\(\i,\2\.timestamp\)\))/,
+        match: /(\.forEach\((\i)=>\{)(let \i;if\(\i&&\2\.blocked&&)/,
         replace: "$1if($self.shouldHide($2))return;$3",
       },
     },

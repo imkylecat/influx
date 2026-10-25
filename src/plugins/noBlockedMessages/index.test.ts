@@ -12,7 +12,7 @@ describe("NoBlockedMessages", () => {
     const streamModule = compile(
       "function(e,t,n){const u={DIVIDER:0,MESSAGE:1};" +
         'const k={MESSAGE_GROUP_BLOCKED:"MESSAGE_GROUP_BLOCKED"};const s={r:(a,b)=>true};' +
-        "function h(e){let t,g=[];return e.forEach(e=>{let A;if(!t||!(0,s.r)(t,e.timestamp)){g.push({type:u.DIVIDER}),t=e.timestamp}g.push({type:u.MESSAGE,id:e.id})}),g}" +
+        "function h(e,f){let t,g=[];return e.forEach(e=>{let A;if(f&&e.blocked&&e.id!==e.jumpDestinationId)return;if(!t||!(0,s.r)(t,e.timestamp)){g.push({type:u.DIVIDER}),t=e.timestamp}g.push({type:u.MESSAGE,id:e.id})}),g}" +
         "e.exports=h}",
     );
     const createStream = runPatched(pendingFor(noBlockedMessages), streamModule);

@@ -59,11 +59,19 @@ function initialize(): void {
     );
   }
 
-  document.addEventListener(
-    "DOMContentLoaded",
+  // Firefox fires DOMContentLoaded on a page that redirects before Fluxer's scripts run, but not load.
+  window.addEventListener(
+    "load",
     () => {
       if (!webpack.webpackRequire)
         logger.error("Never saw Fluxer's webpack runtime. Was Influx injected too late?");
+    },
+    { once: true },
+  );
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    () => {
       Plugins.startAllPlugins();
       logger.info(
         `Loaded version ${INFLUX_VERSION} with ${Object.keys(Plugins.plugins).length} plugins`,

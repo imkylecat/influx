@@ -70,7 +70,9 @@ export const Components = {
     findComponentByDisplayName("ui.action-menu.menu-item.menu-item-primitive.select", "MenuItem"),
   ),
   // A context menu item that opens a nested menu built by its render prop.
-  MenuItemSubmenu: lazy(() => findComponentByCode("ui.action-menu.menu-item-submenu.sub-menu")),
+  MenuItemSubmenu: lazy(() =>
+    findComponentByDisplayName("ui.action-menu.context-menu.sub-menu.trigger", "SubMenu"),
+  ),
   // A context menu item with a checkbox. Toggling it keeps the menu open.
   MenuItemCheckbox: lazy(() =>
     findComponentByDisplayName("ui.action-menu.context-menu.checkbox-item.item", "CheckboxItem"),
@@ -169,7 +171,7 @@ export const Stores = {
   MemberPresenceSubscription: lazy<{
     // Has the presence store follow a member's status for the next 5 minutes.
     touchMember(guildId: string, userId: string): void;
-  }>(() => findByProperties("touchMember", "getSubscribedMembers")),
+  }>(() => findByProperties("touchMember", "getGuildSubscriptions")),
   UserProfile: lazy<{ getProfile(userId: string, guildId?: string): FluxerProfile | null }>(() =>
     findByProperties("getProfile", "handleProfileCreate", "handleProfilesClear"),
   ),
@@ -186,7 +188,7 @@ export const Stores = {
     findByProperties("mediaEndpoint", "gatewayEndpoint"),
   ),
   Authentication: lazy<{ isAuthenticated: boolean }>(() =>
-    findByProperties("isAuthenticated", "setUserId", "handleLogout"),
+    findByProperties("isAuthenticated", "handleSessionStart", "handleLogout"),
   ),
   MobileLayout: lazy<{ enabled: boolean }>(() =>
     findByProperties("navExpanded", "chatExpanded", "isEnabled"),
@@ -231,7 +233,7 @@ export const nativeClasses = (...prefixes: string[]): string =>
 
 export const RestClient = lazy<{
   get<T = unknown>(path: string): Promise<{ ok: boolean; status: number; body: T }>;
-}>(() => findByProperties("installAuth", "carriesAuthorization", "get"));
+}>(() => findByProperties("installAuth", "hasAuthorization", "get"));
 
 // Fluxer's Message model class; its constructor takes a message as the API sends it.
 export const MessageRecord = lazy<new (wire: unknown, options?: object) => FluxerMessage>(() =>
@@ -241,11 +243,11 @@ export const MessageRecord = lazy<new (wire: unknown, options?: object) => Fluxe
 // NicknameUtils.getNickname: the name Fluxer shows in the header, such as a server or friend nickname.
 export const NicknameLookup = lazy<
   (user: { username: string }, guildId?: string, channelId?: string) => string
->(() => findByCode(".displayName||", ".globalName||", ".username||", ".nickname)", ".nicks"));
+>(() => findByCode(".displayName||", ".globalName||", ".username||", ".getMember(", ".nicks["));
 
-export const fetchUserProfile = lazy<
-  (userId: string, guildId?: string, force?: boolean) => Promise<FluxerProfile>
->(() => findByCode("Force refresh requested but request already in-flight"));
+export const fetchUserProfile = lazy<(userId: string, guildId?: string) => Promise<FluxerProfile>>(
+  () => findByCode("in-flight profile request for user"),
+);
 
 export const channelIcon = lazy<
   (channel: FluxerChannel, props?: object, options?: { locked?: boolean }) => JSX.Element
@@ -298,7 +300,7 @@ export function openExternal(url: string): void {
 }
 
 const Toasts = lazy<{ createToast(toast: object): void }>(() =>
-  findByProperties("createToast", "getCurrentToast"),
+  findByProperties("createToast", "destroyToast"),
 );
 
 export function showToast(

@@ -280,21 +280,6 @@ export default definePlugin({
       ],
     },
     {
-      // Your own edits show before the server confirms them, and are undone if saving fails.
-      find: /handleMessageDeleteBulk\(\i\)\{let \i=\i\.\i\.get\(/,
-      replacement: [
-        {
-          match:
-            /handleOptimisticEdit\((\i)\)\{(?:var \i,\i;)?let\{channelId:\i,messageId:\i,content:\i\}=\1,(\i)=\i\.\i\.get\(\i\);/,
-          replace: "$&$self.recordEdit($2,{id:$1.messageId,content:$1.content});",
-        },
-        {
-          match: /handleEditRollback\((\i)\)\{/,
-          replace: "$&$self.undoEdit($1.messageId,$1.originalContent);",
-        },
-      ],
-    },
-    {
       // Saved deleted messages rejoin each page of messages Fluxer loads.
       find: /handleMessageDeleteBulk\(\i\)\{let \i=\i\.\i\.get\(/,
       replacement: {
@@ -314,8 +299,8 @@ export default definePlugin({
       // Deleted messages get the red text of a message that failed to send.
       find: '"channel.user-message.message-text--2"',
       replacement: {
-        match: /(\i)\.state===\i\.\i\.FAILED\?\i\?(\i\.\i):void 0:\i\[\1\.state\]/,
-        replace: "$self.isDeleted($1)?$2:$&",
+        match: /(\i)\.state!==\i\.\i\.FAILED\?(\i)=\i\[\1\.state\]:\i&&\(\2=(\i\.\i)\);/,
+        replace: "$&$self.isDeleted($1)&&($2=$3);",
       },
     },
     {
@@ -405,8 +390,7 @@ export default definePlugin({
   ) {
     if (!settings.store.logEdits || update.content == null) return;
     const message = messages?.get(update.id);
-    // An EDITING message already shows your unconfirmed edit, which was recorded when you saved it.
-    if (!message || message.state === "EDITING" || message.content === update.content) return;
+    if (!message || message.content === update.content) return;
     if (isIgnored(message)) return;
     setEdits(message.id, [
       ...(editHistory.get(message.id) ?? []),
@@ -428,11 +412,6 @@ export default definePlugin({
       logger.error("Failed to restore deleted messages", error);
       return window.messages;
     }
-  },
-
-  undoEdit(id: string, restoredContent: string) {
-    const edits = editHistory.get(id);
-    if (edits?.at(-1)?.content === restoredContent) setEdits(id, edits.slice(0, -1));
   },
 
   isDeleted(message: FluxerMessage | undefined): boolean {

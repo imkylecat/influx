@@ -106,8 +106,6 @@ const storeModule = compile(
     "handleMessageDelete(e){let t=s.W.get(e.channelId);if(!(null==t?void 0:t.has(e.id)))return!1;let n=t;n=n.remove(e.id);return this.commitMessages(n),this.notifyChange(),!0}" +
     "handleMessageDeleteBulk(e){let t=s.W.get(e.channelId);if(!t)return!1;let n=t.removeIds(e.ids);if(n===t)return!1;return this.commitMessages(n),this.notifyChange(),!0}" +
     'handleMessageUpdate(e){let t=e.message.id,n=e.message.channel_id,i=s.W.get(n);if(!(null==i?void 0:i.has(t)))return!1;let a=i.update(t,t=>"EDITING"===t.state&&void 0===e.message.state?t.withUpdates(Object.assign({},e.message,{state:"SENT"})):t.withUpdates(e.message));return this.commitMessages(a),this.notifyChange(),!0}' +
-    'handleOptimisticEdit(e){var t,n;let{channelId:i,messageId:a,content:r}=e,o=s.W.get(i);if(!o)return null;let l=o.get(a);if(!l)return null;let u={originalContent:l.content},c=o.update(a,e=>e.withUpdates({content:r,state:"EDITING"}));return this.commitMessages(c),this.notifyChange(),u}' +
-    'handleEditRollback(e){let{channelId:t,messageId:n,originalContent:i}=e,r=s.W.get(t);if(!(null==r?void 0:r.has(n)))return;let o=r.update(n,e=>e.withUpdates({content:i,state:"SENT"}));this.commitMessages(o),this.notifyChange()}' +
     "handleLoadMessagesSuccess(e){let t=s.W.getOrCreate(e.channelId).applyLoadedWindow({windowMessages:e.messages,isBefore:e.isBefore,isAfter:e.isAfter,jump:e.jump,hasMoreBefore:e.hasMoreBefore,hasMoreAfter:e.hasMoreAfter,cached:e.cached});return this.commitMessages(t),this.notifyChange(),!1}}" +
     "e.exports={store:new M,channels:s}}",
 );
@@ -247,7 +245,7 @@ describe("MessageLogger", () => {
     const textModule = compile(
       "function(e,t,n){" +
         'let U={cm:{FAILED:"FAILED"}},eM={b$:"failed"},nx={SENT:"sent"};' +
-        'e.exports=(r,F)=>{let T=r.state===U.cm.FAILED?F?eM.b$:void 0:nx[r.state];return{className:T,"data-flx":"channel.user-message.message-text--2"}}}',
+        'e.exports=(r,F)=>{let o;r.state!==U.cm.FAILED?o=nx[r.state]:F&&(o=eM.b$);return{className:o,"data-flx":"channel.user-message.message-text--2"}}}',
     );
     const textProps = runPatched(pendingFor(messageLogger), textModule);
     assert.equal(textProps(message("1", "hi"), true).className, "sent");
@@ -281,27 +279,6 @@ describe("MessageLogger", () => {
     });
     assert.equal(channels.current.get("2").content, "world!");
     assert.match(JSON.stringify(renderPastEdits(channels.current.get("2"))), /"content":"world"/);
-  });
-
-  it("records your own edits once, and forgets them if saving fails", () => {
-    const { store, channels } = setup();
-    channels.current = channels.current.update("1", (m: FakeMessage) =>
-      m.withUpdates({ content: "first" }),
-    );
-    store.handleOptimisticEdit({ channelId: "c", messageId: "1", content: "second" });
-    // Fluxer's server confirms the edit with the content already shown.
-    store.handleMessageUpdate({ message: { id: "1", channel_id: "c", content: "second" } });
-    assert.equal(channels.current.get("1").state, "SENT");
-    const shown = JSON.stringify(renderPastEdits(channels.current.get("1")));
-    assert.equal(shown.match(/"content":/g)?.length, 1, "one past edit");
-    assert.match(shown, /"content":"first"/);
-
-    store.handleOptimisticEdit({ channelId: "c", messageId: "1", content: "third" });
-    store.handleEditRollback({ channelId: "c", messageId: "1", originalContent: "second" });
-    assert.equal(channels.current.get("1").content, "second");
-    const afterRollback = JSON.stringify(renderPastEdits(channels.current.get("1")));
-    assert.doesNotMatch(afterRollback, /"content":"second"/, "the failed edit isn't kept");
-    assert.match(afterRollback, /"content":"first"/);
   });
 
   it("gives deleted messages read-only permissions", () => {

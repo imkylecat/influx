@@ -90,7 +90,7 @@ export function patchFactory(
       }
       continue;
     }
-    pending.splice(index--, 1);
+    if (!patch.all) pending.splice(index--, 1);
     code = candidate;
     appliedBy.push(patch.plugin);
   }

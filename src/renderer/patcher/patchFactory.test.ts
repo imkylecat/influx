@@ -91,6 +91,21 @@ describe("patchFactory", () => {
     assert.equal(pending.length, 0);
   });
 
+  it("applies a patch marked all to every module that matches", () => {
+    const pending: Patch[] = [
+      {
+        plugin: "X",
+        find: "postTyping",
+        all: true,
+        replacement: { match: "this.sent=[]", replace: 'this.sent=["x"]' },
+      },
+    ];
+    assert.deepEqual(run(patchFactory(1, typingModule, pending, logger)).sent, ["x"]);
+    assert.deepEqual(run(patchFactory(2, typingModule, pending, logger)).sent, ["x"]);
+    assert.equal(pending.length, 1);
+    assert.deepEqual(errors, []);
+  });
+
   it("rolls back a patch that produces invalid code but keeps earlier good ones", () => {
     const pending: Patch[] = [
       {

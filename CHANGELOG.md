@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Plugins are less likely to break when Fluxer updates.
+
+### Fixed
+
+- The Influx settings pages are no longer blank.
+
 ## [0.7.4] - 2026-10-25
 
 ### Changed

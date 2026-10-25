@@ -58,9 +58,9 @@ function pronounsOf(userId: string, guildId?: string): string | null | undefined
   return known.get(keyOf(userId, guildId))?.pronouns;
 }
 
-async function load(userId: string, guildId?: string, force?: boolean): Promise<void> {
+async function load(userId: string, guildId?: string): Promise<void> {
   try {
-    await fetchUserProfile()?.(userId, guildId, force);
+    await fetchUserProfile()?.(userId, guildId);
     pronounsOf(userId, guildId);
   } catch (error) {
     const { status } = error as { status?: number };
@@ -84,7 +84,7 @@ function request(userId: string, guildId?: string, force?: boolean): void {
   const fresh = !force && entry && Date.now() - entry.time < REFRESH_MILLISECONDS;
   if (fresh || queued.has(key)) return;
   queued.add(key);
-  waiting.push(() => load(userId, guildId, force).finally(() => queued.delete(key)));
+  waiting.push(() => load(userId, guildId).finally(() => queued.delete(key)));
   runWaiting();
 }
 
@@ -159,9 +159,12 @@ export default definePlugin({
   Pronouns,
 
   refreshProfiles(userId = Stores.Users()?.currentUserId) {
-    for (const entry of known.values()) {
-      if (entry.userId === userId) request(entry.userId, entry.guildId, true);
-    }
+    // Fluxer's fetch returns its cached profile, so wait until this handler has dropped it.
+    queueMicrotask(() => {
+      for (const entry of known.values()) {
+        if (entry.userId === userId) request(entry.userId, entry.guildId, true);
+      }
+    });
   },
 
   stop() {

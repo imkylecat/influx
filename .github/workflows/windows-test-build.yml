@@ -1,0 +1,88 @@
+name: Windows Test Build
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Unit Tests (Ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+      - name: Unit tests
+        run: bun test
+
+  build:
+    name: Build Windows Installer
+    runs-on: windows-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Build release assets
+        run: bun run build --release
+
+      - name: Compile Windows installer
+        run: bun run build:installer --host
+
+      - name: Smoke-test compiled installer and archive recovery
+        run: bun scripts/smoke-test-windows-installer.ts
+
+      - name: Write SHA-256 checksums
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -LiteralPath 'dist/release' -File |
+            Where-Object { $_.Name -match '^influx-(main|preload|renderer)\.js$|^influx-installer-windows-x64\.exe$' }
+          if ($files.Count -ne 4) {
+            throw "Expected 4 Windows test build files, found $($files.Count)."
+          }
+          $checksums = $files | ForEach-Object {
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          }
+          Set-Content -LiteralPath 'dist/release/SHA256SUMS' -Value $checksums
+
+      - name: Upload offline test installer and matching assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: influx-windows-experimental
+          path: |
+            dist/release/influx-installer-windows-x64.exe
+            dist/release/influx-main.js
+            dist/release/influx-preload.js
+            dist/release/influx-renderer.js
+            dist/release/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 6

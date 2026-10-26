@@ -1,0 +1,81 @@
+name: Linux Test Build
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux ${{ matrix.arch }} installer + smoke test
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Unit tests
+        run: bun test
+
+      - name: Build matching desktop assets
+        run: bun run build --release
+
+      - name: Compile native Linux installer
+        run: bun run build:installer --host
+
+      - name: Smoke-test actual Linux installer against disposable Fluxer ASAR
+        run: bun scripts/smoke-test-linux-installer.ts
+
+      - name: Write SHA-256 checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist/release
+          test -s influx-installer-linux-${{ matrix.arch }}
+          test -s influx-main.js
+          test -s influx-preload.js
+          test -s influx-renderer.js
+          sha256sum \
+            influx-installer-linux-${{ matrix.arch }} \
+            influx-main.js \
+            influx-preload.js \
+            influx-renderer.js > SHA256SUMS
+
+      - name: Upload matching native Linux installer and assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: influx-linux-${{ matrix.arch }}-experimental
+          path: |
+            dist/release/influx-installer-linux-${{ matrix.arch }}
+            dist/release/influx-main.js
+            dist/release/influx-preload.js
+            dist/release/influx-renderer.js
+            dist/release/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 6

@@ -168,7 +168,10 @@ function saveDeleted(message: FluxerMessage) {
 function withCurrentUsers(wire: MessageWire): MessageWire {
   const users = Stores.Users();
   return withUsers(wire, (user) => {
-    const current = users?.getUser(user.id)?.toJSON();
+    // Fluxer's user store may be unavailable while its modules are initializing.
+    // Restore the saved message even if we cannot refresh the author's profile yet.
+    const current =
+      typeof users?.getUser === "function" ? users.getUser(user.id)?.toJSON() : undefined;
     return current ? publicUser({ ...user, ...current }) : user;
   });
 }

@@ -32,11 +32,12 @@ while [ "$attempts" -lt 600 ] && launchctl list "$label" 2>/dev/null | grep -q '
   attempts=$((attempts + 1))
 done
 cd "$2" || exit 1
-if [ -f app.asar ] && [ ! -e _app.asar ]; then
+mkdir -p influx-original
+if [ -f app.asar ] && [ ! -e influx-original/app.asar ]; then
   ELECTRON_RUN_AS_NODE=1 "$6" -e ""
   cp "$3" .influx-shim.asar &&
-    mv app.asar _app.asar &&
-    { [ ! -e app.asar.unpacked ] || mv app.asar.unpacked _app.asar.unpacked; } &&
+    mv app.asar influx-original/app.asar &&
+    { [ ! -e app.asar.unpacked ] || mv app.asar.unpacked influx-original/app.asar.unpacked; } &&
     mv .influx-shim.asar app.asar
 fi
 [ "$5" = 1 ] && open "$4"
@@ -52,20 +53,36 @@ function windowsScript(shim: string, restart: boolean): string {
 $ErrorActionPreference = 'Stop'
 $resources = ${quotePowerShell(process.resourcesPath)}
 $fluxerAsar = Join-Path $resources 'app.asar'
-$movedAsar = Join-Path $resources '_app.asar'
+$originalDirectory = Join-Path $resources 'influx-original'
+$movedAsar = Join-Path $originalDirectory 'app.asar'
+$previousAsar = Join-Path $originalDirectory 'previous-app.asar'
 $stagedShim = Join-Path $resources '.influx-shim.asar'
 try {
   Wait-Process -Id ${process.pid} -ErrorAction SilentlyContinue
   Get-Process -Name Update -ErrorAction SilentlyContinue |
     Where-Object { $_.Path -eq ${quotePowerShell(updateExecutable)} } |
     Wait-Process -Timeout 600
-  if ((Test-Path -LiteralPath $fluxerAsar) -and -not (Test-Path -LiteralPath $movedAsar)) {
-    Copy-Item -LiteralPath ${quotePowerShell(shim)} -Destination $stagedShim
-    Move-Item -LiteralPath $fluxerAsar -Destination $movedAsar
-    if (Test-Path -LiteralPath "$fluxerAsar.unpacked") {
-      Move-Item -LiteralPath "$fluxerAsar.unpacked" -Destination "$movedAsar.unpacked"
+  if (Test-Path -LiteralPath $fluxerAsar) {
+    # Do not replace the original archive with our own shim when no Fluxer update occurred.
+    $liveHash = (Get-FileHash -LiteralPath $fluxerAsar -Algorithm SHA256).Hash
+    $shimHash = (Get-FileHash -LiteralPath ${quotePowerShell(shim)} -Algorithm SHA256).Hash
+    if ($liveHash -ne $shimHash) {
+      New-Item -ItemType Directory -Force -Path $originalDirectory | Out-Null
+      Copy-Item -LiteralPath ${quotePowerShell(shim)} -Destination $stagedShim
+      if (Test-Path -LiteralPath $movedAsar) {
+        Remove-Item -LiteralPath $previousAsar -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath "$previousAsar.unpacked" -Recurse -Force -ErrorAction SilentlyContinue
+        Move-Item -LiteralPath $movedAsar -Destination $previousAsar
+        if (Test-Path -LiteralPath "$movedAsar.unpacked") {
+          Move-Item -LiteralPath "$movedAsar.unpacked" -Destination "$previousAsar.unpacked"
+        }
+      }
+      Move-Item -LiteralPath $fluxerAsar -Destination $movedAsar
+      if (Test-Path -LiteralPath "$fluxerAsar.unpacked") {
+        Move-Item -LiteralPath "$fluxerAsar.unpacked" -Destination "$movedAsar.unpacked"
+      }
+      Move-Item -LiteralPath $stagedShim -Destination $fluxerAsar
     }
-    Move-Item -LiteralPath $stagedShim -Destination $fluxerAsar
   }
 } finally {
   if ($${restart}) {

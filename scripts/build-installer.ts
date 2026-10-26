@@ -15,7 +15,9 @@ const TARGETS = [
   { target: "bun-linux-arm64", file: "influx-installer-linux-arm64" },
 ];
 
-const hostTarget = `bun-${process.platform}-${process.arch}`;
+// Bun calls Windows "windows" in target names, while process.platform uses "win32".
+const hostPlatform = process.platform === "win32" ? "windows" : process.platform;
+const hostTarget = `bun-${hostPlatform}-${process.arch}`;
 const targets = process.argv.includes("--host")
   ? TARGETS.filter((installer) => installer.target === hostTarget)
   : TARGETS;

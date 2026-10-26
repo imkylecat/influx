@@ -4,6 +4,8 @@ import path from "node:path";
 
 import { type Fetch, type Release, USER_AGENT } from "./github";
 
+export const LOCAL_BUILD_MARKER = ".influx-local-build";
+
 export const DESKTOP_ASSETS = {
   "main.js": "influx-main.js",
   "preload.js": "influx-preload.js",

@@ -20,6 +20,7 @@ import { createHash } from "node:crypto";
 import { fetchLatestRelease, NoReleaseError } from "../src/shared/github";
 import { influxDataDirectory } from "../src/shared/paths";
 import { localReleaseDirectory } from "../src/shared/localRelease";
+import { linuxResourcesCandidates, resolveLinuxResourcesPath } from "../src/shared/linuxResources";
 import { DESKTOP_ASSETS, LOCAL_BUILD_MARKER, downloadDesktopRelease, installFiles } from "../src/shared/release";
 import { fluxerArchivePaths, isFluxerDesktopPackage } from "../src/shared/archiveLayout";
 
@@ -32,7 +33,7 @@ Usage: influx-installer [options]
   --upstream        Explicitly install the official upstream Influx release
   --canary          Use Fluxer Canary (picked automatically when only Canary is installed)
   --stable          Use stable Fluxer even when only Canary is found
-  --path <folder>   Fluxer's resources folder, or its .app bundle on macOS
+  --path <folder>   Fluxer's resources folder, app folder, or app.asar file
   --uninstall       Remove Influx and restore Fluxer's original files
   --diagnose        Inspect archive backups without changing files
   --development     Install this checkout's build (source checkout only)
@@ -75,7 +76,9 @@ const influxDevelopmentDirectory = path.join(influxDirectory, "development");
 function fluxerResourcesDirectory(): string {
   if (pathOption) {
     const resolved = path.resolve(pathOption);
-    return resolved.endsWith(".app") ? path.join(resolved, "Contents", "Resources") : resolved;
+    if (resolved.endsWith(".app")) return path.join(resolved, "Contents", "Resources");
+    if (process.platform === "linux") return resolveLinuxResourcesPath(resolved, hasFluxer);
+    return resolved;
   }
   const stable = defaultResourcesDirectory(false);
   const canary = defaultResourcesDirectory(true);
@@ -104,10 +107,10 @@ function defaultResourcesDirectory(canary: boolean): string {
         "resources",
       );
     default: {
-      // The deb and rpm packages install to /opt/Fluxer, the Arch package to /opt/fluxer.
-      const candidates = (canary ? ["fluxer-canary"] : ["Fluxer", "fluxer"]).map(
-        (name) => `/opt/${name}/resources`,
-      );
+      // Electron packages can be installed under /opt, /usr/lib or a user
+      // directory. Do not auto-select Flatpak/AppImage mounts, which can be
+      // read-only and are managed by their own package systems.
+      const candidates = linuxResourcesCandidates(homeDirectory, canary);
       return candidates.find(hasFluxer) ?? candidates[0];
     }
   }
@@ -177,8 +180,16 @@ async function main(): Promise<void> {
     return;
   }
   if (!hasFluxer(resourcesDirectory)) {
+    const linuxHint = process.platform === "linux"
+      ? "\nTry locating Fluxer's actual archive: " +
+        'find /opt /usr/lib /usr/share /usr/local "$HOME" -type f -name app.asar -print 2>/dev/null' +
+        "\nThen pass --path /full/path/to/app.asar (or its resources folder). " +
+        "Flatpak and mounted AppImage resources are not supported for direct patching; " +
+        "use a writable native installation or extracted tar.gz instead."
+      : "";
     throw new Error(
-      `No app.asar in ${resourcesDirectory}. Pass --path to your Fluxer install (or --canary).`,
+      `No Fluxer app.asar found in ${resourcesDirectory}. Pass --path to your Fluxer install (or --canary).` +
+        linuxHint,
     );
   }
 

@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: [main, "fix/fluxer-desktop-fake-plutonium", "contrib/windows-linux-desktop-and-fakeplutonium"]
   workflow_dispatch:
 
 permissions:

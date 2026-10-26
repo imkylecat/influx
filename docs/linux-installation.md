@@ -23,9 +23,39 @@ sudo ./influx-installer-linux-x64 --local
 
 Replace `x64` with `arm64` on ARM64 systems.
 
-**Install locations:** the injector checks `/opt/Fluxer/resources` for the .deb/.rpm layout, then `/opt/fluxer/resources` for Arch package installations. If yours is different, pass `--path /absolute/path/to/resources` to `--diagnose`, `--local`, and `--uninstall`. Stop Fluxer before modifying its resources. System-wide installations normally require `sudo`, but a user-owned writable location does not.
+**Install locations:** the injector checks `/opt/Fluxer/resources` and `/opt/fluxer/resources` first, then common `/usr/lib`, `/usr/share`, `/usr/local`, and user-owned installation locations. For a tar.gz extraction or other custom location, pass `--path /absolute/path/to/app.asar`, `--path /absolute/path/to/resources`, or `--path /absolute/path/to/Fluxer` to `--diagnose`, `--local`, and `--uninstall`. Stop Fluxer before modifying its resources. System-wide installations normally require `sudo`, but a user-owned writable location does not.
 
 The compiled installer automatically prefers the **adjacent matching local fork** unless `--upstream` is explicitly supplied. Under `sudo`, it writes the user's Influx files to `~/.config/Influx/dist` and restores the original Fluxer archive from `resources/influx-original/app.asar`. Check the output before proceeding: invalid or missing original archives must not be blindly deleted or renamed.
+
+## Troubleshooting: old installer or missing Fluxer location
+
+If `--local` says `needs a source checkout`, you have **an older/upstream installer**, not the compiled experimental fork build. Download `influx-linux-x64-experimental` or `influx-linux-arm64-experimental` from the successful fork Actions run, extract **all five** files into the same directory, and verify:
+
+```bash
+./influx-installer-linux-x64 --help | grep -F -- '--diagnose'
+sha256sum -c SHA256SUMS
+ls -l influx-main.js influx-preload.js influx-renderer.js
+```
+
+An installer whose `--help` output lacks `--diagnose` is not the corrected version.
+
+If the installer reports `No Fluxer app.asar found in /opt/Fluxer/resources`, discover Fluxer's real installation:
+
+```bash
+command -v fluxer || true
+flatpak list --app | grep -i fluxer || true
+find /opt /usr/lib /usr/share /usr/local "$HOME" \\
+  -type f -name app.asar -print 2>/dev/null | grep -i fluxer | head -n 20
+```
+
+For a **writable, unpacked, native** Fluxer installation, use the returned ASAR file path, for example:
+
+```bash
+sudo ./influx-installer-linux-x64 --diagnose --path /your/Fluxer/resources/app.asar
+sudo ./influx-installer-linux-x64 --local --path /your/Fluxer/resources/app.asar
+```
+
+If Fluxer runs through Flatpak or a mounted AppImage, **do not modify files inside the sandbox or mount**; the standalone injector does not support those packaging formats. Use the official native `.deb`/`.rpm`/pacman package or an extracted writable `tar.gz` install to test Influx instead.
 
 ## Rollback
 

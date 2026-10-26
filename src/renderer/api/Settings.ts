@@ -52,6 +52,11 @@ function writeSettings(): void {
 if (storage) window.addEventListener("pagehide", writeSettings);
 
 // Tells components right away, and writes to storage once changes stop coming.
+/** Write pending plugin settings immediately before a renderer reload or desktop relaunch. */
+export function flushSettings(): void {
+  writeSettings();
+}
+
 export function saveSettings(): void {
   changes++;
   for (const listener of changeListeners) listener();

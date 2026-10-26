@@ -5,7 +5,7 @@ import {
   plugins,
   setPluginEnabled,
 } from "@api/Plugins";
-import { type OptionDefinition, useSettings } from "@api/Settings";
+import { flushSettings, type OptionDefinition, useSettings } from "@api/Settings";
 import {
   Components,
   findIcon,
@@ -13,9 +13,11 @@ import {
   nativeClasses,
   openUserProfile,
   React,
+  showToast,
 } from "@webpack/common";
 
 import { iconOrFallback, MissingComponents, SettingsSearch } from "./components";
+import { reloadAfterPluginChange } from "./reload";
 import { settings } from "./settings";
 
 // Turns a setting's key into a label in sentence case, like Fluxer's own: "logDeletes" is "Log deletes".
@@ -118,6 +120,30 @@ const FILTERS: Array<{
   },
 ];
 
+/**
+ * The desktop restart must run through Fluxer's own Electron IPC, not a page
+ * reload: the newer desktop runtime-config broker rejects calls while its
+ * privileged renderer document is still navigating.
+ */
+function applyPluginChanges(): void {
+  const electron = (
+    window as Window & { electron?: { desktopAppRelaunch?: () => Promise<void> } }
+  ).electron;
+  void reloadAfterPluginChange({
+    isDesktop: INFLUX_DESKTOP,
+    persistSettings: flushSettings,
+    nativeRelaunch:
+      typeof electron?.desktopAppRelaunch === "function"
+        ? () => electron.desktopAppRelaunch!()
+        : undefined,
+    browserReload: () => window.location.reload(),
+  }).catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[Influx] Unable to apply plugin changes:", error);
+    showToast("error", message);
+  });
+}
+
 function visibleOptions(plugin: PluginDefinition): Array<[string, OptionDefinition]> {
   return Object.entries(
     (plugin.settings?.definitions ?? {}) as Record<string, OptionDefinition>,
@@ -182,7 +208,7 @@ function PluginRow({ plugin, needsReload }: { plugin: PluginDefinition; needsRel
             <span className={nativeClasses("SettingsStatusBadge.module__badges___")}>
               {plugin.required && <span className={badge("new")}>Required</span>}
               {needsReload && (
-                <span className={`influx-badge-warning ${badge()}`}>Reload to apply</span>
+                <span className={`influx-badge-warning ${badge()}`}>{INFLUX_DESKTOP ? "Restart to apply" : "Reload to apply"}</span>
               )}
             </span>
           )}
@@ -276,14 +302,14 @@ export function PluginsTab() {
         >
           {needsReload.length > 0 && (
             <WarningAlert
-              title="Reload required"
+              title={INFLUX_DESKTOP ? "Restart required" : "Reload required"}
               actions={
-                <Button small onClick={() => location.reload()}>
-                  Reload
+                <Button small onClick={applyPluginChanges}>
+                  {INFLUX_DESKTOP ? "Restart Fluxer" : "Reload"}
                 </Button>
               }
             >
-              Reload Fluxer to apply changes to {needsReload.join(", ")}.
+              {INFLUX_DESKTOP ? "Restart" : "Reload"} Fluxer to apply changes to {needsReload.join(", ")}.
             </WarningAlert>
           )}
           <div className="influx-plugin-filters">

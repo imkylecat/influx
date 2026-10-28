@@ -25,4 +25,14 @@ describe("AnonymizeFileNames", () => {
     assert.equal(names.length, 1);
     assert.match(names[0], /^[A-Za-z0-9]{8}\.png$/);
   });
+
+  it("renames files sent straight from the upload screen", async () => {
+    const dropModule = compile(
+      'function(e,t,n){const eA={b:{createAndStartUploads:(c,f)=>Promise.resolve(f.map(x=>x.name))}};e.exports=(e,s)=>{if(0)return void X.push((0,X.modal)(()=>(0,a.jsx)(ej.Q,{oversizedFileCount:t,"data-flx":"channel.upload-manager.on-drop.file-size-too-large-modal"})));return eA.b.createAndStartUploads(e.id,s).then(r=>[r,s.map(x=>x.name)])}}',
+    );
+    const drop = runPatched(pendingFor(anonymizeFileNames), dropModule);
+    const [uploaded, label]: string[][] = await drop({ id: "1" }, [new File(["x"], "me.png")]);
+    assert.match(uploaded[0], /^[A-Za-z0-9]{8}\.png$/);
+    assert.deepEqual(label, uploaded);
+  });
 });

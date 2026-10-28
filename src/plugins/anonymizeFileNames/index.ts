@@ -65,6 +65,13 @@ export default definePlugin({
         replace: "$&$2=$self.anonymize($2);",
       },
     },
+    {
+      find: '"channel.upload-manager.on-drop.file-size-too-large-modal"',
+      replacement: {
+        match: /(\.createAndStartUploads\(\i\.id,)(\i)\)/,
+        replace: "$1$2=$self.anonymize($2))",
+      },
+    },
   ],
 
   anonymize(files: File[]): File[] {

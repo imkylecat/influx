@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Influx",
   "description": "Adds plugins to Fluxer that make chatting more private, more informed and more fun.",
-  "version": "0.7.5",
+  "version": "0.8.0",
   "content_scripts": [
     {
       "matches": ["https://web.fluxer.app/*", "https://web.canary.fluxer.app/*"],

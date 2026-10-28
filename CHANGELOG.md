@@ -7,6 +7,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-28
+
 ### Removed
 
 - NoBlockedMessages plugin. Fluxer can now hide messages from blocked users itself: turn on "Hide
@@ -268,7 +270,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - ForceOwnerCrown plugin: shows the server owner's crown even in servers that hide it.
 - SilentTyping plugin: stops Fluxer from telling others that you're typing.
 
-[Unreleased]: https://github.com/imkylecat/influx/compare/v0.7.5...HEAD
+[Unreleased]: https://github.com/imkylecat/influx/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/imkylecat/influx/compare/v0.7.5...v0.8.0
 [0.7.5]: https://github.com/imkylecat/influx/compare/v0.7.4...v0.7.5
 [0.7.4]: https://github.com/imkylecat/influx/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/imkylecat/influx/compare/v0.7.2...v0.7.3

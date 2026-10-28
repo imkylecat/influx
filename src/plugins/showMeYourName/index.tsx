@@ -2,7 +2,7 @@ import definePlugin from "@api/Plugins";
 import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { Logger } from "@utils/Logger";
-import { nativeClasses, NicknameLookup, React, Stores } from "@webpack/common";
+import { formatNameForStreamerMode, nativeClasses, NicknameLookup, React } from "@webpack/common";
 import type { FluxerMessage, FluxerUser } from "@webpack/fluxer";
 
 const logger = new Logger("ShowMeYourName");
@@ -23,9 +23,6 @@ const settings = definePluginSettings({
     default: true,
   },
 });
-
-// Fluxer's own streamer-mode truncation: keep the first character.
-const truncate = (name: string) => `${Array.from(name.trim())[0] ?? ""}…`;
 
 function label(author: FluxerUser): string {
   const { username, discriminator } = author;
@@ -62,7 +59,7 @@ export default definePlugin({
       const text = label(author);
       return (
         <span className={nativeClasses("Message.module__messageTimestamp___")}>
-          ({Stores.StreamerMode()?.shouldTruncateUsernames ? truncate(text) : text})
+          ({formatNameForStreamerMode()?.(text) ?? text})
         </span>
       );
     } catch (error) {

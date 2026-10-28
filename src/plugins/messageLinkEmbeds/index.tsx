@@ -6,8 +6,10 @@ import { Logger } from "@utils/Logger";
 import {
   Components,
   findIcon,
+  goToMessage,
   MessageRecord,
   nativeClasses,
+  parseMessageJumpLink,
   React,
   RestClient,
   Stores,
@@ -19,8 +21,7 @@ import STYLES from "./styles.css" with { type: "text" };
 
 const STYLE_ID = "influx-message-link-embeds";
 const logger = new Logger("MessageLinkEmbeds");
-// Matches Fluxer's own jump links, for example https://web.fluxer.app/channels/@me/<channel>/<message>.
-const MESSAGE_LINK = /https?:\/\/([\w.-]+)\/channels\/(@me|\d+)\/(\d+)\/(\d+)/g;
+const MESSAGE_LINK = /https?:\/\/[\w.:-]+\/channels\/(?:@me|\d+)\/\d+\/\d+/g;
 
 const PREVIEW_BEHAVIOR = {
   isEditing: false,
@@ -40,7 +41,7 @@ const settings = definePluginSettings({
 
 interface MessageLink {
   url: string;
-  guildId: string;
+  scope: string;
   channelId: string;
   messageId: string;
 }
@@ -53,10 +54,12 @@ type LoadState =
 const cache = new Map<string, Promise<LoadState>>();
 
 function parseLinks(content: string): MessageLink[] {
+  const parse = parseMessageJumpLink();
   const links = new Map<string, MessageLink>();
-  for (const [url, host, guildId, channelId, messageId] of content.matchAll(MESSAGE_LINK)) {
-    if (host !== location.host && !/(^|\.)fluxer\.app$/.test(host)) continue;
-    links.set(messageId, { url, guildId, channelId, messageId });
+  if (!parse) return [];
+  for (const [url] of content.matchAll(MESSAGE_LINK)) {
+    const link = parse(url);
+    if (link) links.set(link.messageId, { url, ...link });
   }
   return [...links.values()];
 }
@@ -91,12 +94,15 @@ function loadLinkedMessage(channelId: string, messageId: string): Promise<LoadSt
 
 function jumpTo(link: MessageLink): void {
   const navigation = Stores.Navigation();
-  if (!navigation) {
+  const goTo = goToMessage();
+  if (goTo && Stores.Channels()?.getChannel(link.channelId)) {
+    goTo(link.channelId, link.messageId);
+  } else if (!navigation) {
     window.open(link.url, "_blank", "noopener");
-  } else if (link.guildId === "@me") {
+  } else if (link.scope === "@me") {
     navigation.navigateToDM(link.channelId, link.messageId, "push");
   } else {
-    navigation.navigateToGuild(link.guildId, link.channelId, link.messageId, "push");
+    navigation.navigateToGuild(link.scope, link.channelId, link.messageId, "push");
   }
 }
 
@@ -117,15 +123,13 @@ function LinkEmbed({ link }: { link: MessageLink }) {
   }, [link.channelId, link.messageId]);
 
   if (state.status === "loading") {
-    const Spinner = Components.Spinner();
-    return Spinner ? <Spinner size="small" /> : null;
+    return <Components.Spinner size="small" />;
   }
 
   if (state.status === "error") return <UnavailableCard link={link} />;
 
-  const Message = Components.Message();
   const channel = Stores.Channels()?.getChannel(state.message.channelId);
-  if (!Message || !channel) return null;
+  if (!channel) return null;
 
   const { Provider } = getInPreview();
   return (
@@ -135,7 +139,7 @@ function LinkEmbed({ link }: { link: MessageLink }) {
       <div className={nativeClasses("MessageAttachments.module__forwardedBar___")} />
       <div className={nativeClasses("MessageAttachments.module__forwardedContent___")}>
         <Provider value={true}>
-          <Message
+          <Components.Message
             channel={channel}
             message={state.message}
             previewContext="LIST_POPOUT"
@@ -151,12 +155,9 @@ function LinkEmbed({ link }: { link: MessageLink }) {
 }
 
 function UnavailableCard({ link }: { link: MessageLink }) {
-  const EmbedCard = Components.EmbedCard();
-  const Button = Components.Button();
   const Icon = findIcon("WarningCircleIcon");
-  if (!EmbedCard || !Button) return null;
   return (
-    <EmbedCard
+    <Components.EmbedCard
       splashURL={null}
       icon={
         <div className={nativeClasses("EmbedCard.module__iconCircleDisabled___")}>
@@ -179,9 +180,9 @@ function UnavailableCard({ link }: { link: MessageLink }) {
         </span>
       }
       footer={
-        <Button variant="secondary" fitContainer small onClick={() => jumpTo(link)}>
+        <Components.Button variant="secondary" fitContainer small onClick={() => jumpTo(link)}>
           Jump to message
-        </Button>
+        </Components.Button>
       }
     />
   );
@@ -219,15 +220,14 @@ export default definePlugin({
     const links = parseLinks(message.content)
       .filter((link) => link.messageId !== message.id)
       .slice(0, Math.max(0, settings.store.maximumPreviews));
-    const ErrorBoundary = Components.ErrorBoundary();
-    if (!links.length || !ErrorBoundary) return null;
+    if (!links.length) return null;
     return (
-      <ErrorBoundary
+      <Components.ErrorBoundary
         fallback={null}
         onError={(error: unknown) => logger.error("Failed to render", error)}
       >
         <LinkEmbeds links={links} />
-      </ErrorBoundary>
+      </Components.ErrorBoundary>
     );
   },
 

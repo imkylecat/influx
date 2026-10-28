@@ -5,7 +5,7 @@ import { Contributor } from "@utils/constants";
 import { showNotification, showToast, Stores } from "@webpack/common";
 import type { ChannelWire, GuildWire, ReadyPayload, RelationshipWire } from "@webpack/fluxer";
 
-import { addNotice, hasNotices, nagbarFound, nagbarPartsSource, withBanner } from "./banner";
+import { addNotice, hasNotices, nagbarFound, withBanner } from "./banner";
 import {
   describeRemoval,
   diffSnapshots,
@@ -78,6 +78,7 @@ function consumeSelfAction(id: string): boolean {
 let accountId: string | null = null;
 let snapshot: Snapshot | null = null;
 let stopListening: (() => void) | undefined;
+let nagbarPatched = false;
 
 function savedSnapshots(): Record<string, Snapshot> {
   const data = getPluginData("RelationshipNotifier");
@@ -100,8 +101,7 @@ function isWanted(removal: Removal): boolean {
 
 function notify(message: string): void {
   if (settings.store.banner) addNotice(message);
-  // Without a banner, fall back to a pop-up so the notice isn't silently dropped.
-  if (settings.store.popup || !settings.store.banner || !nagbarFound) {
+  if (settings.store.popup || !settings.store.banner || !nagbarPatched || !nagbarFound()) {
     showToast("info", message, { timeout: 10_000 });
   }
   if (settings.store.desktopNotifications) showNotification({ title: "Influx", body: message });
@@ -235,10 +235,14 @@ export default definePlugin({
       replacement: {
         match:
           /(\(\{nagbars:(\i)\}\)=>\{let (\i)=\i\.\i,[^;]*;return )0===\2\.length\?null:(\(0,\i\.jsx\)\("div",\{className:\i\.\i,"data-flx":"app\.app-layout\.nagbar-container\.container",children:)\2\.map\((\i)=>\{/,
-        replace: (_, head, list, mobile, container, item, _offset, code) =>
-          `${head}0===${list}.length&&!$self.hasBanner()?null:${container}` +
-          `$self.withBanner(${list},${nagbarPartsSource(code, `${mobile}.enabled`)})` +
-          `.map(${item}=>{if(${item}.influxBanner)return ${item}.influxBanner;`,
+        replace: (_, head, list, mobile, container, item) => {
+          nagbarPatched = true;
+          return (
+            `${head}0===${list}.length&&!$self.hasBanner()?null:${container}` +
+            `$self.withBanner(${list},${mobile}.enabled)` +
+            `.map(${item}=>{if(${item}.influxBanner)return ${item}.influxBanner;`
+          );
+        },
       },
     },
     {
@@ -251,7 +255,7 @@ export default definePlugin({
   ],
 
   hasBanner(): boolean {
-    return settings.store.banner && nagbarFound && hasNotices();
+    return settings.store.banner && nagbarPatched && nagbarFound() && hasNotices();
   },
 
   withBanner,

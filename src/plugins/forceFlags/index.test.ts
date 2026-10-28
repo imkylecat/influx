@@ -1,5 +1,7 @@
-import { beforeEach, describe, it } from "bun:test";
+import { beforeEach, describe, it, mock } from "bun:test";
 import assert from "node:assert/strict";
+
+import * as common from "@webpack/common";
 
 import forceFlags, { parseOverrides, toggleOverride } from ".";
 import { compile, pendingFor, resetPatching, runPatched } from "../../renderer/patcher/testing";
@@ -65,7 +67,8 @@ describe("ForceFlags", () => {
   });
 
   it("overrides flags in Fluxer's UserRecord, even on existing users", () => {
-    // Excerpt of Fluxer's compiled UserRecord.
+    const UserFlags = { STAFF: 1, PARTNER: 4, BUG_HUNTER: 8, SPAMMER: 64 };
+    void mock.module("@webpack/common", () => ({ ...common, UserFlags: () => UserFlags }));
     const userModule = compile(
       'function(e,t,n){function c(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}e.exports=class{constructor(e){var l;c(this,"id",void 0),c(this,"flags",void 0),this.id=e.id,this.flags=e.flags,this.mentionFlags=null!=(l=e.mention_flags)?l:0}withUpdates(e){var g;return new this.constructor({id:this.id,flags:null!=(g=e.flags)?g:this.flags,mention_flags:"mention_flags"in e?e.mention_flags:this.mentionFlags||void 0})}toJSON(){return{id:this.id,flags:this.flags,mention_flags:this.mentionFlags||void 0}}}}',
     );

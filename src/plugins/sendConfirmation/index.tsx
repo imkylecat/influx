@@ -3,7 +3,7 @@ import { definePluginSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
 import { idListIncludes } from "@utils/idList";
 import { Logger } from "@utils/Logger";
-import { Components, Modals, React, showToast, Stores } from "@webpack/common";
+import { Components, found, Modals, React, showToast, Stores } from "@webpack/common";
 
 export const HONEYPOT_CHANNEL_IDS: readonly string[] = [
   "1513407003270057984",
@@ -46,8 +46,6 @@ export function sendPolicy(channelId: string): "block" | "confirm" | "allow" {
   return idListIncludes(confirmServers, serverId) ? "confirm" : "allow";
 }
 
-const pending = new Map<string, () => void>();
-
 function Confirmation({
   channelId,
   finish,
@@ -56,11 +54,10 @@ function Confirmation({
   finish: (confirmed: boolean) => void;
 }) {
   React.useEffect(() => () => finish(false), [finish]);
-  const ConfirmModal = Components.ConfirmModal()!;
   const channel = Stores.Channels()?.getChannel(channelId);
   const destination = channel?.name ? `#${channel.name}` : `channel ${channelId}`;
   return (
-    <ConfirmModal
+    <Components.ConfirmModal
       title="Send message?"
       description={`Send this message to ${destination}? Canceling leaves it unsent.`}
       primaryText="Send"
@@ -105,21 +102,13 @@ export default definePlugin({
     if (sendPolicy(channelId) === "allow") return true;
     const accountId = Stores.Users()?.currentUserId;
     const modals = Modals();
-    if (!accountId || !modals || !Components.ConfirmModal()) {
+    if (!accountId || !modals || !found(Components.ConfirmModal)) {
       showToast("error", "Couldn't open send confirmation. Your message was not sent.");
       return false;
     }
     const key = `influx-send-confirmation:${channelId}:${nonce}`;
-    if (pending.has(key)) return false;
-    const confirmed = await new Promise<boolean>((resolve) => {
-      const finish = (value: boolean) => {
-        pending.delete(key);
-        resolve(value);
-      };
-      pending.set(key, () => {
-        finish(false);
-        modals.popWithKey(key);
-      });
+    if (Stores.Modal()?.hasModal(key)) return false;
+    const confirmed = await new Promise<boolean>((finish) => {
       try {
         modals.pushWithKey(
           modals.modal(() => <Confirmation channelId={channelId} finish={finish} />),
@@ -135,6 +124,6 @@ export default definePlugin({
   },
 
   stop() {
-    for (const cancel of pending.values()) cancel();
+    Modals()?.popAllByType(Confirmation);
   },
 });

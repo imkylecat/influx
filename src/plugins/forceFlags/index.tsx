@@ -1,7 +1,7 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings, useSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
-import { Components, React, Stores } from "@webpack/common";
+import { Components, GuildFeatures, React, Stores, UserFlags } from "@webpack/common";
 import type { FluxerGuild, FluxerUser } from "@webpack/fluxer";
 
 const settings = definePluginSettings({
@@ -19,52 +19,6 @@ const settings = definePluginSettings({
   },
 });
 
-const USER_FLAGS: Record<string, number> = {
-  STAFF: 1 << 0,
-  PARTNER: 1 << 2,
-  BUG_HUNTER: 1 << 3,
-  FRIENDLY_BOT: 1 << 4,
-  FRIENDLY_BOT_MANUAL_APPROVAL: 1 << 5,
-  SPAMMER: 1 << 6,
-};
-
-const SERVER_FEATURES = [
-  "ANIMATED_BANNER",
-  "ANIMATED_ICON",
-  "AUDIO_BITRATE_128_KBPS",
-  "AUDIO_BITRATE_256_KBPS",
-  "AUDIO_BITRATE_384_KBPS",
-  "BANNER",
-  "CLONE_EMOJI_DISABLED",
-  "CLONE_EMOJI_ENABLED",
-  "CLONE_STICKER_DISABLED",
-  "CLONE_STICKER_ENABLED",
-  "DETACHED_BANNER",
-  "DISCOVERABLE",
-  "EXPRESSION_PURGE_ALLOWED",
-  "HIDE_OWNER_CROWN",
-  "INVITES_DISABLED",
-  "INVITE_SPLASH",
-  "LARGE_GUILD_OVERRIDE",
-  "MORE_EMOJI",
-  "MORE_STICKERS",
-  "PARTNERED",
-  "RAID_DETECTED",
-  "TEXT_CHANNEL_FLEXIBLE_NAMES",
-  "UNAVAILABLE_FOR_EVERYONE",
-  "UNAVAILABLE_FOR_EVERYONE_BUT_STAFF",
-  "UNAVAILABLE_HIDDEN",
-  "UNLIMITED_EMOJI",
-  "UNLIMITED_STICKERS",
-  "VANITY_URL",
-  "VERIFIED",
-  "VERY_LARGE_GUILD",
-  "VIP_VOICE",
-  "VISIONARY",
-  "VOICE_E2EE",
-];
-
-// The user menus opened from DMs, servers, and group DMs.
 const USER_MENUS = [
   "ui.action-menu.user-context-menu.render-advanced-menu-group",
   "ui.action-menu.guild-member-context-menu",
@@ -124,14 +78,12 @@ function overridesFor(text: string, id: string | undefined) {
   return parsed.get(String(id));
 }
 
-const flagBit = (name: string) => USER_FLAGS[name] ?? (/^\d+$/.test(name) ? Number(name) : 0);
+const flagBit = (name: string) => UserFlags()?.[name] ?? (/^\d+$/.test(name) ? Number(name) : 0);
 
 function UserFlagItems({ user }: { user: FluxerUser }) {
   useSettings();
-  const MenuItemCheckbox = Components.MenuItemCheckbox();
-  if (!MenuItemCheckbox) return null;
-  return Object.entries(USER_FLAGS).map(([name, bit]) => (
-    <MenuItemCheckbox
+  return Object.entries(UserFlags() ?? {}).map(([name, bit]) => (
+    <Components.MenuItemCheckbox
       key={name}
       checked={(user.flags & bit) !== 0}
       onCheckedChange={(checked: boolean) => {
@@ -139,7 +91,7 @@ function UserFlagItems({ user }: { user: FluxerUser }) {
       }}
     >
       {name}
-    </MenuItemCheckbox>
+    </Components.MenuItemCheckbox>
   ));
 }
 
@@ -223,47 +175,47 @@ export default definePlugin({
   },
 
   renderUserMenu(user: FluxerUser) {
-    const MenuItemSubmenu = Components.MenuItemSubmenu();
-    if (!MenuItemSubmenu || !Components.MenuItemCheckbox()) return null;
-    return <MenuItemSubmenu label="Force flags" render={() => <UserFlagItems user={user} />} />;
+    return (
+      <Components.MenuItemSubmenu
+        label="Force flags"
+        render={() => <UserFlagItems user={user} />}
+      />
+    );
   },
 
   renderServerMenu(guild: FluxerGuild) {
-    const MenuGroup = Components.MenuGroup();
-    const MenuItemSubmenu = Components.MenuItemSubmenu();
-    const MenuItemCheckbox = Components.MenuItemCheckbox();
-    if (!MenuGroup || !MenuItemSubmenu || !MenuItemCheckbox) return null;
     return (
-      <MenuGroup>
-        <MenuItemSubmenu
+      <Components.MenuGroup>
+        <Components.MenuItemSubmenu
           label="Force features"
           render={() => {
             const current = Stores.Guilds()?.getGuild(guild.id) ?? guild;
-            return [...new Set([...SERVER_FEATURES, ...current.features])].sort().map((name) => (
-              <MenuItemCheckbox
-                key={name}
-                checked={current.features.has(name)}
-                onCheckedChange={(checked: boolean) => {
-                  settings.store.serverFeatures = toggleOverride(
-                    settings.store.serverFeatures,
-                    guild.id,
-                    name,
-                    checked,
-                  );
-                  // Records are rebuilt from the shown features, which include the old override.
-                  const features = [...current.features].filter((other) => other !== name);
-                  Stores.Guilds()?.handleGuildUpdate({
-                    ...current.toJSON(),
-                    features: checked ? [...features, name] : features,
-                  });
-                }}
-              >
-                {name}
-              </MenuItemCheckbox>
-            ));
+            return [...new Set([...Object.values(GuildFeatures() ?? {}), ...current.features])]
+              .sort()
+              .map((name) => (
+                <Components.MenuItemCheckbox
+                  key={name}
+                  checked={current.features.has(name)}
+                  onCheckedChange={(checked: boolean) => {
+                    settings.store.serverFeatures = toggleOverride(
+                      settings.store.serverFeatures,
+                      guild.id,
+                      name,
+                      checked,
+                    );
+                    const features = [...current.features].filter((other) => other !== name);
+                    Stores.Guilds()?.handleGuildUpdate({
+                      ...current.toJSON(),
+                      features: checked ? [...features, name] : features,
+                    });
+                  }}
+                >
+                  {name}
+                </Components.MenuItemCheckbox>
+              ));
           }}
         />
-      </MenuGroup>
+      </Components.MenuGroup>
     );
   },
 });

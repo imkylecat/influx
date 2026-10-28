@@ -52,12 +52,6 @@ export function UpdatesSection() {
     pendingRestart ? { kind: "installed", version: pendingRestart } : { kind: "idle" },
   );
   useSettings();
-  const SettingsSection = Components.SettingsSection();
-  const Switch = Components.Switch();
-  const Button = Components.Button();
-  const WarningAlert = Components.WarningAlert();
-  const ExternalLink = Components.ExternalLink();
-  if (!SettingsSection || !Switch || !Button || !WarningAlert || !ExternalLink) return null;
 
   const check = async () => {
     setState({ kind: "checking" });
@@ -72,7 +66,7 @@ export function UpdatesSection() {
   const actions =
     state.kind === "installed" ? null : (
       <>
-        <Button
+        <Components.Button
           small
           variant="secondary"
           fitContent
@@ -80,16 +74,16 @@ export function UpdatesSection() {
           onClick={check}
         >
           Check for updates
-        </Button>
+        </Components.Button>
         {state.kind === "available" && !canInstallUpdates && (
-          <Button small fitContent onClick={() => openExternal(state.url)}>
+          <Components.Button small fitContent onClick={() => openExternal(state.url)}>
             Get {state.version}
-          </Button>
+          </Components.Button>
         )}
         {INFLUX_DESKTOP &&
           canInstallUpdates &&
           (state.kind === "available" || state.kind === "installing") && (
-            <Button
+            <Components.Button
               small
               fitContent
               submitting={state.kind === "installing"}
@@ -104,24 +98,26 @@ export function UpdatesSection() {
               }}
             >
               Update to {state.version}
-            </Button>
+            </Components.Button>
           )}
       </>
     );
 
   return (
-    <SettingsSection
+    <Components.SettingsSection
       id="influx-updates"
       title="Updates"
       description={
         <>
           Influx {INFLUX_VERSION} ({CHANNEL_LABEL}). <output>{statusText(state)}</output>{" "}
-          <ExternalLink href={RELEASES_URL}>All releases and changelogs</ExternalLink>
+          <Components.ExternalLink href={RELEASES_URL}>
+            All releases and changelogs
+          </Components.ExternalLink>
         </>
       }
       actions={actions}
     >
-      <Switch
+      <Components.Switch
         label="Automatically update"
         description={AUTO_UPDATE_DESCRIPTION}
         value={canInstallUpdates && settings.store.autoUpdate}
@@ -131,17 +127,17 @@ export function UpdatesSection() {
         }}
       />
       {INFLUX_DESKTOP && state.kind === "installed" && (
-        <WarningAlert
+        <Components.WarningAlert
           title="Restart required"
           actions={
-            <Button small onClick={restartToUpdate}>
+            <Components.Button small onClick={restartToUpdate}>
               Restart Fluxer
-            </Button>
+            </Components.Button>
           }
         >
           Influx {state.version} is installed. Restart Fluxer to start using it.
-        </WarningAlert>
+        </Components.WarningAlert>
       )}
-    </SettingsSection>
+    </Components.SettingsSection>
   );
 }

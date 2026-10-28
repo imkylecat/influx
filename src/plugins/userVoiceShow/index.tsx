@@ -91,7 +91,6 @@ function VoiceChannelTooltip({ channel, icon }: { channel: FluxerChannel; icon: 
   const users = React.useSyncExternalStore(subscribe, () =>
     JSON.stringify(channelUsers(channel).map((user) => user.id)),
   );
-  const AvatarStack = Components.AvatarStack();
   return (
     <div className={nativeClasses("GuildsLayout.module__guildTooltipContainer___")}>
       <span className={nativeClasses("GuildsLayout.module__guildTooltipName___")}>
@@ -105,18 +104,16 @@ function VoiceChannelTooltip({ channel, icon }: { channel: FluxerChannel; icon: 
       </div>
       <div className={nativeClasses("GuildsLayout.module__guildVoiceInfo___")}>
         {icon}
-        {AvatarStack && (
-          <AvatarStack
-            key={users}
-            users={channelUsers(channel)}
-            size={18}
-            maxVisible={13}
-            guildId={channel.guildId}
-            channelId={channel.id}
-            enableProfileModal={false}
-            showTooltips={false}
-          />
-        )}
+        <Components.AvatarStack
+          key={users}
+          users={channelUsers(channel)}
+          size={18}
+          maxVisible={13}
+          guildId={channel.guildId}
+          channelId={channel.id}
+          enableProfileModal={false}
+          showTooltips={false}
+        />
       </div>
     </div>
   );
@@ -189,7 +186,6 @@ function VoiceChannelIndicator({
   const StateIcon = findIcon(isDeaf ? "SpeakerSlashIcon" : "MicrophoneSlashIcon");
   const Icon = isDeaf || isMuted ? StateIcon : SpeakerIcon;
   const getLockedIcon = channelIcon();
-  const Tooltip = Components.Tooltip();
   if (!Icon || !SpeakerIcon || !getLockedIcon) return null;
 
   const speaker = (size: string) =>
@@ -221,7 +217,7 @@ function VoiceChannelIndicator({
       {icon}
     </button>
   );
-  return Tooltip ? <Tooltip text={tooltip}>{button}</Tooltip> : button;
+  return <Components.Tooltip text={tooltip}>{button}</Components.Tooltip>;
 }
 
 export default definePlugin({

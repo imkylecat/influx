@@ -1,25 +1,12 @@
 import { getPluginData, saveSettings } from "@api/Settings";
-import { React } from "@webpack/common";
-import { find } from "@webpack/finders";
-import type { ComponentType, ReactNode } from "react";
-
-import { canonicalizeMatch } from "../../renderer/patcher/patchFactory";
+import { Components, found, observable, React } from "@webpack/common";
+import type { ReactNode } from "react";
 
 const MAXIMUM_NOTICES = 50;
-const BANNER_TONE = "brand";
 
 interface Notice {
   message: string;
   at: number;
-}
-
-// Fluxer's banner building blocks, lifted out of its nagbar module by the container patch.
-interface NagbarParts {
-  Nagbar: ComponentType<any> | null;
-  Content: ComponentType<any> | null;
-  Button: ComponentType<any> | null;
-  tones: Record<string, { backgroundColor: string; textColor: string }> | null;
-  isMobile: boolean;
 }
 
 interface NagbarItem {
@@ -28,24 +15,15 @@ interface NagbarItem {
 }
 
 let notices: Notice[] | undefined;
-// Whether the nagbar patch found all of Fluxer's banner parts. Without them, notices go to toasts.
-export let nagbarFound = false;
 
 function getNotices(): Notice[] {
   if (notices) return notices;
-  const observable = find(
-    (value) =>
-      typeof value === "function" &&
-      typeof value.box === "function" &&
-      typeof value.array === "function" &&
-      typeof value.object === "function",
-  );
   const saved = getPluginData("RelationshipNotifier").notices;
   const initial = Array.isArray(saved)
     ? saved.filter((notice) => typeof notice?.message === "string")
     : [];
-  notices = observable ? observable.array(initial, { deep: false }) : initial;
-  return notices!;
+  notices = observable()?.array(initial, { deep: false }) ?? initial;
+  return notices;
 }
 
 function persist(): void {
@@ -82,76 +60,51 @@ function formatTime(at: number): string {
     : `${date.toLocaleDateString()} ${time}`;
 }
 
-function Banner({ parts }: { parts: NagbarParts }) {
+export const nagbarFound = (): boolean =>
+  [Components.Nagbar, Components.NagbarContent, Components.NagbarButton].every(found);
+
+function Banner({ isMobile }: { isMobile: boolean }) {
   const list = getNotices();
   const latest = list[list.length - 1];
   const more = list.length - 1;
-  const { Nagbar, Content, Button, tones, isMobile } = parts;
-  if (!Nagbar || !Content || !Button) return null;
   const message = `${latest.message} (${formatTime(latest.at)})${more > 0 ? ` +${more} more` : ""}`;
 
-  const tone = tones?.[BANNER_TONE] ?? {
-    backgroundColor: "var(--brand-primary)",
-    textColor: "var(--text-on-brand-primary)",
-  };
   return (
-    <Nagbar
+    <Components.Nagbar
       isMobile={isMobile}
-      backgroundColor={tone.backgroundColor}
-      textColor={tone.textColor}
+      backgroundColor="var(--brand-primary)"
+      textColor="var(--text-on-brand-primary)"
       dismissible
       onDismiss={dismissAll}
     >
-      <Content
+      <Components.NagbarContent
         isMobile={isMobile}
         message={message}
         onDismiss={dismissAll}
         actions={
           more > 0 ? (
             <>
-              <Button isMobile={isMobile} onClick={dismissLatest}>
+              <Components.NagbarButton isMobile={isMobile} onClick={dismissLatest}>
                 Next
-              </Button>
-              <Button isMobile={isMobile} onClick={dismissAll}>
+              </Components.NagbarButton>
+              <Components.NagbarButton isMobile={isMobile} onClick={dismissAll}>
                 Dismiss all
-              </Button>
+              </Components.NagbarButton>
             </>
           ) : (
-            <Button isMobile={isMobile} onClick={dismissAll}>
+            <Components.NagbarButton isMobile={isMobile} onClick={dismissAll}>
               Dismiss
-            </Button>
+            </Components.NagbarButton>
           )
         }
       />
-    </Nagbar>
+    </Components.Nagbar>
   );
 }
 
-export function withBanner<T extends NagbarItem>(items: T[], parts: NagbarParts): T[] {
-  if (!nagbarFound || !hasNotices()) return items;
+export function withBanner<T extends NagbarItem>(items: T[], isMobile: boolean): T[] {
+  if (!nagbarFound() || !hasNotices()) return items;
   const banner = { type: "influx_relationship_notifier" } as unknown as T;
-  banner.influxBanner = <Banner key="influx-relationship-notifier" parts={parts} />;
+  banner.influxBanner = <Banner key="influx-relationship-notifier" isMobile={isMobile} />;
   return [banner, ...items];
-}
-
-const NAGBAR = canonicalizeMatch(
-  /\(0,\i\.jsx\)\((\i(?:\.\i)?),\{isMobile:\i,backgroundColor:(\i\.\i)\[\i\.\i\.[A-Z_]+\]\.backgroundColor/,
-);
-const CONTENT = canonicalizeMatch(
-  /children:\(0,\i\.jsx\)\((\i(?:\.\i)?),\{isMobile:\i,(?:onDismiss:[^,]+,)?message:/,
-);
-const BUTTON = canonicalizeMatch(
-  /\(0,\i\.jsx\)\((\i(?:\.\i)?),\{isMobile:\i,onClick:[^{}]{0,160}?"data-flx":"[\w.-]*nagbar[\w.-]*"/,
-);
-
-// Builds the object literal that hands Fluxer's nagbar parts to withBanner at render time.
-export function nagbarPartsSource(moduleCode: string, isMobileExpression: string): string {
-  const nagbar = NAGBAR.exec(moduleCode);
-  const content = CONTENT.exec(moduleCode);
-  const button = BUTTON.exec(moduleCode);
-  nagbarFound = Boolean(nagbar && content && button);
-  return (
-    `{Nagbar:${nagbar?.[1] ?? "null"},tones:${nagbar?.[2] ?? "null"},` +
-    `Content:${content?.[1] ?? "null"},Button:${button?.[1] ?? "null"},isMobile:!!(${isMobileExpression})}`
-  );
 }

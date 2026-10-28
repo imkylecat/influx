@@ -15,7 +15,7 @@ import {
   React,
 } from "@webpack/common";
 
-import { iconOrFallback, MissingComponents, SettingsSearch } from "./components";
+import { iconOrFallback } from "./components";
 import { settings } from "./settings";
 
 const humanize = (key: string): string =>
@@ -41,10 +41,8 @@ function OptionField({
 
   switch (definition.type) {
     case "boolean": {
-      const Switch = Components.Switch();
-      if (!Switch) return null;
       return (
-        <Switch
+        <Components.Switch
           label={humanize(name)}
           description={definition.description}
           value={Boolean(store[name])}
@@ -53,10 +51,8 @@ function OptionField({
       );
     }
     case "select": {
-      const Combobox = Components.Combobox();
-      if (!Combobox) return null;
       return (
-        <Combobox
+        <Components.Combobox
           label={humanize(name)}
           description={definition.description}
           value={String(store[name])}
@@ -67,13 +63,12 @@ function OptionField({
     }
     case "number":
     case "string": {
-      const Input = Components.Input();
-      const ModalDescription = Components.ModalDescription();
-      if (!Input || !ModalDescription) return null;
       return (
-        <Input
+        <Components.Input
           label={humanize(name)}
-          footer={<ModalDescription>{definition.description}</ModalDescription>}
+          footer={
+            <Components.ModalDescription>{definition.description}</Components.ModalDescription>
+          }
           type={definition.type === "number" ? "number" : "text"}
           value={definition.type === "number" ? numberText : String(store[name] ?? "")}
           onChange={(event: { currentTarget: HTMLInputElement }) => {
@@ -130,31 +125,23 @@ const badge = (...variants: string[]) =>
   );
 
 function PluginSettingsModal({ plugin }: { plugin: PluginDefinition }) {
-  const ModalRoot = Components.ModalRoot();
-  const ModalHeader = Components.ModalHeader();
-  const ModalContent = Components.ModalContent();
-  const ModalContentLayout = Components.ModalContentLayout();
-  const ModalDescription = Components.ModalDescription();
-  if (!ModalRoot || !ModalHeader || !ModalContent || !ModalContentLayout || !ModalDescription) {
-    return null;
-  }
   const close = () => Modals()?.pop();
   return (
-    <ModalRoot size="medium" onClose={close}>
-      <ModalHeader title={`${plugin.name} settings`} onClose={close} />
-      <ModalContent>
-        <ModalContentLayout>
+    <Components.ModalRoot size="medium" onClose={close}>
+      <Components.ModalHeader title={`${plugin.name} settings`} onClose={close} />
+      <Components.ModalContent>
+        <Components.ModalContentLayout>
           {!isPluginEnabled(plugin) && (
-            <ModalDescription>
+            <Components.ModalDescription>
               {plugin.name} is off. These settings apply when you turn it on.
-            </ModalDescription>
+            </Components.ModalDescription>
           )}
           {visibleOptions(plugin).map(([name, definition]) => (
             <OptionField key={name} plugin={plugin} name={name} definition={definition} />
           ))}
-        </ModalContentLayout>
-      </ModalContent>
-    </ModalRoot>
+        </Components.ModalContentLayout>
+      </Components.ModalContent>
+    </Components.ModalRoot>
   );
 }
 
@@ -165,10 +152,7 @@ function openPluginSettings(plugin: PluginDefinition): void {
 
 function PluginRow({ plugin, needsReload }: { plugin: PluginDefinition; needsReload: boolean }) {
   const enabled = isPluginEnabled(plugin);
-  const Switch = Components.Switch();
-  const Button = Components.Button();
   const GearIcon = findIcon("GearIcon");
-  if (!Switch || !Button) return null;
 
   return (
     <div className={row("settingRow")}>
@@ -203,16 +187,16 @@ function PluginRow({ plugin, needsReload }: { plugin: PluginDefinition; needsRel
       </div>
       <div className={`influx-plugin-actions ${row("settingAction")}`}>
         {visibleOptions(plugin).length > 0 && (
-          <Button
+          <Components.Button
             variant="secondary"
             compact
             leftIcon={GearIcon && <GearIcon size={14} weight="bold" />}
             onClick={() => openPluginSettings(plugin)}
           >
             Configure
-          </Button>
+          </Components.Button>
         )}
-        <Switch
+        <Components.Switch
           ariaLabel={`${enabled ? "Disable" : "Enable"} ${plugin.name}`}
           value={enabled}
           disabled={plugin.required}
@@ -234,70 +218,40 @@ export function PluginsTab() {
   const [query, setQuery] = React.useState("");
   useSettings();
 
-  const SettingsTabContainer = Components.SettingsTabContainer();
-  const SettingsTabContent = Components.SettingsTabContent();
-  const SettingsSection = Components.SettingsSection();
-  const Input = Components.Input();
-  const Combobox = Components.Combobox();
-  const Button = Components.Button();
-  const WarningAlert = Components.WarningAlert();
-  const StatusSlate = Components.StatusSlate();
-  if (
-    !SettingsTabContainer ||
-    !SettingsTabContent ||
-    !SettingsSection ||
-    !Input ||
-    !Combobox ||
-    !Button ||
-    !WarningAlert ||
-    !StatusSlate
-  ) {
-    return <MissingComponents />;
-  }
-
   const all = Object.values(plugins).sort((first, second) => first.name.localeCompare(second.name));
   const activeFilter =
     FILTERS.find((option) => option.value === settings.store.pluginFilter) ?? FILTERS[0];
   const shown = all.filter((plugin) => activeFilter.test(plugin) && matchesQuery(plugin, query));
   const enabledCount = all.filter(isPluginEnabled).length;
   const needsReload = getPluginsNeedingReload();
-  const SearchIcon = findIcon("MagnifyingGlassIcon");
 
   return (
-    <SettingsTabContainer>
-      <SettingsTabContent>
-        <SettingsSection
+    <Components.SettingsTabContainer>
+      <Components.SettingsTabContent>
+        <Components.SettingsSection
           id="influx-plugins"
           title="Installed plugins"
           description={`Influx ${INFLUX_VERSION}. ${enabledCount} of ${all.length} plugins enabled.`}
         >
           {needsReload.length > 0 && (
-            <WarningAlert
+            <Components.WarningAlert
               title="Reload required"
               actions={
-                <Button small onClick={() => location.reload()}>
+                <Components.Button small onClick={() => location.reload()}>
                   Reload
-                </Button>
+                </Components.Button>
               }
             >
               Reload Fluxer to apply changes to {needsReload.join(", ")}.
-            </WarningAlert>
+            </Components.WarningAlert>
           )}
           <div className="influx-plugin-filters">
-            {SettingsSearch ? (
-              <SettingsSearch value={query} onChange={setQuery} placeholder="Search plugins" />
-            ) : (
-              <Input
-                placeholder="Search plugins"
-                aria-label="Search plugins"
-                leftIcon={SearchIcon && <SearchIcon size={20} weight="bold" />}
-                value={query}
-                onChange={(event: { currentTarget: HTMLInputElement }) =>
-                  setQuery(event.currentTarget.value)
-                }
-              />
-            )}
-            <Combobox
+            <Components.SettingsSearch
+              value={query}
+              onChange={setQuery}
+              placeholder="Search plugins"
+            />
+            <Components.Combobox
               aria-label="Filter plugins"
               density="compact"
               value={activeFilter.value}
@@ -322,7 +276,7 @@ export function PluginsTab() {
               ))}
             </div>
           ) : (
-            <StatusSlate
+            <Components.StatusSlate
               Icon={iconOrFallback(query.trim() ? "MagnifyingGlassIcon" : "PlugIcon")}
               title="No plugins to show"
               description={
@@ -330,8 +284,8 @@ export function PluginsTab() {
               }
             />
           )}
-        </SettingsSection>
-      </SettingsTabContent>
-    </SettingsTabContainer>
+        </Components.SettingsSection>
+      </Components.SettingsTabContent>
+    </Components.SettingsTabContainer>
   );
 }

@@ -4,7 +4,9 @@ Only do what is asked. Don't add features, refactor code, or make changes beyond
 
 When developing plugins, use native Fluxer components wherever possible. Avoid raw CSS and custom components when an existing native component can serve the same purpose. Reusing native components keeps plugins visually and behaviorally consistent with Fluxer and the rest of Influx.
 
-Get native components straight from `Components` in `@webpack/common`, for example `const Button = Components.Button();`. Don't wrap them in local maps, aliases, or helper hooks. If a component is missing, add it to `Components` instead.
+Use native components straight from `Components` in `@webpack/common`, for example `<Components.Button>`. Don't wrap them in local maps, aliases, or helper hooks. If a component is missing, add it to `Components` instead. Until Fluxer's component is found, it renders only its children, so check `found(Components.Button)` only when a plugin needs a fallback.
+
+To re-render a component when Fluxer's MobX state changes, wrap it in `observer` from `@webpack/common` instead of subscribing by hand.
 
 Where possible, plugins should include a `stop()` method that cleans up their effects so they can be disabled without reloading the app. Plugins that use startup patches still require a reload to remove those patches.
 

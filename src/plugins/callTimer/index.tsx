@@ -1,7 +1,7 @@
 import definePlugin from "@api/Plugins";
 import { definePluginSettings, useSettings } from "@api/Settings";
 import { Contributor } from "@utils/constants";
-import { findIcon, formatDuration, nativeClasses, React, Stores } from "@webpack/common";
+import { findIcon, formatDuration, nativeClasses, observer, React, Stores } from "@webpack/common";
 
 const settings = definePluginSettings({
   channelList: {
@@ -11,19 +11,16 @@ const settings = definePluginSettings({
   },
 });
 
-const subscribe = (onChange: () => void) => Stores.MediaEngine()?.subscribe(onChange) ?? (() => {});
-
-function useCallSeconds(channelId?: string): number | undefined {
-  return React.useSyncExternalStore(subscribe, () => {
-    const engine = Stores.MediaEngine();
-    return engine?.connected && (channelId === undefined || engine.channelId === channelId)
-      ? engine.voiceStats.duration
-      : undefined;
-  });
+function callSeconds(channelId?: string): number | undefined {
+  const engine = Stores.MediaEngine();
+  engine?.getMobxSnapshot();
+  return engine?.connected && (channelId === undefined || engine.channelId === channelId)
+    ? engine.voiceStats.duration
+    : undefined;
 }
 
-function CallTimer() {
-  const seconds = useCallSeconds();
+const CallTimer = observer(function CallTimer() {
+  const seconds = callSeconds();
   const format = formatDuration();
   const ClockIcon = findIcon("ClockIcon");
   if (seconds === undefined || !format) return null;
@@ -40,11 +37,11 @@ function CallTimer() {
       </span>
     </div>
   );
-}
+});
 
-function ChannelTimer({ channelId }: { channelId: string }) {
+const ChannelTimer = observer(function ChannelTimer({ channelId }: { channelId: string }) {
   useSettings();
-  const seconds = useCallSeconds(channelId);
+  const seconds = callSeconds(channelId);
   const format = formatDuration();
   if (!settings.store.channelList || seconds === undefined || !format) return null;
   return (
@@ -59,7 +56,7 @@ function ChannelTimer({ channelId }: { channelId: string }) {
       </div>
     </div>
   );
-}
+});
 
 export default definePlugin({
   name: "CallTimer",

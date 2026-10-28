@@ -66,42 +66,22 @@ function ProfileNote({ userId, Editor }: { userId: string; Editor: ComponentType
 
 function NoteModal({ accountId, userId }: { accountId: string; userId: string }) {
   const [note, setNote] = React.useState(() => readNote(accountId, userId));
-  const ModalRoot = Components.ModalRoot();
-  const ModalHeader = Components.ModalHeader();
-  const ModalContent = Components.ModalContent();
-  const ModalContentLayout = Components.ModalContentLayout();
-  const ModalDescription = Components.ModalDescription();
-  const ModalFooter = Components.ModalFooter();
-  const Textarea = Components.Textarea();
-  const Button = Components.Button();
-  if (
-    !ModalRoot ||
-    !ModalHeader ||
-    !ModalContent ||
-    !ModalContentLayout ||
-    !ModalDescription ||
-    !ModalFooter ||
-    !Textarea ||
-    !Button
-  ) {
-    return null;
-  }
   const close = () => Modals()?.pop();
   const save = (value: string) => {
     saveNote(accountId, userId, value);
     close();
   };
   return (
-    <ModalRoot size="small" onClose={close}>
-      <ModalHeader title="Local note" onClose={close} />
-      <ModalContent>
-        <ModalContentLayout>
-          <Textarea
+    <Components.ModalRoot size="small" onClose={close}>
+      <Components.ModalHeader title="Local note" onClose={close} />
+      <Components.ModalContent>
+        <Components.ModalContentLayout>
+          <Components.Textarea
             label="Note"
             footer={
-              <ModalDescription>
+              <Components.ModalDescription>
                 Saved only in this browser or app for your account. Clearing local data removes it.
-              </ModalDescription>
+              </Components.ModalDescription>
             }
             placeholder="Write a private note about this user…"
             value={note}
@@ -114,18 +94,22 @@ function NoteModal({ accountId, userId }: { accountId: string; userId: string })
             showCharacterCount
             autoFocus
           />
-        </ModalContentLayout>
-      </ModalContent>
-      <ModalFooter>
-        <Button variant="secondary" onClick={close}>
+        </Components.ModalContentLayout>
+      </Components.ModalContent>
+      <Components.ModalFooter>
+        <Components.Button variant="secondary" onClick={close}>
           Cancel
-        </Button>
-        <Button variant="danger" disabled={!readNote(accountId, userId)} onClick={() => save("")}>
+        </Components.Button>
+        <Components.Button
+          variant="danger"
+          disabled={!readNote(accountId, userId)}
+          onClick={() => save("")}
+        >
           Delete note
-        </Button>
-        <Button onClick={() => save(note)}>Save</Button>
-      </ModalFooter>
-    </ModalRoot>
+        </Components.Button>
+        <Components.Button onClick={() => save(note)}>Save</Components.Button>
+      </Components.ModalFooter>
+    </Components.ModalRoot>
   );
 }
 
@@ -179,21 +163,18 @@ export default definePlugin({
   ],
 
   renderProfileNote(userId: string, Editor: ComponentType<any>) {
-    const ErrorBoundary = Components.ErrorBoundary();
-    if (!ErrorBoundary) return null;
     return (
-      <ErrorBoundary fallback={null}>
+      <Components.ErrorBoundary fallback={null}>
         <ProfileNote userId={userId} Editor={Editor} />
-      </ErrorBoundary>
+      </Components.ErrorBoundary>
     );
   },
 
   renderMenuItem(user: { id: string }, onClose: () => void) {
-    const MenuItem = Components.MenuItem();
     const NoteIcon = findIcon("NotePencilIcon");
-    if (!MenuItem || !Stores.Users()?.currentUserId) return null;
+    if (!Stores.Users()?.currentUserId) return null;
     return (
-      <MenuItem
+      <Components.MenuItem
         icon={NoteIcon && <NoteIcon size="1rem" weight="fill" />}
         onClick={() => {
           const accountId = Stores.Users()?.currentUserId;
@@ -207,7 +188,7 @@ export default definePlugin({
         }}
       >
         Local note
-      </MenuItem>
+      </Components.MenuItem>
     );
   },
 });

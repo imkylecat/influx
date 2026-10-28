@@ -216,28 +216,21 @@ function PastEdits({
 }) {
   const edits = React.useSyncExternalStore(subscribeToEdits, () => editHistory.get(message.id));
   if (!settings.store.logEdits || !edits?.length) return null;
-  const Tooltip = Components.Tooltip();
-  // Dimmed like a message that's still sending, with Fluxer's own "(edited)" label.
   const pastEditClass = nativeClasses("Message.module__messageSending___");
   const editedClass = nativeClasses("Message.module__editedTimestamp___");
-  const editedLabelClass = nativeClasses("Message.module__editedLabel___");
+  const label = (
+    <span className={nativeClasses("Message.module__editedLabel___")}>(past edit)</span>
+  );
   return (
     <>
-      {edits.map((edit, index) => {
-        const time = edit.timestamp.toLocaleString();
-        const label = (
-          <span className={editedClass} title={Tooltip ? undefined : time}>
-            {" "}
-            <span className={editedLabelClass}>(past edit)</span>
-          </span>
-        );
-        return (
-          <div key={index} className={pastEditClass}>
-            <Markdown content={edit.content} options={options} />
-            {Tooltip ? <Tooltip text={time}>{label}</Tooltip> : label}
-          </div>
-        );
-      })}
+      {edits.map((edit, index) => (
+        <div key={index} className={pastEditClass}>
+          <Markdown content={edit.content} options={options} />
+          <Components.TimestampWithTooltip date={edit.timestamp} className={editedClass}>
+            {label}
+          </Components.TimestampWithTooltip>
+        </div>
+      ))}
     </>
   );
 }
@@ -414,34 +407,31 @@ export default definePlugin({
   },
 
   renderMenuItems(message: FluxerMessage) {
-    const MenuGroup = Components.MenuGroup();
-    const MenuItem = Components.MenuItem();
     const HistoryIcon = findIcon("ClockCounterClockwiseIcon");
     const TrashIcon = findIcon("TrashIcon");
-    if (!MenuGroup || !MenuItem) return null;
     const deleted = this.isDeleted(message);
     const edited = settings.store.logEdits && editHistory.has(message.id);
     if (!deleted && !edited) return null;
     return (
-      <MenuGroup>
+      <Components.MenuGroup>
         {edited && (
-          <MenuItem
+          <Components.MenuItem
             icon={HistoryIcon && <HistoryIcon size="1rem" weight="fill" />}
             onClick={() => setEdits(message.id, [])}
           >
             Clear edit history
-          </MenuItem>
+          </Components.MenuItem>
         )}
         {deleted && (
-          <MenuItem
+          <Components.MenuItem
             danger
             icon={TrashIcon && <TrashIcon size="1rem" weight="fill" />}
             onClick={() => removeDeletedMessage(message)}
           >
             Remove deleted message
-          </MenuItem>
+          </Components.MenuItem>
         )}
-      </MenuGroup>
+      </Components.MenuGroup>
     );
   },
 

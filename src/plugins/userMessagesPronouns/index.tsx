@@ -5,8 +5,8 @@ import {
   Components,
   fetchUserProfile,
   nativeClasses,
+  observer,
   React,
-  reaction,
   Stores,
 } from "@webpack/common";
 import type { FluxerMessage } from "@webpack/fluxer";
@@ -88,16 +88,11 @@ function request(userId: string, guildId?: string, force?: boolean): void {
   runWaiting();
 }
 
-function Pronouns({ message }: { message: FluxerMessage }) {
+const Pronouns = observer(function Pronouns({ message }: { message: FluxerMessage }) {
   useSettings();
   const { author } = message;
   const guildId = message.guildId ?? Stores.Channels()?.getChannel(message.channelId)?.guildId;
-  const subscribe = React.useCallback(
-    (onChange: () => void) =>
-      reaction()?.(() => pronounsOf(author.id, guildId), onChange) ?? (() => {}),
-    [author.id, guildId],
-  );
-  const pronouns = React.useSyncExternalStore(subscribe, () => pronounsOf(author.id, guildId));
+  const pronouns = pronounsOf(author.id, guildId);
   const shown =
     !author.bot &&
     !author.system &&
@@ -114,9 +109,8 @@ function Pronouns({ message }: { message: FluxerMessage }) {
       • {settings.store.pronounsFormat === "lowercase" ? text.toLowerCase() : text}
     </span>
   );
-  const Tooltip = Components.Tooltip();
-  return Tooltip ? <Tooltip text="Pronouns">{label}</Tooltip> : label;
-}
+  return <Components.Tooltip text="Pronouns">{label}</Components.Tooltip>;
+});
 
 export default definePlugin({
   name: "UserMessagesPronouns",

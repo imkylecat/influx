@@ -6,6 +6,7 @@ import {
   checkEmojiAvailability,
   checkStickerAvailability,
   Components,
+  found,
   Modals,
   React,
   Stores,
@@ -198,15 +199,13 @@ function replaceEmojis(content: string, channel: FluxerChannel | null): string {
 
 function CannotEmbedNotice({ resolve }: { resolve: (send: boolean) => void }) {
   React.useEffect(() => () => resolve(false), [resolve]);
-  const ConfirmModal = Components.ConfirmModal()!;
-  const Checkbox = Components.Checkbox();
   return (
-    <ConfirmModal
+    <Components.ConfirmModal
       title="Hold on!"
       description="This message has a fake emoji or sticker, but you can't embed links in this channel. It will appear as a link only. Send it anyway?"
       primaryText="Send anyway"
       secondaryText="Cancel"
-      checkboxContent={Checkbox && <Checkbox>Don't ask me again</Checkbox>}
+      checkboxContent={<Components.Checkbox>Don't ask me again</Components.Checkbox>}
       onPrimary={(dontAskAgain?: boolean) => {
         if (dontAskAgain) settings.store.disableEmbedPermissionCheck = true;
         resolve(true);
@@ -221,7 +220,7 @@ function confirmWithoutEmbeds(channel: FluxerChannel | null): Promise<boolean> {
     settings.store.disableEmbedPermissionCheck ||
     canEmbedLinks(channel) ||
     !modals ||
-    !Components.ConfirmModal()
+    !found(Components.ConfirmModal)
   ) {
     return Promise.resolve(true);
   }

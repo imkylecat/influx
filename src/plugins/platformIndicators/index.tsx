@@ -6,8 +6,8 @@ import {
   findIcon,
   nativeClasses,
   observable,
+  observer,
   React,
-  reaction,
   Stores,
 } from "@webpack/common";
 import type { FluxerMessage, FluxerUser } from "@webpack/fluxer";
@@ -56,26 +56,10 @@ interface Platform {
 let settingsVersion: { get(): number; set(value: number): void } | undefined;
 const settingsChanges = () => (settingsVersion ??= observable()?.box(0));
 
-type MemberListRows = NonNullable<
-  ReturnType<typeof Stores.MemberList>
->["lists"][string][string]["rows"];
-const listedPlatforms = new WeakMap<MemberListRows, Map<string, Platform>>();
-
-// The member list's rows keep each member's presence as the server sent it, mobile flag included.
 function listedPlatform(guildId: string, userId: string): Platform | undefined {
-  for (const { rows } of Object.values(Stores.MemberList()?.lists[guildId] ?? {})) {
-    let platforms = listedPlatforms.get(rows);
-    if (!platforms) {
-      platforms = new Map();
-      for (const { userId: id, presence } of rows.values()) {
-        if (id && presence?.status) {
-          platforms.set(id, { status: presence.status, mobile: presence.mobile === true });
-        }
-      }
-      listedPlatforms.set(rows, platforms);
-    }
-    const listed = platforms.get(userId);
-    if (listed) return listed;
+  for (const list of Object.values(Stores.MemberList()?.lists[guildId] ?? {})) {
+    const status = list.presences.get(userId);
+    if (status) return { status, mobile: list.mobileUserIds.has(userId) };
   }
   return undefined;
 }
@@ -108,16 +92,14 @@ function render(platform: Platform | undefined, size: string) {
 }
 
 const WATCH_MILLISECONDS = 4 * 60_000;
-const watched = new Map<string, number>();
 
 function watch(guildId: string, userId: string): void {
-  const key = `${guildId}:${userId}`;
-  if (Date.now() - (watched.get(key) ?? 0) < WATCH_MILLISECONDS) return;
-  watched.set(key, Date.now());
-  Stores.MemberPresenceSubscription()?.touchMember(guildId, userId);
+  const subscriptions = Stores.MemberPresenceSubscription();
+  const touched = subscriptions?.subscriptions.get(guildId)?.get(userId) ?? 0;
+  if (Date.now() - touched >= WATCH_MILLISECONDS) subscriptions?.touchMember(guildId, userId);
 }
 
-function PlatformIndicator({
+const PlatformIndicator = observer(function PlatformIndicator({
   user,
   place,
   status,
@@ -133,16 +115,7 @@ function PlatformIndicator({
   useSettings();
   const userId = user?.id;
   const guildId = listGuildId ?? message?.guildId;
-  const subscribe = React.useCallback(
-    (onChange: () => void) =>
-      reaction()?.(() => JSON.stringify(userId && platformOf(userId, guildId, status)), onChange) ??
-      (() => {}),
-    [userId, guildId, status],
-  );
-  const platform = React.useSyncExternalStore(subscribe, () =>
-    JSON.stringify(userId && platformOf(userId, guildId, status)),
-  );
-  // Bots are online without using an app.
+  const platform = userId ? platformOf(userId, guildId, status) : undefined;
   const person = userId !== undefined && !user?.bot && message?.webhookId == null;
   const watching =
     person && message && guildId && (settings.store.messages || settings.store.messageAvatars);
@@ -153,12 +126,11 @@ function PlatformIndicator({
     return () => clearInterval(timer);
   }, [watching, guildId, userId]);
 
-  const shown = person && platform ? render(JSON.parse(platform), "0.875rem") : undefined;
-  const Tooltip = Components.Tooltip();
+  const shown = person && platform ? render(platform, "0.875rem") : undefined;
   if (!settings.store[place] || !shown) return null;
   const icon = <span className={nativeClasses(WRAPPER_CLASSES[place])}>{shown.icon}</span>;
-  return Tooltip ? <Tooltip text={shown.label}>{icon}</Tooltip> : icon;
-}
+  return <Components.Tooltip text={shown.label}>{icon}</Components.Tooltip>;
+});
 
 function badge(user: FluxerUser, guildId?: string | null, status?: string | null) {
   const shown = user.bot ? undefined : render(platformOf(user.id, guildId, status), "100%");
@@ -242,6 +214,5 @@ export default definePlugin({
 
   stop() {
     stopWatchingSettings?.();
-    watched.clear();
   },
 });

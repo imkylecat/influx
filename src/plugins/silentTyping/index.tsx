@@ -26,12 +26,11 @@ function ChatBarButton({ channelId }: { channelId?: string }) {
   useSettings();
   const { active } = settings.store;
   const silent = isSilent(channelId);
-  const TextareaButton = Components.TextareaButton();
   const KeyboardIcon = findIcon("KeyboardIcon");
-  if (!TextareaButton || !KeyboardIcon) return null;
+  if (!KeyboardIcon) return null;
   const state = silent ? "on" : active ? "off in this channel" : "off";
   return (
-    <TextareaButton
+    <Components.TextareaButton
       icon={KeyboardIcon}
       iconProps={silent ? { weight: "fill" } : undefined}
       label={`Silent typing: ${state}`}

@@ -139,7 +139,6 @@ function FolderSidebar({ folders }: { folders: OpenFolder[] }) {
   const { showFolderIcon, sidebarAnimation } = settings.store;
   const folderIcon =
     showFolderIcon === "always" || (showFolderIcon === "moreThanOne" && folders.length > 1);
-  const Scroller = Components.Scroller();
   const content = (
     <div className={nativeClasses("GuildsLayout.module__guildListContent___")}>
       {folders.map(({ FolderItem, props }) => (
@@ -159,16 +158,14 @@ function FolderSidebar({ folders }: { folders: OpenFolder[] }) {
       data-open={folders.length > 0}
       data-animate={sidebarAnimation}
     >
-      {Scroller ? (
-        <Scroller
+      {
+        <Components.Scroller
           className={nativeClasses("GuildsLayout.module__guildListScrollContainer___")}
           showTrack={false}
         >
           {content}
-        </Scroller>
-      ) : (
-        content
-      )}
+        </Components.Scroller>
+      }
     </nav>
   );
 }

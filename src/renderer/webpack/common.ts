@@ -1,4 +1,4 @@
-import type { ComponentType } from "react";
+import type { ComponentType, FunctionComponent, ReactNode } from "react";
 
 import { Logger } from "../utils/Logger";
 import {
@@ -46,6 +46,21 @@ function lazy<T>(lookup: () => T | undefined): () => T | undefined {
   };
 }
 
+const Missing = ({ children }: { children?: ReactNode }) => children ?? null;
+
+function lazyComponents<T extends string>(
+  lookups: Record<T, () => ComponentType<any> | undefined>,
+): Record<T, ComponentType<any>> {
+  const components = {} as Record<T, ComponentType<any>>;
+  for (const [name, lookup] of Object.entries<() => ComponentType<any> | undefined>(lookups)) {
+    const find = lazy(lookup);
+    Object.defineProperty(components, name, { enumerable: true, get: () => find() ?? Missing });
+  }
+  return components;
+}
+
+export const found = (component: ComponentType<any>): boolean => component !== Missing;
+
 function lazyByKey<T>(lookup: (key: string) => T | undefined): (key: string) => T | undefined {
   const lookups = new Map<string, () => T | undefined>();
   return (key) => {
@@ -58,59 +73,50 @@ function lazyByKey<T>(lookup: (key: string) => T | undefined): (key: string) => 
   };
 }
 
-export const Components = {
-  ConfirmModal: lazy(() => findComponentByCode("app.confirm-modal.modal-root")),
-  Switch: lazy(() => findComponentByCode("-switch-label")),
-  Checkbox: lazy(() => findComponentByCode("ui.checkbox.checkbox.checkbox-wrapper")),
-  Input: lazy(() => findComponentByCode("ui.form.input.field-set.fieldset", "Input")),
-  Textarea: lazy(() => findComponentByDisplayName("ui.form.input.textarea.field-set", "Textarea")),
-  MenuItem: lazy(() =>
+export const Components = lazyComponents({
+  ConfirmModal: () => findComponentByCode("app.confirm-modal.modal-root"),
+  Switch: () => findComponentByCode("-switch-label"),
+  Checkbox: () => findComponentByCode("ui.checkbox.checkbox.checkbox-wrapper"),
+  Input: () => findComponentByCode("ui.form.input.field-set.fieldset", "Input"),
+  Textarea: () => findComponentByDisplayName("ui.form.input.textarea.field-set", "Textarea"),
+  MenuItem: () =>
     findComponentByDisplayName("ui.action-menu.menu-item.menu-item-primitive.select", "MenuItem"),
-  ),
-  // A context menu item that opens a nested menu built by its render prop.
-  MenuItemSubmenu: lazy(() =>
+  MenuItemSubmenu: () =>
     findComponentByDisplayName("ui.action-menu.context-menu.sub-menu.trigger", "SubMenu"),
-  ),
-  // A context menu item with a checkbox. Toggling it keeps the menu open.
-  MenuItemCheckbox: lazy(() =>
+  MenuItemCheckbox: () =>
     findComponentByDisplayName("ui.action-menu.context-menu.checkbox-item.item", "CheckboxItem"),
-  ),
-  // A context menu section, with a separator after it when anything follows.
-  MenuGroup: lazy(() => findComponentByCode("ui.action-menu.menu-group.menu-group-primitive")),
-  Button: lazy(() => findComponentByCode("ui.button.button.focus-ring", "Button")),
-  // The icon buttons in the chat bar, beside the GIF, sticker, and emoji pickers.
-  TextareaButton: lazy(() =>
+  MenuGroup: () => findComponentByCode("ui.action-menu.menu-group.menu-group-primitive"),
+  Button: () => findComponentByCode("ui.button.button.focus-ring", "Button"),
+  TextareaButton: () =>
     findComponentByCode("channel.textarea.textarea-button.focus-ring", "TextareaButton"),
-  ),
-  Combobox: lazy(() => findComponentByCode("ui.form.combobox.label")),
-  WarningAlert: lazy(() => findComponentByCode("ui.warning-alert.warning-alert.alert")),
-  SettingsTabContainer: lazy(() =>
+  Combobox: () => findComponentByCode("ui.form.combobox.label"),
+  WarningAlert: () => findComponentByCode("ui.warning-alert.warning-alert.alert"),
+  SettingsTabContainer: () =>
     findComponentByCode("app.settings-tab-layout.settings-tab-container.container"),
-  ),
-  SettingsTabContent: lazy(() =>
+  SettingsTabContent: () =>
     findComponentByCode("app.settings-tab-layout.settings-tab-content.content"),
-  ),
-  SettingsSection: lazy(() => findComponentByCode("app.settings-section.section")),
-  StatusSlate: lazy(() => findComponentByCode("app.status-slate.container")),
-  Tooltip: lazy(() => findComponentByCode("ui.tooltip.tooltip.trigger-wrapper")),
-  Spinner: lazy(() => findComponentByCode('"ui.spinner.spinner"')),
-  ExternalLink: lazy(() => findComponentByCode("app.external-link.external-link.click")),
-  // The card behind invite and theme embeds: an icon, title, subtitle, and a footer below a divider.
-  EmbedCard: lazy(() => findComponentByCode("messaging.embeds.embed-card.embed-card.wrapper")),
-  ModalRoot: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalRoot")),
-  ModalHeader: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalHeader")),
-  ModalContent: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalContent")),
-  ModalContentLayout: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalContentLayout")),
-  // Muted helper text, also used for the footer under an Input or Textarea.
-  ModalDescription: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalDescription")),
-  ModalFooter: lazy(() => findComponentByDisplayName(MODAL_MODULE, "ModalFooter")),
-  // The full message row, as rendered in pins, confirm modals, and unread-channel previews.
-  Message: lazy(() => findComponentByCode("channel.message.message-view-context-provider")),
-  AvatarStack: lazy(() => findComponentByCode("ui.avatars.avatar-stack.avatar")),
-  Scroller: lazy(() => findComponentByCode("ui.scroller.scroller-children")),
-  // Lexical's error boundary. It calls onError, and shows a red box unless fallback is set, even to null.
-  ErrorBoundary: lazy(() => findComponentByCode("An error was thrown.")),
-};
+  SettingsSection: () => findComponentByCode("app.settings-section.section"),
+  StatusSlate: () => findComponentByCode("app.status-slate.container"),
+  Tooltip: () => findComponentByCode("ui.tooltip.tooltip.trigger-wrapper"),
+  Spinner: () => findComponentByCode('"ui.spinner.spinner"'),
+  ExternalLink: () => findComponentByCode("app.external-link.external-link.click"),
+  EmbedCard: () => findComponentByCode("messaging.embeds.embed-card.embed-card.wrapper"),
+  ModalRoot: () => findComponentByDisplayName(MODAL_MODULE, "ModalRoot"),
+  ModalHeader: () => findComponentByDisplayName(MODAL_MODULE, "ModalHeader"),
+  ModalContent: () => findComponentByDisplayName(MODAL_MODULE, "ModalContent"),
+  ModalContentLayout: () => findComponentByDisplayName(MODAL_MODULE, "ModalContentLayout"),
+  ModalDescription: () => findComponentByDisplayName(MODAL_MODULE, "ModalDescription"),
+  ModalFooter: () => findComponentByDisplayName(MODAL_MODULE, "ModalFooter"),
+  Message: () => findComponentByCode("channel.message.message-view-context-provider"),
+  AvatarStack: () => findComponentByCode("ui.avatars.avatar-stack.avatar"),
+  Scroller: () => findComponentByCode("ui.scroller.scroller-children"),
+  ErrorBoundary: () => findComponentByCode("An error was thrown."),
+  SettingsSearch: () => findComponentByCode("app.settings-search.container"),
+  TimestampWithTooltip: () => findComponentByCode("channel.timestamp-with-tooltip.container"),
+  Nagbar: () => findComponentByCode("app.nagbar.nagbar"),
+  NagbarContent: () => findComponentByCode("app.nagbar-content.container"),
+  NagbarButton: () => findComponentByCode("app.nagbar-button.button.click"),
+});
 
 export const findIcon = lazyByKey<ComponentType<any>>(findComponentByName);
 
@@ -119,6 +125,7 @@ export const Modals = lazy<{
   pop(): void;
   pushWithKey(modal: unknown, key: string): void;
   popWithKey(key: string): void;
+  popAllByType(component: ComponentType<any>): void;
   modal(render: () => JSX.Element): unknown;
 }>(() => findByProperties("push", "pop", "modal", "pushWithKey"));
 
@@ -141,9 +148,6 @@ export const Stores = {
     navigateToGuild(guildId: string, channelId?: string, messageId?: string, mode?: string): void;
     navigateToDM(channelId?: string, messageId?: string, mode?: string): void;
   }>(() => findByProperties("navigateToGuild", "navigateToDM", "navigateToFavorites")),
-  StreamerMode: lazy<{ shouldTruncateUsernames: boolean }>(() =>
-    findByProperties("shouldTruncateUsernames", "shouldHidePersonalInformation"),
-  ),
   Presence: lazy<{
     getStatus(userId: string): string;
     isMobile(userId: string): boolean;
@@ -155,16 +159,15 @@ export const Stores = {
       Record<
         string,
         {
-          rows: Map<
-            number,
-            { userId?: string; presence?: { status?: string; mobile?: boolean } | null }
-          >;
+          presences: Map<string, string>;
+          mobileUserIds: Set<string>;
         }
       >
     >;
   }>(() => findByProperties("getList", "getPresence", "handleListUpdate")),
   MemberPresenceSubscription: lazy<{
     touchMember(guildId: string, userId: string): void;
+    subscriptions: Map<string, Map<string, number>>;
   }>(() => findByProperties("touchMember", "getGuildSubscriptions")),
   UserProfile: lazy<{ getProfile(userId: string, guildId?: string): FluxerProfile | null }>(() =>
     findByProperties("getProfile", "handleProfileCreate", "handleProfilesClear"),
@@ -187,6 +190,9 @@ export const Stores = {
   MobileLayout: lazy<{ enabled: boolean }>(() =>
     findByProperties("navExpanded", "chatExpanded", "isEnabled"),
   ),
+  Modal: lazy<{ hasModal(key: string): boolean }>(() =>
+    findByProperties("hasModal", "hasModalOfType", "popByType"),
+  ),
   UserSettings: lazy<{
     guildFolders: Array<{ id: number | null; guildIds: string[] }>;
   }>(() => findByProperties("guildFolders", "updateUserSettings")),
@@ -195,15 +201,26 @@ export const Stores = {
     channelId: string | null;
     voiceStats: { duration: number };
     subscribe(listener: () => void): () => void;
+    getMobxSnapshot(): number;
     getAllVoiceStates(): Record<string, Record<string, Record<string, VoiceStateWire>>>;
     connectToVoiceChannel(guildId: string | null, channelId: string): Promise<void>;
   }>(() => findByProperties("voiceStats", "disconnectFromVoiceChannel")),
 };
 
-// MobX, which Fluxer's stores and components are built on.
+const mobxObserver = lazy<<P>(component: FunctionComponent<P>) => FunctionComponent<P>>(() =>
+  findByCode("on a function component wrapped in either another"),
+);
+
+export function observer<P extends object>(component: FunctionComponent<P>): FunctionComponent<P> {
+  let observed: FunctionComponent<P> | undefined;
+  return (props) =>
+    React.createElement((observed ??= mobxObserver()?.(component)) ?? component, props);
+}
+
 export const observable = lazy<{
   map<K, V>(entries?: undefined, options?: { deep?: boolean }): Map<K, V>;
   box<T>(value: T): { get(): T; set(value: T): void };
+  array<T>(values: T[], options?: { deep?: boolean }): T[];
 }>(() => findByProperties("box", "map", "array"));
 
 export const reaction = lazy<
@@ -259,6 +276,26 @@ export const checkStickerAvailability = lazy<ExpressionAvailability<FluxerSticke
 
 export const formatDuration = lazy<(seconds: number) => string>(() =>
   findByCode('="en-US"', "Number.isFinite(", "/3600)"),
+);
+
+export const formatNameForStreamerMode = lazy<(name: string) => string>(() =>
+  findByCode("shouldTruncateUsernames?"),
+);
+
+export const parseMessageJumpLink = lazy<
+  (url: string) => { scope: string; channelId: string; messageId: string } | null
+>(() => findByCode("{scope:", ",messageId:", "length)!==4"));
+
+export const goToMessage = lazy<(channelId: string, messageId: string) => void>(() =>
+  findByCode("setPendingJumpDispatch(", "viewContext"),
+);
+
+export const UserFlags = lazy<Record<string, number>>(() =>
+  findByProperties("FRIENDLY_BOT_MANUAL_APPROVAL", "BUG_HUNTER", "SPAMMER"),
+);
+
+export const GuildFeatures = lazy<Record<string, string>>(() =>
+  findByProperties("VOICE_E2EE", "VANITY_URL", "UNAVAILABLE_HIDDEN"),
 );
 
 interface NotificationContent {

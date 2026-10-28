@@ -53,7 +53,7 @@ export function snapshotFromReady(ready: ReadyPayload, previous?: Snapshot): Sna
   }
   const guilds: Snapshot["guilds"] = {};
   for (const wire of ready.guilds ?? []) {
-    // Servers that are briefly unavailable still arrive as stubs, just without a name.
+    if (wire.visiting) continue;
     guilds[wire.id] = guildName(wire) ?? previous?.guilds[wire.id] ?? null;
   }
   if (!ready.private_channels) return { relationships, guilds };

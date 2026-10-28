@@ -145,7 +145,7 @@ function onRelationshipRemove(data: { id: string }): void {
 }
 
 function onGuildChange(data: GuildWire): void {
-  if (!snapshot || data.unavailable) return;
+  if (!snapshot || data.unavailable || data.visiting) return;
   const name = guildName(data);
   if (data.id in snapshot.guilds && (name == null || snapshot.guilds[data.id] === name)) return;
   snapshot.guilds[data.id] = name ?? snapshot.guilds[data.id] ?? null;
@@ -153,8 +153,7 @@ function onGuildChange(data: GuildWire): void {
 }
 
 function onGuildDelete(data: { id: string; unavailable?: boolean }): void {
-  // An unavailable server is an outage, not a removal.
-  if (data.unavailable) return;
+  if (data.unavailable || Stores.Guilds()?.getGuild(data.id)?.visiting) return;
   const known = snapshot && data.id in snapshot.guilds;
   const name = snapshot?.guilds[data.id] ?? Stores.Guilds()?.getGuild(data.id)?.name ?? null;
   if (snapshot && known) {

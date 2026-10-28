@@ -16,6 +16,7 @@ describe("RelationshipNotifier while away", () => {
         { id: "g1", properties: { name: "Kept" } },
         { id: "g2", properties: { name: "Gone" } },
         { id: "g3", unavailable: true },
+        { id: "g4", visiting: true, properties: { name: "Preview" } },
       ],
     });
     const after = snapshotFromReady(

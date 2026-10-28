@@ -25,6 +25,7 @@ export interface FluxerChannel {
 export interface FluxerGuild {
   id: string;
   name: string;
+  visiting: boolean;
   features: ReadonlySet<string>;
   toJSON(): object;
 }
@@ -110,6 +111,7 @@ export interface GuildWire {
   id: string;
   name?: string;
   unavailable?: boolean;
+  visiting?: boolean;
   properties?: { name?: string };
 }
 

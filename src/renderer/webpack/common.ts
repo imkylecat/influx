@@ -313,10 +313,13 @@ const linkedUserProfileOpener = lazy<(userId: string) => Promise<boolean>>(() =>
   findByCode("Skipping linked profile open before fetch"),
 );
 
-export function openUserProfile(userId: string): void {
+export async function openUserProfile(...userIds: string[]): Promise<void> {
   const openLinkedUserProfile = linkedUserProfileOpener();
-  if (openLinkedUserProfile) void openLinkedUserProfile(userId);
-  else logger.error("Couldn't find Fluxer's openLinkedUserProfile");
+  if (!openLinkedUserProfile) {
+    logger.error("Couldn't find Fluxer's openLinkedUserProfile");
+    return;
+  }
+  for (const userId of userIds) if (await openLinkedUserProfile(userId)) return;
 }
 
 const inviteAcceptModalOpener = lazy<(code: string) => void>(() =>

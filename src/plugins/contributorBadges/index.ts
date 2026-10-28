@@ -7,7 +7,7 @@ const BADGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"
 const BADGE_ICON_URL = `data:image/svg+xml,${encodeURIComponent(BADGE_SVG)}`;
 
 const contributorIds = new Set<string>(
-  Object.values(Contributor).map((contributor) => contributor.id),
+  Object.values(Contributor).flatMap((contributor) => contributor.ids),
 );
 
 interface ProfileBadge {

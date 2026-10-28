@@ -188,12 +188,12 @@ function PluginRow({ plugin, needsReload }: { plugin: PluginDefinition; needsRel
         <p className={row("settingDescription")}>
           By{" "}
           {plugin.authors.map((author, index) => (
-            <React.Fragment key={author.id}>
+            <React.Fragment key={author.name}>
               {index > 0 && ", "}
               <button
                 type="button"
                 className={nativeClasses("CallMessage.module__callLink___")}
-                onClick={() => openUserProfile(author.id)}
+                onClick={() => void openUserProfile(...author.ids)}
               >
                 {author.name}
               </button>

@@ -190,6 +190,9 @@ export const Stores = {
   MobileLayout: lazy<{ enabled: boolean }>(() =>
     findByProperties("navExpanded", "chatExpanded", "isEnabled"),
   ),
+  MatureContentGate: lazy<{
+    getGateReason(context: { channelId: string; guildId?: string | null }): number;
+  }>(() => findByProperties("getGateReason", "hasAgreedToChannel")),
   Modal: lazy<{ hasModal(key: string): boolean }>(() =>
     findByProperties("hasModal", "hasModalOfType", "popByType"),
   ),

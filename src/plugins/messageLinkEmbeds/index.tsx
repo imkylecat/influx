@@ -130,6 +130,10 @@ function LinkEmbed({ link }: { link: MessageLink }) {
 
   const channel = Stores.Channels()?.getChannel(state.message.channelId);
   if (!channel) return null;
+  const gate = Stores.MatureContentGate();
+  if (!gate || gate.getGateReason({ channelId: channel.id, guildId: channel.guildId })) {
+    return <UnavailableCard link={link} />;
+  }
 
   const { Provider } = getInPreview();
   return (

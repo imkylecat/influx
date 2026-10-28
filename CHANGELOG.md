@@ -7,6 +7,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Removed
+
+- NoBlockedMessages plugin. Fluxer can now hide messages from blocked users itself: turn on "Hide
+  messages from blocked users" in Advanced settings.
+
+### Fixed
+
+- Updated the patch signatures of all plugins for the current Fluxer version.
+- AnonymizeFileNames also renames files you send at once by holding Shift while you drop them.
+- MessageLinkEmbeds no longer previews messages from age-restricted channels you haven't agreed to
+  view.
+- RelationshipNotifier no longer says you were removed from a server when you stop previewing it.
+- PlatformIndicators keeps updating someone's status after you close their profile.
+
 ## [0.7.5] - 2026-10-25
 
 ### Changed

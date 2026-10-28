@@ -37,7 +37,6 @@ describe("Gateway", () => {
   });
 
   it("hooks Fluxer's handler registry once it is filled", () => {
-    // Shape of Fluxer's compiled gateway handler registry.
     const registryModule = compile(
       'function(e){let t=new Map;t.set("READY",()=>{}),t.set("SESSIONS_REPLACE",()=>{}),e.exports=t}',
     );

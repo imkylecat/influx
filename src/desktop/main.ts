@@ -8,7 +8,6 @@ import { FLUXER_APP_ORIGINS, IPC_GET_RENDERER } from "./constants";
 import { keepAcrossFluxerUpdates } from "./fluxerUpdates";
 import { registerUpdater } from "./updater";
 
-// Set by the build banner; Bun would otherwise bake in the build machine's __dirname.
 declare const INFLUX_DIRECTORY: string;
 
 const fluxerAsar = path.join(process.resourcesPath, "_app.asar");

@@ -21,7 +21,6 @@ export default definePlugin({
 
   patches: [
     {
-      // DeveloperMode.isDeveloper: true for staff or after the 7-tap unlock.
       find: "get isDeveloper(){",
       replacement: {
         match: /get isDeveloper\(\)\{/,
@@ -29,7 +28,6 @@ export default definePlugin({
       },
     },
     {
-      // UserRecord.isStaff: the is_staff field or the STAFF flag, for any user.
       find: "isStaff(){var",
       replacement: {
         match: /isStaff\(\)\{/,

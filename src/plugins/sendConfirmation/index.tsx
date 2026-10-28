@@ -55,7 +55,6 @@ function Confirmation({
   channelId: string;
   finish: (confirmed: boolean) => void;
 }) {
-  // Escape, the close button, and dismissal must cancel the waiting send too.
   React.useEffect(() => () => finish(false), [finish]);
   const ConfirmModal = Components.ConfirmModal()!;
   const channel = Stores.Channels()?.getChannel(channelId);
@@ -83,13 +82,11 @@ export default definePlugin({
       find: "Enqueueing message for channel",
       replacement: [
         {
-          // Guard the shared send command before uploads or queueing, including forwards and retries.
           match: /(?=if\(!(\i\.\i)\.consumeLocalSendReservation\((\i),(\i)\.nonce\)\))/,
           replace:
             "if(!(yield $self.authorize($2,$3.nonce))){$1.rejectLocalRateLimitedSend($2,$3.nonce,$3.hasAttachments);return null;}",
         },
         {
-          // Block normal composer sends before Fluxer clears the draft or creates an optimistic message.
           match: /return (\i\.\i)\.reserveLocalSend\((\i),(\i)\)/,
           replace: "return !$self.blocked($2)&&$1.reserveLocalSend($2,$3)",
         },
@@ -134,7 +131,6 @@ export default definePlugin({
         showToast("error", "Couldn't open send confirmation. Your message was not sent.");
       }
     });
-    // Recheck after waiting: account and protection settings may have changed while the modal was open.
     return confirmed && Stores.Users()?.currentUserId === accountId && !this.blocked(channelId);
   },
 

@@ -66,7 +66,6 @@ export default definePlugin({
       },
     },
     {
-      // The settings search keeps a shorter copy of this list and falls back to the full one.
       find: /\{my_profile:[^{}]+,advanced_settings:/,
       all: true,
       replacement: {

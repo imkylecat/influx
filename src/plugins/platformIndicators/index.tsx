@@ -43,7 +43,6 @@ const STATUS_LABELS: Record<string, string> = {
   dnd: "Do not disturb",
 };
 
-// The spacing of the owner crown and of the bot tag.
 const WRAPPER_CLASSES: Record<Place, string> = {
   memberList: "MemberListItem.module__ownerIcon___",
   messages: "Message.module__userTagOffset___",
@@ -81,8 +80,6 @@ function listedPlatform(guildId: string, userId: string): Platform | undefined {
   return undefined;
 }
 
-// Fluxer's presence store knows friends and watched members. The member list knows who it shows.
-// Callers that already show a status pass it.
 function platformOf(
   userId: string,
   guildId?: string | null,
@@ -110,11 +107,9 @@ function render(platform: Platform | undefined, size: string) {
   };
 }
 
-// Fluxer follows a touched member for 5 minutes, so watching repeats before then.
 const WATCH_MILLISECONDS = 4 * 60_000;
 const watched = new Map<string, number>();
 
-// Has Fluxer's presence store follow a member, as opening their profile does.
 function watch(guildId: string, userId: string): void {
   const key = `${guildId}:${userId}`;
   if (Date.now() - (watched.get(key) ?? 0) < WATCH_MILLISECONDS) return;
@@ -165,7 +160,6 @@ function PlatformIndicator({
   return Tooltip ? <Tooltip text={shown.label}>{icon}</Tooltip> : icon;
 }
 
-// Props for the badge Fluxer draws over an avatar's status, as it does for muted people in voice.
 function badge(user: FluxerUser, guildId?: string | null, status?: string | null) {
   const shown = user.bot ? undefined : render(platformOf(user.id, guildId, status), "100%");
   return (
@@ -193,7 +187,6 @@ export default definePlugin({
         match:
           /(\i)\.bot&&\(0,(\i)\.jsx\)\(\i\.\i,\{className:\i\.\i,system:\1\.system,"data-flx":"channel\.member-list-item\.user-tag"\}\)/,
         replace: (match: string, user: string, jsx: string, offset: number, code: string) => {
-          // The server and the status the member list shows, passed to the avatar a little earlier.
           const [, guildId, status] =
             /guildId:([\w$]+),status:([\w$]+),[^{}]*"data-flx":"channel\.member-list-item\.status-aware-avatar"/.exec(
               code.slice(0, offset),
@@ -205,7 +198,6 @@ export default definePlugin({
     {
       find: '"channel.user-message.message-username--2"',
       replacement: {
-        // The same author names as ShowMeYourName, after its username when that patch ran first.
         match:
           /\(0,(\i)\.jsx\)\(\i(?:\.\i)?,\{user:(\i),message:(\i),guild:\i,member:[^}]{0,300}?"data-flx":"channel\.(?:user-message|compact-message-layout\.compact-author-prefix)\.message-username(?:--\d)?"\}\)(?:,Influx\.plugins\["ShowMeYourName"\]\.renderUsername\(\i,\i\))?/g,
         replace: '$&,(0,$1.jsx)($self.PlatformIndicator,{user:$2,message:$3,place:"messages"})',
@@ -231,7 +223,6 @@ export default definePlugin({
 
   PlatformIndicator,
 
-  // Reading the settings version redraws Fluxer's avatars when a setting changes.
   avatarBadge(user: FluxerUser, guildId: string | null | undefined, status?: string | null) {
     settingsChanges()?.get();
     return settings.store.avatars && status ? badge(user, guildId, status) : undefined;

@@ -15,7 +15,6 @@ describe("AnonymizeFileNames", () => {
   });
 
   it("renames files passed to CloudUpload.addFiles", async () => {
-    // Shape of Fluxer's compiled CloudUpload.addFiles.
     const uploadModule = compile(
       "function(e,t,n){function v(g){return function(){const it=g.apply(this,arguments);return new Promise(r=>{(function step(x){const s=it.next(x);s.done?r(s.value):Promise.resolve(s.value).then(step)})()})}}" +
         "class U{createAttachments(e,t){return Promise.resolve(t.map(f=>f.name))}addFiles(e,t){return v(function*(){if(0===t.length)return[];let n=yield this.createAttachments(e,t);return n}).call(this)}}" +

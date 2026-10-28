@@ -1,4 +1,3 @@
-/* Most of the settings UI borrows Fluxer's own classes; these cover what has no native equivalent. */
 .influx-plugin-filters {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));

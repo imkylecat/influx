@@ -18,8 +18,6 @@ import { type LoadedWindow, mergeDeleted, type PastEdit, publicUser, readSavedLo
 
 import STYLES from "./styles.css" with { type: "text" };
 
-// Fluxer only defines flag bits up to 1 << 13, so this one is free for marking deleted messages.
-// Changing flags also makes Message.equals() see a difference, which rerenders the row.
 const DELETED_FLAG = 1 << 30;
 const MAXIMUM_EDITED_MESSAGES = 2000;
 const MAXIMUM_SAVED_DELETED_MESSAGES = 1000;
@@ -28,7 +26,6 @@ const DATA_KEY = "MessageLogger";
 const STYLE_ID = "influx-message-logger";
 const logger = new Logger("MessageLogger");
 
-// Fluxer's message menu actions that still work once a message is gone from the server.
 const DELETED_MESSAGE_ACTIONS = new Set([
   "view_reactions",
   "copy_message",
@@ -85,10 +82,8 @@ interface ActionGroup {
   items: { id?: string }[];
 }
 
-// Each message's list is replaced rather than mutated, so rows can tell when theirs changed.
 const editHistory = new Map<string, readonly PastEdit[]>();
 const editListeners = new Set<() => void>();
-// Deleted messages as Fluxer's server would send them, kept only while logs are saved.
 const savedDeleted = new Map<string, MessageWire>();
 
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -108,7 +103,6 @@ function scheduleSave() {
 async function loadLogs() {
   const saved = readSavedLogs(await getData(DATA_KEY));
   if (!settings.store.saveLogs) return;
-  // Anything logged while loading is newer than what was saved.
   const logged = { deleted: [...savedDeleted.values()], edits: [...editHistory] };
   savedDeleted.clear();
   editHistory.clear();
@@ -153,9 +147,7 @@ function withUsers(
 function saveDeleted(message: FluxerMessage) {
   if (!settings.store.saveLogs) return;
   try {
-    // Through JSON, since Fluxer's records hold live objects that can't be stored.
     const wire: MessageWire = JSON.parse(JSON.stringify(message.toJSON()));
-    // Left out so it follows who you have blocked when the message is restored.
     delete wire.blocked;
     addSavedDeleted({ ...withUsers(wire, publicUser), flags: message.flags | DELETED_FLAG });
     scheduleSave();
@@ -164,7 +156,6 @@ function saveDeleted(message: FluxerMessage) {
   }
 }
 
-// Saved messages would otherwise bring back the names and avatars people had back then.
 function withCurrentUsers(wire: MessageWire): MessageWire {
   const users = Stores.Users();
   return withUsers(wire, (user) => {
@@ -174,7 +165,6 @@ function withCurrentUsers(wire: MessageWire): MessageWire {
 }
 
 function setEdits(id: string, edits: readonly PastEdit[]) {
-  // Re-inserting keeps the map ordered from least to most recently edited.
   editHistory.delete(id);
   if (edits.length) editHistory.set(id, edits);
   if (editHistory.size > MAXIMUM_EDITED_MESSAGES) {
@@ -280,7 +270,6 @@ export default definePlugin({
       ],
     },
     {
-      // Saved deleted messages rejoin each page of messages Fluxer loads.
       find: /handleMessageDeleteBulk\(\i\)\{let \i=\i\.\i\.get\(/,
       replacement: {
         match:
@@ -296,7 +285,6 @@ export default definePlugin({
       },
     },
     {
-      // Deleted messages get the red text of a message that failed to send.
       find: '"channel.user-message.message-text--2"',
       replacement: {
         match: /(\i)\.state!==\i\.\i\.FAILED\?(\i)=\i\[\1\.state\]:\i&&\(\2=(\i\.\i)\);/,
@@ -320,8 +308,6 @@ export default definePlugin({
       },
     },
     {
-      // Deleted messages get the permissions of a read-only channel, so the hover bar and
-      // message menu stop offering replies, reactions, edits, and pins the server would reject.
       find: '"channel.message-action-utils.request-message-pin.confirm-modal"',
       replacement: {
         match:
@@ -330,7 +316,6 @@ export default definePlugin({
       },
     },
     {
-      // The message menu's actions, some of which don't check those permissions.
       find: '"channel.message-action-menu.groups.report-message-icon"',
       replacement: {
         match:

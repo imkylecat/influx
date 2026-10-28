@@ -18,7 +18,6 @@ import {
 import { iconOrFallback, MissingComponents, SettingsSearch } from "./components";
 import { settings } from "./settings";
 
-// Turns a setting's key into a label in sentence case, like Fluxer's own: "logDeletes" is "Log deletes".
 const humanize = (key: string): string =>
   key
     .replace(/[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`)
@@ -35,7 +34,6 @@ function OptionField({
 }) {
   useSettings();
   const store = plugin.settings!.store as Record<string, any>;
-  // What's typed in a number field, which isn't always a number yet.
   const [numberText, setNumberText] = React.useState(() => String(store[name] ?? ""));
   const update = (next: unknown) => {
     store[name] = next;
@@ -124,7 +122,6 @@ function visibleOptions(plugin: PluginDefinition): Array<[string, OptionDefiniti
   ).filter(([, definition]) => !definition.hidden);
 }
 
-// Laid out like the rows on Fluxer's Advanced settings tab.
 const row = (name: string) => nativeClasses(`AdvancedSettingsTab.module__${name}___`);
 const badge = (...variants: string[]) =>
   nativeClasses(

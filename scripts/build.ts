@@ -45,7 +45,6 @@ const pluginDiscovery: BunPlugin = {
   },
 };
 
-// Bun's bundler can't run inside a plugin callback, so the style sheets are bundled before each build.
 const styleSheets = new Map<string, string>();
 
 const styles: BunPlugin = {
@@ -106,10 +105,8 @@ const builds: BuildConfig[] = [
   {
     ...desktop,
     entrypoints: [path.join(root, "src/desktop/main.ts")],
-    // Bun inlines __dirname as the build machine's source path; capture the real one first.
     banner: "var INFLUX_DIRECTORY = __dirname;",
   },
-  // Sandboxed windows have no __dirname, so the preload script gets no banner.
   { ...desktop, entrypoints: [path.join(root, "src/desktop/preload.ts")] },
 ];
 
@@ -146,8 +143,6 @@ async function buildAll(): Promise<void> {
   console.log("Built desktop and browser bundles.");
 }
 
-// Poll source metadata so watch mode also detects new plugin directories on platforms
-// where recursive filesystem notifications miss newly created files.
 async function sourceSnapshot(): Promise<string> {
   async function scan(directory: string): Promise<string[]> {
     const entries = await readdir(directory, { withFileTypes: true });

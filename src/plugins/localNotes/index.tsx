@@ -46,7 +46,6 @@ function saveNote(accountId: string, userId: string, note: string): void {
   else showToast("error", "Your account changed. Reopen the local note to edit it.");
 }
 
-// Fluxer's own profile note editor, which the profile patch teaches to save somewhere else.
 function ProfileNote({ userId, Editor }: { userId: string; Editor: ComponentType<any> }) {
   useSettings();
   const accountId = Stores.Users()?.currentUserId;
@@ -138,7 +137,6 @@ export default definePlugin({
   settings,
   patches: [
     {
-      // Fluxer's note editor takes an influxNote prop, and the profile shows a second one with it.
       find: '"user.user-profile-modal.user-note-editor.div"',
       replacement: [
         {

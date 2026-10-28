@@ -16,7 +16,6 @@ beforeEach(() => resetPatching(forceDeveloperMode));
 
 describe("ForceDeveloperMode", () => {
   it("makes isDeveloper true without staff or the 7-tap unlock", () => {
-    // Excerpt of Fluxer's compiled DeveloperMode store.
     const storeModule = compile(
       "function(e,t,n){const a={A:{currentUser:null}};" +
         "e.exports=new class{constructor(){this.manuallyEnabled=!1}" +
@@ -33,7 +32,6 @@ describe("ForceDeveloperMode staff", () => {
       ...common,
       Stores: { ...common.Stores, Users: () => ({ currentUserId: "1" }) },
     }));
-    // Excerpt of Fluxer's compiled UserRecord.
     const userModule = compile(
       "function(e,t,n){e.exports=class{constructor(e){this.id=e.id;this._isStaff=e.is_staff;this.flags=0}" +
         "isStaff(){var e;return null!=(e=this._isStaff)?e:(this.flags&1)!=0}}}",

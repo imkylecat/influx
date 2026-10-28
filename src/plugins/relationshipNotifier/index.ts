@@ -65,7 +65,6 @@ const settings = definePluginSettings({
   },
 });
 
-// Ids of friends, servers, and group chats you removed or left yourself, so those don't notify.
 const selfActions = new Map<string, ReturnType<typeof setTimeout>>();
 
 function consumeSelfAction(id: string): boolean {
@@ -76,7 +75,6 @@ function consumeSelfAction(id: string): boolean {
   return true;
 }
 
-// The snapshot is kept per account, since Fluxer can switch between several.
 let accountId: string | null = null;
 let snapshot: Snapshot | null = null;
 let stopListening: (() => void) | undefined;
@@ -118,7 +116,6 @@ function onReady(data: ReadyPayload): void {
   if (!accountId) return;
   const previous = savedSnapshots()[accountId];
   const next = snapshotFromReady(data, previous);
-  // The first time Influx sees an account there's nothing to compare against yet.
   if (previous && settings.store.whileAway) {
     for (const removal of diffSnapshots(previous, next)) report(removal, true);
   }

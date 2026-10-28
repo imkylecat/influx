@@ -17,7 +17,6 @@ const PluginIconFallback = ({ className }: { className?: string }) => (
 export const iconOrFallback = (name: string): ComponentType<any> =>
   findIcon(name) ?? PluginIconFallback;
 
-// Fluxer's chat invite card, captured by a patch since its module has no other way to tell it apart.
 export let InviteEmbed: ComponentType<{ code: string }> | undefined;
 export function captureInviteEmbed<T extends ComponentType<any>>(component: T): T {
   InviteEmbed = component;

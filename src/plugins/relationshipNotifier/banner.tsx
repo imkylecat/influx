@@ -31,7 +31,6 @@ let notices: Notice[] | undefined;
 // Whether the nagbar patch found all of Fluxer's banner parts. Without them, notices go to toasts.
 export let nagbarFound = false;
 
-// A MobX array, when Fluxer's MobX can be found, so the banner shows and hides as notices change.
 function getNotices(): Notice[] {
   if (notices) return notices;
   const observable = find(

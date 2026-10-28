@@ -51,7 +51,6 @@ function writeSettings(): void {
 
 if (storage) window.addEventListener("pagehide", writeSettings);
 
-// Tells components right away, and writes to storage once changes stop coming.
 export function saveSettings(): void {
   changes++;
   for (const listener of changeListeners) listener();
@@ -62,13 +61,11 @@ export function saveSettings(): void {
   saveTimer ??= setTimeout(writeSettings, SAVE_DELAY_MILLISECONDS);
 }
 
-// Returns a function that removes the listener again.
 export function onSettingsChange(listener: () => void): () => void {
   changeListeners.add(listener);
   return () => changeListeners.delete(listener);
 }
 
-// Rerenders the component that calls it whenever a setting changes.
 export function useSettings(): void {
   React.useSyncExternalStore(onSettingsChange, () => changes);
 }

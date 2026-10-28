@@ -1,5 +1,3 @@
-// Posts a release and its changelog to a Fluxer webhook.
-// Usage: FLUXER_WEBHOOK_URL=... bun scripts/post-release.ts <version> <release url>
 import { readFileSync } from "node:fs";
 import path from "node:path";
 

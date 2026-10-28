@@ -47,7 +47,6 @@ function baseName(index: number): string {
 export function anonymizeName(name: string, base: string): string {
   const spoiler = name.startsWith(SPOILER_PREFIX) ? SPOILER_PREFIX : "";
   const rest = name.slice(spoiler.length);
-  // Keep compound extensions like .tar.gz, but not a dotted name like "my.holiday.photo.png".
   const match = /(\.tar)?\.[A-Za-z0-9]{1,10}$/.exec(rest);
   return spoiler + base + (match?.[0] ?? "");
 }

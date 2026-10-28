@@ -97,7 +97,6 @@ function unwrapComponent(component: any): any {
   return component;
 }
 
-// Display names often sit on the inner function of memo() and forwardRef() wrappers.
 function displayNameOf(component: any): string | undefined {
   for (let depth = 0; depth < 5 && component != null; depth++) {
     if (typeof component.displayName === "string") return component.displayName;
@@ -106,7 +105,6 @@ function displayNameOf(component: any): string | undefined {
   return undefined;
 }
 
-// The components each module whose source contains code exports, one list per module.
 function* componentsByModule(code: string): Generator<any[]> {
   for (const id of search(code)) {
     let exports: any;
@@ -147,7 +145,6 @@ export function findComponentByCode(
     });
     if (bySource) return bySource;
     if (components.length === 1) return components[0];
-    // Observer-wrapped components hide their source, but hooks and helpers beside them are plain functions.
     const wrapped = components.filter((component) => typeof component === "object");
     if (wrapped.length === 1) return wrapped[0];
   }

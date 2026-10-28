@@ -10,7 +10,6 @@ declare global {
   }
 }
 
-// The desktop preload script defines this before the renderer runs. Extension builds never read it.
 const native = window.InfluxNative!;
 
 export const canInstallUpdates = INFLUX_DESKTOP && !INFLUX_DEVELOPMENT;

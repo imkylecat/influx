@@ -59,7 +59,6 @@ function initialize(): void {
     );
   }
 
-  // Firefox fires DOMContentLoaded on a page that redirects before Fluxer's scripts run, but not load.
   window.addEventListener(
     "load",
     () => {

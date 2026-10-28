@@ -8,7 +8,6 @@ type GatewayListener = (data: any) => void;
 
 const listeners = new Map<string, Map<GatewayListener, string>>();
 
-// Returns a function that removes the listeners again.
 export function onGatewayEvents(
   plugin: string,
   eventListeners: Record<string, GatewayListener>,
@@ -25,7 +24,6 @@ export function onGatewayEvents(
   };
 }
 
-// Runs the listeners for each event before Fluxer's own handler.
 export function hookGatewayEvents(registry: Map<string, GatewayHandler>): void {
   for (const [event, original] of registry) {
     registry.set(event, (data, context) => {

@@ -11,7 +11,6 @@ const wire = (id: string): MessageWire => ({
   author: { id: "1", username: "alex" },
 });
 const ids = (messages: MessageWire[]) => messages.map((message) => message.id);
-// Fluxer loads pages newest first.
 const page = (...loaded: string[]) => ({ channelId: "c", messages: loaded.map(wire) });
 const saved = ["5", "15", "25", "35", "100"].map(wire);
 

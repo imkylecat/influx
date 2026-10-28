@@ -22,7 +22,6 @@ const logger = new Logger("MessageLinkEmbeds");
 // Matches Fluxer's own jump links, for example https://web.fluxer.app/channels/@me/<channel>/<message>.
 const MESSAGE_LINK = /https?:\/\/([\w.-]+)\/channels\/(@me|\d+)\/(\d+)\/(\d+)/g;
 
-// Matches what Fluxer's confirm modal passes when it previews a message.
 const PREVIEW_BEHAVIOR = {
   isEditing: false,
   isHighlight: false,
@@ -85,7 +84,6 @@ function loadLinkedMessage(channelId: string, messageId: string): Promise<LoadSt
   if (!pending) {
     pending = fetchLinkedMessage(channelId, messageId);
     cache.set(key, pending);
-    // Let failures retry the next time the message renders.
     void pending.then((state) => state.status === "error" && cache.delete(key));
   }
   return pending;
@@ -102,7 +100,6 @@ function jumpTo(link: MessageLink): void {
   }
 }
 
-// Set inside a preview, so a linked message's own links don't preview again.
 let InPreview: Context<boolean> | undefined;
 const getInPreview = () => (InPreview ??= React.createContext(false));
 
@@ -153,7 +150,6 @@ function LinkEmbed({ link }: { link: MessageLink }) {
   );
 }
 
-// Laid out like Fluxer's own card for an unavailable theme or invite.
 function UnavailableCard({ link }: { link: MessageLink }) {
   const EmbedCard = Components.EmbedCard();
   const Button = Components.Button();

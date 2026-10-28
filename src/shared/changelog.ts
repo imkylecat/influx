@@ -1,16 +1,11 @@
-// Reads CHANGELOG.md, which follows https://keepachangelog.com.
-
-/** The body of a version's section, without its "## [x.y.z] - date" heading. */
 export function changelogSection(changelog: string, version: string): string | null {
   const heading = new RegExp(`^## \\[${RegExp.escape(version)}\\][^\\n]*\\n`, "m").exec(changelog);
   if (!heading) return null;
   const rest = changelog.slice(heading.index + heading[0].length);
-  // The section ends at the next version heading or the link references at the bottom.
   const end = rest.search(/^## |^\[[^\]]+\]: /m);
   return (end === -1 ? rest : rest.slice(0, end)).trim() || null;
 }
 
-/** Chat markdown keeps every newline, so rejoin wrapped bullets and show "### Added" as a bold label. */
 export function toEmbedMarkdown(section: string, maximumLength: number, moreUrl: string): string {
   const text = section
     .replace(/\n {2,}(?=\S)/g, " ")

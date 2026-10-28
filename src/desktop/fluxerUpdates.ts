@@ -17,11 +17,6 @@ type UpdateManager = {
   waitExitThenApplyUpdate: ApplyUpdate;
 };
 
-// Fluxer's updates replace its app files and with them the Influx shim. After Fluxer exits and its
-// updater finishes, these scripts move the new app.asar aside, put the shim back and, when Fluxer
-// was restarting for the update, start it again. macOS sends SIGTERM to what Fluxer started once
-// Fluxer exits, so the Mac script ignores it. macOS also refuses to open an app whose files changed
-// before its first launch, so the script first runs the untouched new Fluxer once, as plain Node.
 const MAC_SCRIPT = `
 trap '' TERM
 label="$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$4/Contents/Info.plist").ShipIt"
@@ -144,9 +139,6 @@ export function keepAcrossFluxerUpdates(installDirectory: string, fluxerMain: st
       }
       applyUpdate.call(this, update, silent, false, restartArguments);
     };
-    // As Fluxer starts, Velopack applies a downloaded update from native code, which skips the
-    // patch above, so apply it here first. Velopack leaves the update alone when it runs Fluxer
-    // for a hook or has just restarted it, and marks a restart with VELOPACK_RESTART.
     if (process.argv[1]?.startsWith("--veloapp-") || process.env.VELOPACK_RESTART) return;
     try {
       const updateManager = new velopack.UpdateManager("");
@@ -159,8 +151,6 @@ export function keepAcrossFluxerUpdates(installDirectory: string, fluxerMain: st
     }
     app.exit(0);
   } else if (process.platform === "darwin") {
-    // ShipIt relaunches Fluxer before the shim can be restored, so quit instead and let the script
-    // relaunch it. ShipIt still installs the downloaded update when Fluxer quits.
     const quitAndInstall = autoUpdater.quitAndInstall.bind(autoUpdater);
     autoUpdater.quitAndInstall = () => {
       try {

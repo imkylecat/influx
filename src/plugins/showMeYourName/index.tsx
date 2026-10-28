@@ -45,7 +45,6 @@ export default definePlugin({
     {
       find: '"channel.user-message.message-username--2"',
       replacement: {
-        // Cozy headers (normal, attachment-only, and bot) and the compact author prefix.
         match:
           /(\(0,\i\.jsx\)\(\i(?:\.\i)?,\{user:(\i),message:(\i),guild:\i,member:[^}]{0,300}?"data-flx":"channel\.(?:user-message|compact-message-layout\.compact-author-prefix)\.message-username(?:--\d)?"\}\))/g,
         replace: "$1,$self.renderUsername($2,$3)",
@@ -55,7 +54,6 @@ export default definePlugin({
 
   renderUsername(author: FluxerUser | undefined, message: FluxerMessage | undefined) {
     try {
-      // A webhook's "username" is just its display name.
       if (!author?.username || message?.webhookId != null) return null;
       if (settings.store.hideWhenSame) {
         const shown = NicknameLookup()?.(author, undefined, message?.channelId) ?? author.username;

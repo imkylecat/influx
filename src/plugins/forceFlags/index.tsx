@@ -76,7 +76,6 @@ interface Overrides {
   remove: string[];
 }
 
-/** Parses "id: +NAME -NAME; id: +NAME" into overrides per ID. */
 export function parseOverrides(text: string): Map<string, Overrides> {
   const overrides = new Map<string, Overrides>();
   for (const entry of text.split(";")) {
@@ -153,14 +152,12 @@ export default definePlugin({
 
   patches: [
     {
-      // UserRecord. Its flags apply overrides when read, so every copy of a user stays current.
       find: "this.flags=e.flags,this.mentionFlags",
       replacement: [
         {
           match: /this\.flags=e\.flags,/,
           replace: "$self.defineFlags(this,e.flags),",
         },
-        // Updated and serialized copies keep the real flags.
         {
           match: /(flags:null!=\((\i)=e\.flags\)\?\2:)this\.flags/,
           replace: "$1$self.realFlags.get(this)",

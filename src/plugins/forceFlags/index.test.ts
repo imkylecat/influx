@@ -36,7 +36,6 @@ describe("ForceFlags", () => {
       "ui.action-menu.guild-member-context-menu",
       "ui.action-menu.group-dm-context-menu.group-dm-member-context-menu",
     ]) {
-      // Excerpt of the menu's last group in Fluxer's compiled code.
       const menuModule = compile(
         `function(e,t,n){const i={jsx:(type,props)=>props.children??type};e.exports=(u,c)=>(0,i.jsx)("group",{children:[(0,i.jsx)("copy",{user:u,onClose:c,"data-flx":"${menu}.copy-user-id-menu-item"}),"after"]})}`,
       );
@@ -54,7 +53,6 @@ describe("ForceFlags", () => {
       renderServerMenu: (guild: unknown) => ({ forceFeatures: guild }),
     };
     resetPatching(stub);
-    // Excerpt of Fluxer's compiled GuildContextMenu.
     const menuModule = compile(
       'function(e,t,n){const i={jsx:(type,props)=>props.children??type,jsxs:(type,props)=>props.children,Fragment:"fragment"};e.exports=({guild:g,onClose:c})=>(0,i.jsxs)(i.Fragment,{children:[(0,i.jsx)("renderer",{"data-flx":"ui.action-menu.guild-context-menu.data-menu-renderer"}),(0,i.jsx)("group",{"data-flx":"ui.action-menu.guild-context-menu.menu-group",children:(0,i.jsx)("mute",{guild:g,onClose:c,"data-flx":"ui.action-menu.guild-context-menu.mute-community-menu-item"})})]})}',
     );
@@ -86,7 +84,6 @@ describe("ForceFlags", () => {
   });
 
   it("overrides features in Fluxer's GuildRecord", () => {
-    // Excerpt of Fluxer's compiled GuildRecord constructor.
     const guildModule = compile(
       "function(e,t,n){e.exports=class{constructor(e){this.id=e.id,this.features=new Set(e.features),this.ownerId=e.owner_id}}}",
     );

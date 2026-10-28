@@ -159,7 +159,6 @@ export default definePlugin({
   Pronouns,
 
   refreshProfiles(userId = Stores.Users()?.currentUserId) {
-    // Fluxer's fetch returns its cached profile, so wait until this handler has dropped it.
     queueMicrotask(() => {
       for (const entry of known.values()) {
         if (entry.userId === userId) request(entry.userId, entry.guildId, true);

@@ -82,7 +82,6 @@ function defaultResourcesDirectory(canary: boolean): string {
         "resources",
       );
     default: {
-      // The deb and rpm packages install to /opt/Fluxer, the Arch package to /opt/fluxer.
       const candidates = (canary ? ["fluxer-canary"] : ["Fluxer", "fluxer"]).map(
         (name) => `/opt/${name}/resources`,
       );
@@ -144,7 +143,6 @@ async function main(): Promise<void> {
     return;
   }
 
-  // Under sudo, folders mkdirSync creates (even ~/.config itself) would stay owned by root.
   const createdDirectory = mkdirSync(influxDirectory, { recursive: true });
   if (createdDirectory) giveToSudoUser(createdDirectory);
 

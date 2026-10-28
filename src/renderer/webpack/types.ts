@@ -19,7 +19,6 @@ export interface PatchReplacement {
 export interface PatchDefinition {
   find: string | RegExp;
   replacement: PatchReplacement | PatchReplacement[];
-  // Applies to every module whose code matches find, instead of only the first.
   all?: boolean;
 }
 

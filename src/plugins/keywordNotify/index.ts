@@ -116,13 +116,11 @@ function isIgnored(
   );
 }
 
-// Fluxer already notifies for mentions, so don't send a second one.
 function mentionsMe(message: MessageWire): boolean {
   const me = Stores.Users()?.currentUserId;
   return Boolean(message.mention_everyone || message.mentions?.some((user) => user.id === me));
 }
 
-// Like Fluxer's own notifications, skip the channel you're already reading.
 function isViewing(message: MessageWire): boolean {
   return document.hasFocus() && location.pathname.split("/")[3] === message.channel_id;
 }
@@ -143,7 +141,6 @@ function notify(message: MessageWire): void {
 }
 
 function onMessageCreate(message: MessageWire): void {
-  // Fluxer already notifies for every DM and group DM message by default.
   if (!settings.store.notify || !message.guild_id) return;
   if (isIgnored(message.author, message.channel_id, message.guild_id)) return;
   if (mentionsMe(message) || isViewing(message) || !matchesKeywords(message.content)) return;
@@ -161,7 +158,6 @@ export default definePlugin({
 
   patches: [
     {
-      // The message row's class list: match keyword hits with Fluxer's mention highlight.
       find: '"channel.message.article.alt-click"',
       replacement: {
         match: /(!\i&&)(\i)\.isMentioned\(\)(&&\i\.\i)/,

@@ -19,7 +19,6 @@ describe("LocalNotes", () => {
     assert.equal(readNote("2", "10"), "Different account");
     assert.equal(readNote("1", "20"), "Different user");
     assert.equal(readNote("3", "10"), "");
-    // The settings payload can be saved and reloaded as JSON.
     getPluginData("LocalNotes").notes = JSON.parse(
       JSON.stringify(getPluginData("LocalNotes").notes),
     );
@@ -67,7 +66,6 @@ describe("LocalNotes", () => {
   });
 
   it("shows a second note editor on profiles that saves locally", () => {
-    // Shape of Fluxer's compiled UserNoteEditor and the ProfileContent that renders it.
     const factory = compile(
       "function(module){const saved=[],i={jsx:(type,props)=>({type,props}),jsxs:(type,props)=>({type,props})},$={x6:'Trans'},r={_:e=>e.message},ea={h:'textarea'},eo={y:(e,t)=>saved.push([e,t])},H={$:(...e)=>e.join(' ')},D={},s=!1,m={current:{note:''}},l=()=>{};" +
         'let el={id:"KiJn9B",message:"Note"},eu={id:"hx3d1y",message:"Click to add a note"},' +

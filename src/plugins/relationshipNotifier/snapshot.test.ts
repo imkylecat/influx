@@ -20,7 +20,6 @@ describe("RelationshipNotifier while away", () => {
     });
     const after = snapshotFromReady(
       {
-        // sam's request became a friendship, jo was blocked: neither is a removal.
         relationships: [
           { id: "2", type: 1, user: { username: "sam" } },
           { id: "4", type: 2, user: { username: "jo" } },

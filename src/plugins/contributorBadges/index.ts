@@ -41,7 +41,6 @@ export default definePlugin({
       },
     },
     {
-      // Badge images are file names on Fluxer's servers, so this badge's image is swapped in here.
       find: "/badges/${",
       replacement: {
         match: /(function \i\((\i)\)\{return)(`\$\{\i\.\i\.staticCdnEndpoint\}\/badges\/)/,
@@ -53,7 +52,6 @@ export default definePlugin({
   badgeAsset: BADGE.asset,
   badgeIconUrl: BADGE_ICON_URL,
 
-  // Profiles are rebuilt from their own badges, so the badge may already be there.
   addBadges(badges: readonly ProfileBadge[], userId: string): readonly ProfileBadge[] {
     if (!contributorIds.has(userId) || badges.some((badge) => badge.kind === BADGE.kind)) {
       return badges;

@@ -59,7 +59,6 @@ describe("SendConfirmation", () => {
   });
 
   it("gates sends before reservations and uploads, and preserves cancellation recovery", async () => {
-    // Shape of Fluxer's shared MessageCommands send/reserve functions, including generator downleveling.
     const factory = compile(`function(module){
       function ec(fn){return function(){const iterator=fn.apply(this,arguments);return new Promise((resolve,reject)=>{function step(value){let next;try{next=iterator.next(value)}catch(error){reject(error);return}if(next.done)resolve(next.value);else Promise.resolve(next.value).then(step,reject)}step()})}}
       const events=[];

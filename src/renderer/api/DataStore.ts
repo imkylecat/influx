@@ -4,7 +4,6 @@ const logger = new Logger("DataStore");
 const DATABASE_NAME = "Influx";
 const STORE_NAME = "data";
 
-// Fluxer removes window.indexedDB as it starts, so this is taken before then.
 const factory: IDBFactory | null = (() => {
   try {
     return window.indexedDB ?? null;
@@ -41,7 +40,6 @@ async function run<T>(
   });
 }
 
-// For data too large for settings. Values are stored as they are, so dates stay dates.
 export async function getData<T>(key: string): Promise<T | undefined> {
   try {
     return await run<T | undefined>("readonly", (store) => store.get(key));

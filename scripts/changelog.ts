@@ -1,4 +1,3 @@
-// Prints a version's CHANGELOG.md section: bun scripts/changelog.ts 0.2.3
 import { readFileSync } from "node:fs";
 import path from "node:path";
 

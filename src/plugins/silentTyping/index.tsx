@@ -61,10 +61,8 @@ export default definePlugin({
       find: '"channel.textarea.textarea-buttons.button-container-dense"',
       replacement: {
         match:
-          // Reuse the GIF and sticker buttons' guard, which hides them on mobile and in narrow chat bars.
           /(\(0,(\i)\.jsxs\)\("div",\{[^{}]*?"data-flx":"channel\.textarea\.textarea-buttons\.button-container-dense",children:\[)(!\i&&\i&&)/,
         replace: (_, head: string, jsx: string, guard: string, offset: number, code: string) => {
-          // The component takes its channel as a prop, named where it unpacks them.
           const props = code.lastIndexOf("channelId:", offset);
           const channelId = /^channelId:([\w$]+)/.exec(code.slice(props, props + 40))?.[1];
           return `${head}${guard}(0,${jsx}.jsx)($self.ChatBarButton,{channelId:${channelId}}),${guard}`;

@@ -80,7 +80,6 @@ export function patchFactory(
       }
     }
 
-    // A failed patch stays pending, since another module may also match its find.
     if (failure !== undefined) {
       if (!reportedFailures.has(patch)) {
         reportedFailures.add(patch);

@@ -5,13 +5,11 @@ export interface PastEdit {
   timestamp: Date;
 }
 
-// What MessageLogger keeps on this device between restarts.
 export interface SavedLogs {
   deleted: MessageWire[];
   edits: Array<[id: string, edits: readonly PastEdit[]]>;
 }
 
-// A page of messages as Fluxer loads it, newest first.
 export interface LoadedWindow {
   channelId: string;
   messages: MessageWire[];
@@ -33,11 +31,9 @@ const PUBLIC_USER_FIELDS = [
   "flags",
 ];
 
-// Your own user also holds private details, such as your email address, that logs shouldn't keep.
 export const publicUser = <U extends object>(user: U): U =>
   Object.fromEntries(Object.entries(user).filter(([key]) => PUBLIC_USER_FIELDS.includes(key))) as U;
 
-// IDs are numbers too large for JavaScript, so a longer one is a larger one.
 export const compareIds = (a: string, b: string): number =>
   a.length - b.length || (a < b ? -1 : a > b ? 1 : 0);
 
@@ -60,8 +56,6 @@ export function readSavedLogs(value: unknown): SavedLogs {
   };
 }
 
-// Adds a channel's saved deleted messages to the page they were in.
-// A page that ends where more messages follow leaves the ones past its end to the next page.
 export function mergeDeleted(
   window: LoadedWindow,
   saved: MessageWire[],

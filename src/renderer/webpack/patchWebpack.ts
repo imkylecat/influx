@@ -8,7 +8,6 @@ export let webpackRequire: WebpackRequire | undefined;
 
 export const moduleCache = new Map<ModuleId, WebpackModule>();
 
-// Counts factories added and modules loaded, so lookups that found nothing know when to retry.
 export let moduleChanges = 0;
 
 type ModuleListener = (module: WebpackModule) => void;
@@ -51,16 +50,11 @@ export function installWebpackHook(pendingPatches: Patch[]): void {
         }
       }
     };
-    // Module searches read the original source through this.
     wrapper.toString = () => Function.prototype.toString.call(original);
     moduleChanges++;
     return wrapper;
   }
 
-  // Fluxer's runtime creates its require function, then assigns the module table to it as `m`.
-  // Every function inherits this setter from Function.prototype, so it runs on that assignment,
-  // captures the runtime before any module executes, and removes itself. The proxy it leaves on
-  // `m` wraps the factories that later chunks add.
   Object.defineProperty(Function.prototype, "m", {
     configurable: true,
     set(this: unknown, modules: Record<ModuleId, ModuleFactory>) {

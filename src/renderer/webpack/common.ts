@@ -32,10 +32,8 @@ waitFor(filters.byProperties("useState", "createElement", "Fragment"), (module) 
   React = module;
 });
 
-// Fluxer's modal building blocks all live in one module.
 const MODAL_MODULE = "app.modal.content-layout.content-layout";
 
-// Looks up once, and after finding nothing, again only when more of Fluxer has loaded.
 function lazy<T>(lookup: () => T | undefined): () => T | undefined {
   let value: T | undefined;
   let searchedAt = -1;
@@ -133,7 +131,6 @@ export const Stores = {
   ),
   Guilds: lazy<{
     getGuild(id: string): FluxerGuild | undefined;
-    // Rebuilds the server's record, as when the server sends an update.
     handleGuildUpdate(guild: object): void;
   }>(() => findByProperties("getGuild", "getGuildRoles", "getOwnedGuilds")),
   Messages: lazy<FluxerMessagesStore>(() =>
@@ -150,10 +147,8 @@ export const Stores = {
   Presence: lazy<{
     getStatus(userId: string): string;
     isMobile(userId: string): boolean;
-    // Calls the listener at once, and again whenever the user's status or device changes.
     subscribeToUserStatus(userId: string, listener: () => void): () => void;
   }>(() => findByProperties("getStatus", "isMobile", "subscribeToUserStatus")),
-  // The member list of each channel, by server ID and then by list ID.
   MemberList: lazy<{
     lists: Record<
       string,
@@ -169,7 +164,6 @@ export const Stores = {
     >;
   }>(() => findByProperties("getList", "getPresence", "handleListUpdate")),
   MemberPresenceSubscription: lazy<{
-    // Has the presence store follow a member's status for the next 5 minutes.
     touchMember(guildId: string, userId: string): void;
   }>(() => findByProperties("touchMember", "getGuildSubscriptions")),
   UserProfile: lazy<{ getProfile(userId: string, guildId?: string): FluxerProfile | null }>(() =>
@@ -212,12 +206,10 @@ export const observable = lazy<{
   box<T>(value: T): { get(): T; set(value: T): void };
 }>(() => findByProperties("box", "map", "array"));
 
-// Runs the effect whenever the expression reads observable values that changed. Returns a function that stops it.
 export const reaction = lazy<
   <T>(expression: () => T, effect: (value: T, previous: T) => void) => () => void
 >(() => findByCode('"Reaction"', "fireImmediately"));
 
-// Finds a CSS module class by its readable prefix, for example "Message.module__messageTimestamp___".
 const findClassName = lazyByKey<string>((prefix) => {
   const matches = (value: unknown): value is string =>
     typeof value === "string" && value.startsWith(prefix);
@@ -235,12 +227,10 @@ export const RestClient = lazy<{
   get<T = unknown>(path: string): Promise<{ ok: boolean; status: number; body: T }>;
 }>(() => findByProperties("installAuth", "hasAuthorization", "get"));
 
-// Fluxer's Message model class; its constructor takes a message as the API sends it.
 export const MessageRecord = lazy<new (wire: unknown, options?: object) => FluxerMessage>(() =>
   findByCode("this.editedTimestamp=e.edited_timestamp"),
 );
 
-// NicknameUtils.getNickname: the name Fluxer shows in the header, such as a server or friend nickname.
 export const NicknameLookup = lazy<
   (user: { username: string }, guildId?: string, channelId?: string) => string
 >(() => findByCode(".displayName||", ".globalName||", ".username||", ".getMember(", ".nicks["));
@@ -281,8 +271,6 @@ const NativeNotification = lazy<(content: NotificationContent) => Promise<unknow
   findByCode("Electron native notification show failed; refusing browser/Web Push fallback"),
 );
 
-// Fluxer's own notifications: native on desktop, the service worker or Notification API in browsers.
-// They respect Fluxer's notification settings and play its sound. Returns whether they were found.
 export function showNotification(content: NotificationContent): boolean {
   const show = NativeNotification();
   void show?.(content).catch((error) => logger.error("Couldn't show a notification", error));

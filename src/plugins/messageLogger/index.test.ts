@@ -99,7 +99,6 @@ class FakeChannelMessages {
   }
 }
 
-// Shape of Fluxer's compiled MessagingMessages store, with ChannelMessages as s.W.
 const storeModule = compile(
   "function(e,t,n){const s={W:null};" +
     "class M{commitMessages(e){s.W.current=e}notifyChange(){}" +
@@ -119,7 +118,6 @@ describe("MessageLogger", () => {
     data.saveLogs = false;
   });
 
-  // Renders a message's past edits with a stand-in React, returning null when there are none.
   function renderPastEdits(message: FakeMessage): unknown {
     void mock.module("@webpack/common", () => ({
       ...common,
@@ -282,7 +280,6 @@ describe("MessageLogger", () => {
   });
 
   it("gives deleted messages read-only permissions", () => {
-    // Shape of Fluxer's compiled message permissions, where a is its read-only channel check.
     const permissionsModule = compile(
       "function(e,t,n){const tN={A:{isBlocked:()=>!1}},u={sC:c=>!!c.readOnly};" +
         'function tW(e){return!1}const modal="channel.message-action-utils.request-message-pin.confirm-modal";' +
@@ -302,7 +299,6 @@ describe("MessageLogger", () => {
   });
 
   it("keeps only local actions in a deleted message's menu", () => {
-    // Shape of Fluxer's compiled message action groups.
     const groupsModule = compile(
       'function(e,t,n){const i={jsx:(t,p)=>p},a={ul:e=>!0},m={},B={reply:"reply",copyMessageId:"message_copy_id",reportMessage:"report_message"},ea=()=>{};' +
         'e.exports=e=>{let l=[{items:[{id:B.reply},{id:B.copyMessageId},{label:"Retry"}]}];' +
@@ -319,7 +315,6 @@ describe("MessageLogger", () => {
   });
 
   it("adds its menu items after the danger group", () => {
-    // Shape of Fluxer's compiled message context menu.
     const menuModule = compile(
       'function(e,t,n){const i={jsx:(t,p)=>p,jsxs:(t,p)=>p},x={r:"group"},T={G:"submenu"};' +
         'e.exports=(e,eG,D)=>[eG?(0,i.jsxs)(x.r,{"data-flx":"ui.action-menu.message-context-menu.render-danger-group.menu-group",children:[(0,i.jsx)(T.G,{render:()=>(0,i.jsx)(ee,{reactions:[],channelId:e.channelId,messageId:e.id,' +

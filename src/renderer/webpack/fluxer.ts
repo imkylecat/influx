@@ -1,5 +1,3 @@
-// Fluxer's records, stores, and gateway payloads, as far as Influx relies on them.
-
 export interface FluxerUser {
   id: string;
   username: string;
@@ -62,10 +60,8 @@ export interface FluxerMessage {
   toJSON(): MessageWire;
 }
 
-// One channel's loaded messages. Every change returns a new list, so rows can tell when theirs changed.
 export interface FluxerChannelMessages {
   get(id: string): FluxerMessage | undefined;
-  // The oldest and newest messages on screen.
   first(): FluxerMessage | undefined;
   last(): FluxerMessage | undefined;
   update(id: string, updater: (message: FluxerMessage) => FluxerMessage): FluxerChannelMessages;
@@ -74,7 +70,6 @@ export interface FluxerChannelMessages {
 
 export interface FluxerMessagesStore {
   getMessage(channelId: string, messageId: string): FluxerMessage | undefined;
-  // Without creating an empty list for unloaded channels.
   getCachedMessages(channelId: string): FluxerChannelMessages | undefined;
   commitMessages(messages: FluxerChannelMessages): void;
   notifyChange(): void;

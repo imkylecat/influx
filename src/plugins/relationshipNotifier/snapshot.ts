@@ -1,7 +1,6 @@
 import type { ChannelWire, GuildWire, ReadyPayload, RelationshipWire } from "@webpack/fluxer";
 
 const GROUP_CHAT_TYPE = 3;
-// Fluxer names an unnamed group after its members, up to this many.
 const MAXIMUM_NAMED_MEMBERS = 4;
 
 interface KnownRelationship {
@@ -9,11 +8,9 @@ interface KnownRelationship {
   name: string;
 }
 
-// What Influx last saw of your friends, friend requests, servers, and group chats, keyed by id.
 export interface Snapshot {
   relationships: Record<string, KnownRelationship>;
   guilds: Record<string, string | null>;
-  // Missing from snapshots saved before Influx tracked group chats.
   groups?: Record<string, string | null>;
 }
 
@@ -67,7 +64,6 @@ export function snapshotFromReady(ready: ReadyPayload, previous?: Snapshot): Sna
   return { relationships, guilds, groups };
 }
 
-// Keyed by Fluxer's relationship type. Type 2, a blocked user, isn't reported.
 const REMOVAL_KINDS: Record<number, Exclude<Removal["kind"], "guild"> | undefined> = {
   1: "friend",
   3: "incomingRequest",
@@ -79,7 +75,6 @@ export function relationshipRemoval(id: string, known: KnownRelationship): Remov
   return kind ? { kind, id, name: known.name } : null;
 }
 
-// Only disappearances count: a request that became a friendship, or a friend you blocked, isn't a removal.
 export function diffSnapshots(previous: Snapshot, next: Snapshot): Removal[] {
   const removals: Removal[] = [];
   for (const [id, known] of Object.entries(previous.relationships)) {

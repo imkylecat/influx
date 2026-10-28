@@ -14,8 +14,7 @@ const settings = definePluginSettings({
 
 export default definePlugin({
   name: "ForceDeveloperMode",
-  description:
-    "Turns on Fluxer's developer mode without tapping the build number 7 times. Staff-only tools stay hidden unless you turn them on below, and Fluxer's server checks those itself.",
+  description: "Turns on Fluxer's developer mode without tapping the build number 7 times.",
   authors: [Contributor.Kairu],
   settings,
 

@@ -43,8 +43,9 @@ export default definePlugin({
     {
       find: "/badges/${",
       replacement: {
-        match: /(function \i\((\i)\)\{return)(`\$\{\i\.\i\.staticCdnEndpoint\}\/badges\/)/,
-        replace: "$1 $2===$self.badgeAsset?$self.badgeIconUrl:$3",
+        match:
+          /(function \i\((\i)\)\{return )(null!==\i\.asset\?`\$\{\i\.\i\.staticCdnEndpoint\}\/badges\/)/,
+        replace: "$1$2.asset===$self.badgeAsset?$self.badgeIconUrl:$3",
       },
     },
   ],
@@ -56,6 +57,7 @@ export default definePlugin({
     if (!contributorIds.has(userId) || badges.some((badge) => badge.kind === BADGE.kind)) {
       return badges;
     }
+
     return Object.freeze([...badges, BADGE]);
   },
 });

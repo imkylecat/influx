@@ -82,11 +82,14 @@ describe("downloadDesktopRelease", () => {
   it("returns verified files under their local names", async () => {
     const { fetch, release } = fakeGitHub(DESKTOP_FILES);
     const files = await downloadDesktopRelease(release, fetch);
-    assert.deepEqual(Object.fromEntries([...files].map(([k, v]) => [k, v.toString()])), {
-      "main.js": "main",
-      "preload.js": "preload",
-      "renderer.js": "renderer",
-    });
+    assert.deepEqual(
+      Object.fromEntries([...files].map(([name, data]) => [name, data.toString()])),
+      {
+        "main.js": "main",
+        "preload.js": "preload",
+        "renderer.js": "renderer",
+      },
+    );
   });
 
   it("refuses a file whose checksum does not match", async () => {

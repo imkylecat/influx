@@ -72,10 +72,10 @@ function patterns(): RegExp[] {
   for (const raw of keywords.split(",")) {
     const keyword = raw.trim();
     if (!keyword) continue;
-    const regex = /^\/(.+)\/([a-z]*)$/.exec(keyword);
+    const regularExpression = /^\/(.+)\/([a-z]*)$/.exec(keyword);
     try {
-      if (regex) {
-        list.push(new RegExp(regex[1], regex[2] || flags));
+      if (regularExpression) {
+        list.push(new RegExp(regularExpression[1], regularExpression[2] || flags));
       } else {
         const text = RegExp.escape(keyword);
         list.push(

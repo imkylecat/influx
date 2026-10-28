@@ -84,7 +84,7 @@ class FakeChannelMessages {
       ),
     );
   }
-  update(id: string, updater: (m: FakeMessage) => FakeMessage) {
+  update(id: string, updater: (current: FakeMessage) => FakeMessage) {
     const next = new Map(this.messages);
     next.set(id, updater(this.messages.get(id)!));
     return new FakeChannelMessages(next);
@@ -171,8 +171,8 @@ describe("MessageLogger", () => {
 
   it("still removes messages that were never sent", () => {
     const { store, channels } = setup();
-    channels.current = channels.current.update("1", (m: FakeMessage) =>
-      m.withUpdates({ state: "FAILED" }),
+    channels.current = channels.current.update("1", (current: FakeMessage) =>
+      current.withUpdates({ state: "FAILED" }),
     );
     store.handleMessageDelete({ channelId: "c", id: "1" });
     assert.equal(channels.current.get("1"), undefined);

@@ -41,7 +41,7 @@ export function hookGatewayEvents(registry: Map<string, GatewayHandler>): void {
 
 export const gatewayPatch: Patch = {
   plugin: "Gateway",
-  find: '"SESSIONS_REPLACE"',
+  find: '"SESSIONS_REPLACE",()=>{}',
   replacement: {
     match: /([\w$]+)\.set\("SESSIONS_REPLACE",\(\)=>\{\}\)/,
     replace: "$&,Influx.Gateway.hookGatewayEvents($1)",
